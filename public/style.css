@@ -1,0 +1,43 @@
+@import url('https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css');
+@import url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.9.1/font/bootstrap-icons.css');
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&display=swap');
+
+:root{
+    --primary-red: #BA1514;
+    --primary-gold: #C2A340;
+    --secondary-gold: #F4ECCE;
+}
+
+.fancy-font {
+    font-family: 'Cinzel', serif;
+    color: var(--primary-red);
+}
+
+.red-link{
+    color: var(--primary-red);
+}
+
+[role=button] {
+    cursor: pointer;
+}
+
+  /* ===== Scrollbar CSS ===== */
+  /* Firefox */
+  * {
+    scrollbar-width: none;
+    scrollbar-color: var(--primary-gold) var(--secondary-gold);
+  }
+
+  /* Chrome, Edge, and Safari */
+  *::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: var(--secondary-gold);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--primary-gold);
+    border-radius: 10px;
+  }
