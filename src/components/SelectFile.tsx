@@ -1,36 +1,59 @@
 import React from "react";
 import { createUserFile, deleteUserFile, readUserFile, listUserFile } from "../util/UserFileCRUDL";
 import { UserFile } from "../types/UserFile";
+import MaterialReactTable, { MRT_ColumnDef } from "material-react-table";
+import {MRT_Localization_PT} from "material-react-table/locales/pt";
 
 type SelectFileProps = {
     setUserFile: (file: UserFile) => void
 }
 
-export default class SelectFile extends React.Component<SelectFileProps,{list: UserFile[]}>{
-    updateList: () => void
+type SelectFileState = {
+    list: UserFile[]
+}
 
-    constructor(props: SelectFileProps){
-        super(props);
-        this.state = {
-            list: listUserFile()
-        }
-        this.updateList = () => {
-            console.log(this);
-            console.log("Update List");
-            console.log(this.state);
-            this.setState({list: listUserFile()})
-        }
+export default class SelectFile extends React.Component<SelectFileProps,SelectFileState>{
+    state: SelectFileState = {
+        list: listUserFile()
     }
+    updateList = () => {this.setState({list: listUserFile()})}
 
-    componentDidMount(): void {
+    componentDidMount() {
         window.addEventListener("AlertUpdateListUserFile", this.updateList);
     }
 
-    componentWillUnmount(): void {
+    componentWillUnmount() {
         window.removeEventListener("AlertUpdateListUserFile", this.updateList);
     }
-    
-    onFile(event: React.ChangeEvent<HTMLInputElement>): void{
+
+    render(): React.ReactNode {
+        let cols: MRT_ColumnDef[] = [
+            {header: "Ficheiros Locais", accessorKey: "name"},
+            {header: "Número de Caracteres", accessorKey: "html_contents.length"}
+        ]
+
+        return (<MaterialReactTable 
+            renderTopToolbarCustomActions={({table}) => <AddUserFileAction setUserFile={this.props.setUserFile}/>} 
+            columns={cols}
+            data={this.state.list}
+            localization={MRT_Localization_PT}
+            enableRowActions
+            renderRowActions={({row}) => <UserFileActions file={this.state.list[row.index]} setUserFile={this.props.setUserFile} />}
+            positionActionsColumn="last"
+            enablePagination={false}
+            enableDensityToggle={false}
+            enableHiding={false}
+        />);
+    }
+}
+
+type UserFileActionsProps = {
+    file: UserFile,
+    setUserFile: (file: UserFile) => void
+}
+
+export class AddUserFileAction extends React.Component<SelectFileProps>{
+    onFile: React.ChangeEventHandler<HTMLInputElement> = (event) => {
         let files = event.target.files;
         if( files == null) return;
 
@@ -54,14 +77,21 @@ export default class SelectFile extends React.Component<SelectFileProps,{list: U
             let content = await r.text();
 
             if( r.status !== 200 ) return Promise.reject(new Error(content));
+
+            let documentDom = new DOMParser().parseFromString(content, "text/html");
             
             userFile = {
-                html_contents: content,
+                html_contents: documentDom.body.innerHTML,
                 name: file.name
             };
             
             event.target.value = "";
-            createUserFile(userFile);
+            try{
+                createUserFile(userFile);
+            }
+            catch(e){
+                alert("Aviso! Ficheiro grande demais para ser guardado no browser. Poderá trabalhar nele à mesma.");
+            }
             this.props.setUserFile(userFile);
 
         }).catch(e => {
@@ -73,42 +103,18 @@ export default class SelectFile extends React.Component<SelectFileProps,{list: U
     }
 
     render(): React.ReactNode {
-        return (<div className="container">
-            <table className="table table-sm">
-                <thead>
-                    <tr>
-                        <th>Ficheiros Locais</th><th>Número de caracteres</th><th>Acções</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {this.state.list.map(f => <SavedFileRow file={f} setUserFile={this.props.setUserFile} />)}
-                    <tr>
-                        <td><label role="button" htmlFor="file">Adicionar ficheiro</label></td>
-                        <td></td>
-                        <td><input id="file" type="file" name="file" onInput={this.onFile.bind(this)}></input> </td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>)
+        return (<>
+            <label htmlFor="file" role="button"><i className="bi bi-plus-circle"></i> Adicionar Ficheiro</label>
+            <input hidden type="file" name="file" id="file" onInput={this.onFile}></input>
+        </>);
     }
 }
 
-type SavedFileRowProps = {
-    file: UserFile,
-    setUserFile: (file: UserFile) => void
-}
-
-export class SavedFileRow extends React.Component<SavedFileRowProps>{
+export class UserFileActions extends React.Component<UserFileActionsProps>{
     render(): React.ReactNode {
-        return (<tr>
-            <td>{this.props.file.name}</td>
-            <td>{this.props.file.html_contents.length}</td>
-            <td>
-                <div className="d-flex">
-                    <i className="bi bi-play-fill" role="button" onClick={() => this.props.setUserFile(this.props.file)}></i>
-                    <i className="bi bi-x" role="button" onClick={() => deleteUserFile(this.props.file)}></i>
-                </div>
-            </td>
-        </tr>);
+        return (<>
+            <i className="bi bi-pencil-fill m-1 p-1 text-primary" role="button" onClick={() => this.props.setUserFile(this.props.file)}></i>
+            <i className="bi bi-trash m-1 p-1 text-danger" role="button" onClick={() => deleteUserFile(this.props.file)}></i>
+        </>);
     }
 }

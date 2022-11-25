@@ -21,23 +21,46 @@
     cursor: pointer;
 }
 
-  /* ===== Scrollbar CSS ===== */
-  /* Firefox */
-  * {
-    scrollbar-width: none;
-    scrollbar-color: var(--primary-gold) var(--secondary-gold);
-  }
+img{
+  max-width: 100%;
+}
 
-  /* Chrome, Edge, and Safari */
-  *::-webkit-scrollbar {
-    width: 10px;
-  }
+[data-anonimize-first=true]:before {
+  content: attr(data-anonimize-type);
+  background: white;
+  padding: 0.1em;
+  margin: 0.2em;
+  font-size: 0.7rem;
+  border-radius: 0.2em;
+  font-weight: bold;
+}
 
-  *::-webkit-scrollbar-track {
-    background: var(--secondary-gold);
-  }
+[data-anonimize-type] {
+  background: pink;
+  padding: 0.1em;
+}
 
-  *::-webkit-scrollbar-thumb {
-    background-color: var(--primary-gold);
-    border-radius: 10px;
-  }
+/* ===== Scrollbar CSS ===== */
+/* Firefox */
+* {
+  scrollbar-width: none;
+  scrollbar-color: var(--primary-gold) var(--secondary-gold);
+}
+
+/* Chrome, Edge, and Safari */
+*::-webkit-scrollbar {
+  width: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: var(--secondary-gold);
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: var(--primary-gold);
+  border-radius: 10px;
+}
+
+.selected {
+  background-color: var(--secondary-gold);
+}

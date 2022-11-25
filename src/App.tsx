@@ -7,7 +7,7 @@ function App() {
   const [userFile, setUserFile] = useState<UserFile | undefined>(undefined);
   return (
     <div className="App">
-      {userFile == null ? <SelectFile setUserFile={setUserFile} /> : <Anonimize setUserFile={setUserFile} file={userFile} />}
+      {userFile == null ? <SelectFile key="select" setUserFile={setUserFile} /> : <Anonimize key="anonimize" setUserFile={setUserFile} file={userFile} />}
     </div>
   );
 }
