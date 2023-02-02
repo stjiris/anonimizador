@@ -27,17 +27,16 @@ img{
 
 [data-anonimize-first=true]:before {
   content: attr(data-anonimize-type);
+  display: inline-block;
+  padding: 0.35em 0.65em;
+  font-size: .75em;
+  font-weight: 700;
+  line-height: 1;
   background: white;
-  padding: 0.1em;
-  margin: 0.2em;
-  font-size: 0.7rem;
-  border-radius: 0.2em;
-  font-weight: bold;
-}
-
-[data-anonimize-type] {
-  background: pink;
-  padding: 0.1em;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: baseline;
+  border-radius: 0.25rem;
 }
 
 /* ===== Scrollbar CSS ===== */

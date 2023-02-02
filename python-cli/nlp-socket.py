@@ -46,5 +46,6 @@ if __name__ == '__main__':
                     }
         if not currEnt is None:
             printMessage("Entity", currEnt)
+            currEnt = None
 
 

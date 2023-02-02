@@ -1,6 +1,6 @@
 export const EntTypeColors: any = {
     "default": "#eb8634",
-    "PES": "#84d2ff",
+    "PER": "#84d2ff",
     "ORG": "#00ffa2",
     "DAT": "#66fc03",
     "LOC": "#fc03c2",

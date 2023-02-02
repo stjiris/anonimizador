@@ -1,7 +1,7 @@
 import React from 'react'
+import { AnonimizeStateState } from '../types/AnonimizeState'
 import { AnonimizableEnt, EntType } from '../types/EntType'
 import { TokenSelection } from '../types/Selection'
-import {UserFile} from '../types/UserFile'
 
 
 
@@ -10,6 +10,7 @@ export interface AnonimizeContentProps {
     ents: AnonimizableEnt[]
     types: EntType[]
     onEntity: (ent: AnonimizableEnt) => void
+    anonimizeState: AnonimizeStateState
 }
 
 export interface AnonimizeContentState {
@@ -31,7 +32,7 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
                 sel = null
             }
         }
-        if( sel != null ){
+        if( sel !== null ){
             let startOffset = parseInt(sel.getRangeAt(0).startContainer.parentElement?.dataset.offset || "-1");
             let endOffset = parseInt(sel.getRangeAt(0).endContainer.parentElement?.dataset.offset || "-1") + (sel.getRangeAt(0).endContainer.parentElement?.textContent?.length || 0);
             if( startOffset >= 0 && endOffset >= 0){
@@ -52,7 +53,7 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
             }
         }
 
-        if( this.state.selection != null && sel == null ){
+        if( this.state.selection !== null && sel === null ){
             this.setState({selection: undefined})
         }
     }
@@ -68,7 +69,7 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
         let list = [];
         let offset = 0;
         for(let i=0; i < this.props.doc.childNodes.length; i++){
-            list.push(<AnonimizeBlock key={i} selection={this.state.selection} element={this.props.doc.childNodes[i]} offset={offset} ents={this.props.ents} />)
+            list.push(<AnonimizeBlock key={i} selection={this.state.selection} element={this.props.doc.childNodes[i]} offset={offset} ents={this.props.ents} anonimizeState={this.props.anonimizeState}/>)
             offset += (this.props.doc.childNodes[i].textContent || "").length;
         }
         return <>
@@ -86,7 +87,8 @@ interface AnonimizeBlockProps{
     element: ChildNode
     selection: TokenSelection | undefined
     offset: number
-    ents: AnonimizableEnt[]
+    ents: AnonimizableEnt[],
+    anonimizeState: AnonimizeStateState
 }
 
 class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
@@ -94,13 +96,13 @@ class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
     render(): React.ReactNode {
         let elmt = this.props.element;
 
-        if( elmt.nodeType == Node.TEXT_NODE ){
+        if( elmt.nodeType === Node.TEXT_NODE ){
             let elmtStr = elmt.nodeValue || ""; // should never be null tho...
             let tokensElems = [];
             let suboffset = 0;
             let tokens = elmtStr.split(/(?=[^A-Za-zÀ-ÖØ-öø-ÿ0-9])|(?<=[^A-Za-zÀ-ÖØ-öø-ÿ0-9])/);
             for( let token of tokens ){
-                tokensElems.push(<AnonimizeToken key={suboffset} string={token} selection={this.props.selection} offset={this.props.offset+suboffset} ents={this.props.ents} />);
+                tokensElems.push(<AnonimizeToken key={suboffset} string={token} selection={this.props.selection} offset={this.props.offset+suboffset} ents={this.props.ents} anonimizeState={this.props.anonimizeState} />);
                 suboffset+=token.length;
             }
             return tokensElems;
@@ -112,7 +114,7 @@ class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
         let r = [];
         let suboffset = 0;
         for(let i = 0; i < elmt.childNodes.length; i++){
-            r.push(<AnonimizeBlock key={i} selection={this.props.selection} element={elmt.childNodes[i]} offset={this.props.offset + suboffset} ents={this.props.ents}/>)
+            r.push(<AnonimizeBlock key={i} selection={this.props.selection} element={elmt.childNodes[i]} offset={this.props.offset + suboffset} ents={this.props.ents} anonimizeState={this.props.anonimizeState}/>)
             suboffset += (elmt.childNodes[i].textContent || "").length
         }
         
@@ -132,13 +134,13 @@ class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
             attrs['className'] = c;
         }
 
-        if( Tag == 'a' && attrs['href'] && !attrs['href'].startsWith('#')){
+        if( Tag === 'a' && attrs['href'] && !attrs['href'].startsWith('#')){
             attrs['target'] = '_blank'; // prevent user to exit page
         }
 
         attrs["ref"] = this.blockRef;
 
-        if( r.length == 0 ){
+        if( r.length === 0 ){
             return React.createElement(Tag, attrs);
         }
         else{
@@ -152,26 +154,78 @@ type AnonimizeTokenProps = {
     selection: TokenSelection | undefined
     offset: number
     ents: AnonimizableEnt[]
+    anonimizeState: AnonimizeStateState
 }
 
 class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
     render(): React.ReactNode {
+        // User Selected
         let selected = this.props.selection && this.props.offset >= this.props.selection.start && this.props.offset <= this.props.selection.end;
-        let isPartAnonimize = this.props.ents.find( ent => ent.offsets.some(r => r.start <= this.props.offset && this.props.offset + this.props.string.length-1 <= r.end-1 ))
+
+        // Token Anonimized
+        let isPartAnonimize = null; 
+        let isPartAnonimizeOffset = null;
+        for( let ent of this.props.ents ){
+            for(let offset of ent.offsets){
+                if(offset.start <= this.props.offset && this.props.offset + this.props.string.length <= offset.end){
+                    isPartAnonimizeOffset = offset;
+                    isPartAnonimize = ent;
+                    break;
+                }
+            }
+            if( isPartAnonimize ){
+                break
+            }
+        }
 
         let dataAttrs: {[_:string]: string} = {
             'data-offset': this.props.offset.toString()
         };
 
-        if( isPartAnonimize ){
+        
+        if( isPartAnonimize && isPartAnonimizeOffset ){
             dataAttrs['data-anonimize-cod'] = isPartAnonimize.cod;
             dataAttrs['data-anonimize-type'] = isPartAnonimize.type.name;
-            if( isPartAnonimize.offsets.some( r => r.start == this.props.offset) ){
+            dataAttrs['data-anonimize-color'] = isPartAnonimize.type.color;
+            dataAttrs['data-anonimize-offset-start'] = isPartAnonimizeOffset.start.toString()
+            dataAttrs['data-anonimize-offset-end'] = isPartAnonimizeOffset.end.toString()
+            if( isPartAnonimizeOffset.start === this.props.offset ){
                 dataAttrs['data-anonimize-first'] = "true";
+            }
+            if(  this.props.offset === isPartAnonimizeOffset.end-this.props.string.length ){
+                dataAttrs['data-anonimize-last'] = "true";
             }
         }
 
-        return <span className={selected ? 'selected' : ''} {...dataAttrs}>{this.props.string}</span>;
+        /*if( isPartAnonimize ){
+            if( dataAttrs['data-anonimize-first'] === "true" ){
+            }
+            else{
+                return <span>{this.props.string}</span>;
+            }
+        }
+        else{
+            return <span>{this.props.string}</span>;
+        }*/
+
+        switch(this.props.anonimizeState){
+            case AnonimizeStateState.ANONIMIZED:
+                if( isPartAnonimize && 'data-anonimize-first' in dataAttrs ){
+                    return isPartAnonimize.cod;
+                }
+                else if( isPartAnonimize ){
+                    return ""
+                }
+                else{
+                    return this.props.string
+                }
+            case AnonimizeStateState.ORIGINAL:
+                return this.props.string;
+            case AnonimizeStateState.TAGGED:
+                return <span className={selected ? 'selected' : ''} {...dataAttrs}>{this.props.string}</span>;
+            default:
+                return "";
+        }
     }
 }
 

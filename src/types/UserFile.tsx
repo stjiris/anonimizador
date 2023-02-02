@@ -1,10 +1,11 @@
-export interface UserFileProp {
-    file: UserFile
-}
+import { AnonimizableEnt } from "./EntType";
+
 
 export interface UserFile {
     name: string
     html_contents: string
+    size: number
+    ents: AnonimizableEnt[]
 }
 
 export function isUserFile(obj: any): obj is UserFile {

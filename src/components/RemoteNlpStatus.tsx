@@ -1,4 +1,3 @@
-import { text } from "node:stream/consumers";
 import React from "react";
 import { AnonimizableEnt } from "../types/EntType";
 
@@ -89,7 +88,7 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
     }
 
     render(): React.ReactNode {
-        return !this.state.requested ? <a className="red-link fw-bold" role="button" onClick={this.runRemoteNlp}>Sugerir</a> :
+        return !this.state.requested ? <button className="red-link fw-bold" onClick={this.runRemoteNlp}>Sugerir</button> :
             <div>
                 {this.state.messages.map( o => <pre><code>{JSON.stringify(o)}</code></pre>)}
             </div>;

@@ -21,7 +21,7 @@ const process = require('process');
 const PYTHON_COMMAND = process.env.PYTHON_COMMAND || path.join(__dirname, "env/bin/python");
 
 app.get("*/types", (req, res) => {
-    let nerTypes = ["ORG", "LOC", "PES", "DAT"];
+    let nerTypes = ["ORG", "LOC", "PER", "DAT"];
     let patterns = readFileSync('patterns.csv').toString().trim().split("\n").slice(1);
     for( let linePattern of patterns ){
         let label = JSON.parse(linePattern.split("\t")[1]);
@@ -47,6 +47,28 @@ app.post("*/html", upload.single('file'), (req, res) => {
             res.status(500).end();
         }
         rmSync(req.file.path);
+    })
+})
+
+app.post("*/docx", upload.single('file'), (req, res) => {
+    let out = path.join(os.tmpdir(), `${Date.now()}.docx`)
+    let subproc = spawn(PYTHON_COMMAND,["python-cli/inverse-pandoc.py", req.file.path, out], {...process.env, PYTHONIOENCODING: 'utf-8', PYTHONLEGACYWINDOWSSTDIO: 'utf-8' })
+    subproc.on("error", (err) => {
+        console.log(err);  
+    })
+    subproc.stderr.on('data', (err) => {
+        process.stderr.write(`ERROR: spawn: ${subproc.spawnargs.join(' ')}: ${err.toString()}`)
+    });
+    subproc.on('close', (code) => {
+        console.log("spawn: Exited with",code)
+        if( code != 0 ){
+            res.status(500).end();
+        }
+        res.sendFile(out);
+        setTimeout(() => {
+            rmSync(out);
+            rmSync(req.file.path);
+        }, 3000)
     })
 })
 

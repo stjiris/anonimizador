@@ -29,7 +29,8 @@ export default class SelectFile extends React.Component<SelectFileProps,SelectFi
     render(): React.ReactNode {
         let cols: MRT_ColumnDef[] = [
             {header: "Ficheiros Locais", accessorKey: "name"},
-            {header: "Número de Caracteres", accessorKey: "html_contents.length"}
+            {header: "Número de Caracteres", accessorKey: "size"},
+            {header: "Número de Entidade", accessorKey: "ents.length"},
         ]
 
         return (<MaterialReactTable 
@@ -82,7 +83,9 @@ export class AddUserFileAction extends React.Component<SelectFileProps>{
             
             userFile = {
                 html_contents: documentDom.body.innerHTML,
-                name: file.name
+                name: file.name,
+                size: documentDom.body.innerHTML.length,
+                ents: []
             };
             
             event.target.value = "";
