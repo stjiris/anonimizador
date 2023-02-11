@@ -72,6 +72,12 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
             list.push(<AnonimizeBlock key={i} selection={this.state.selection} element={this.props.doc.childNodes[i]} offset={offset} ents={this.props.ents} anonimizeState={this.props.anonimizeState}/>)
             offset += (this.props.doc.childNodes[i].textContent || "").length;
         }
+        /*
+         TODO Several AnonimizaeTooltip
+          - The current one allows to create more entities,
+          - We need one to: remove current entiti(es) selected
+          - ...
+        */
         return <>
             <div id="content" ref={this.contentRef}>{list}</div>
             <AnonimizeTooltip 

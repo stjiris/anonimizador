@@ -2,7 +2,6 @@ import spacy
 import re
 import sys
 import csv
-spacy_model = "../model-best"
 
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
 PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A-Z0-9]*"
@@ -76,9 +75,8 @@ def remove_pattern(p, ents):
             new_list.append(e)
     return new_list
 
-def nlp(text):
-    snlp = spacy.load(spacy_model)
-    doc = snlp(text)
+def nlp(text, model):
+    doc = model(text)
     ents = []
     for ent in excude_manual(doc.ents):
         ents.append(ent)

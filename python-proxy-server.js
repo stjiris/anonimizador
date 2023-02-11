@@ -72,6 +72,25 @@ app.post("*/docx", upload.single('file'), (req, res) => {
     })
 })
 
+app.post("*/from-text", upload.single('file'), (req, res) => {
+    let subproc = spawn(PYTHON_COMMAND,["python-cli/anonimizador-text.py", "-i", req.file.path,"-f","json"], {...process.env, PYTHONIOENCODING: 'utf-8', PYTHONLEGACYWINDOWSSTDIO: 'utf-8' }) // envs might not be needed outside windows world
+    subproc.on("error", (err) => {
+        console.log(err);
+        res.status(500).write(err.toString());
+        res.end();
+    })
+    subproc.stdout.pipe(res);
+    subproc.stderr.on('data', (err) => {
+        process.stderr.write(`[${new Date().toISOString()} STDERR python-cli/anonimizador-text] ${err.toString()}`)
+    });
+    subproc.on('close', (code) => {
+
+        process.stderr.write(`[EXIT ${new Date().toISOString()} python-cli/anonimizador-text] CODE: ${code}`)
+        rmSync(req.file.path);
+    })
+})
+
+
 app.post("*/", upload.single('file'), (req, res) => {
     let subproc = spawn(PYTHON_COMMAND,["black-box-cli.py", req.file.path], {...process.env, PYTHONIOENCODING: 'utf-8', PYTHONLEGACYWINDOWSSTDIO: 'utf-8' }) // envs might not be needed outside windows world
     subproc.on("error", (err) => {

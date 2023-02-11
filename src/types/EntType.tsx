@@ -1,3 +1,5 @@
+export type EntityType = "PER" | "ORG" | "DAT" | "LOC" | "PRO" | "MAT" | "CEP" | "TEL" | "EMA";
+
 export const EntTypeColors: any = {
     "default": "#eb8634",
     "PER": "#84d2ff",
@@ -26,4 +28,13 @@ export interface AnonimizableEnt{
     type: EntType
     cod: string
     text: string
+}
+
+export interface Entity {
+    id: string,
+    type: EntityType
+    offsets: OffsetRange[]
+    anonimize: boolean
+    previewText: string
+    functionCod: string
 }

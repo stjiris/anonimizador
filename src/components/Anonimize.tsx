@@ -28,20 +28,50 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     }
 
     addEntity = (ent: AnonimizableEnt | undefined) => {
+        console.log("Adding entity")
         if( !ent ) return;
-        let ents: AnonimizableEnt[] = this.state.ents.concat(ent);
-        ents.forEach( (ent, i) => ent.cod = `${i}${i}${i}` )
 
+        let currEnts = this.state.ents;
+        // Loop to remove "colisions"
+        for( let curr of currEnts ){
+            for( let off of curr.offsets ){
+                if( (ent.offsets[0].start >= off.start && ent.offsets[0].start < off.end) || (ent.offsets[0].end > off.start && ent.offsets[0].end <= off.end) ){
+                    // Entity colides with existing
+                    curr.type = ent.type;
+                    console.log("Colision - updating type")
+                    return;
+                }
+            }
+        }
+
+        let used = false;
+
+        // Loop to check similarities
+        for( let curr of currEnts ){
+            if( curr.text.trim() == ent.text.trim() && curr.type.name == ent.type.name ){
+                curr.offsets.push(ent.offsets[0])
+                used = true;
+                console.log("Used")
+                break;
+            }
+        }
+
+        // Add entity to end
+        if( !used ){
+            currEnts.push(ent)
+        }
+
+        // sort by start offset
+        currEnts.sort( (a,b) => a.offsets[0].start - b.offsets[0].start )
+        
         this.setState({
-            ents: ents
+            ents: currEnts
         })
     }
 
     componentDidUpdate(prevProps: Readonly<AnonimizeProps>, prevState: Readonly<AnonimizeState>, snapshot?: any): void {
-        if(this.state.ents !== prevState.ents){
-            this.props.file.ents = this.state.ents;
-            updateUserFile(this.props.file);
-        }
+        this.props.file.ents = this.state.ents;
+        updateUserFile(this.props.file);
     }
 
     downloadHtml = () => {
