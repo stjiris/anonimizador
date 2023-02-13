@@ -7,8 +7,6 @@ import { Entity } from "../types/Entity";
 import RemoteNlpStatus from "./RemoteNlpStatus";
 import { updateUserFile } from '../util/UserFileCRUDL';
 import { AnonimizeStateState } from "../types/AnonimizeState";
-import { EntityTypeI } from "../types/EntityType";
-import { typeColors } from "../util/typeColors";
 import { EntityPool } from "../types/EntityPool";
 
 interface AnonimizeProps{
@@ -67,7 +65,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     }
 
     render(): React.ReactNode {
-        let columns: MRT_ColumnDef<{} | Entity>[] = [{header: "#", accessorFn: (ent) => "offsets" in ent && Array.isArray(ent.offsets) ? ent.offsets.length : 0},{header: "Entidade", accessorKey: "previewText"}, {header: "Tipo", accessorKey: "type.type"}, {header: "Anonimização", accessorKey: "anonimizeFunctionName"}]
+        let columns: MRT_ColumnDef<Entity>[] = [{header: "#", accessorKey: "offsetsLength"},{header: "Entidade", accessorKey: "previewText"}, {header: "Tipo", accessorKey: "type.name"}, {header: "Anonimização", accessorKey: "anonimizeFunctionName"}]
         return (<div className="row container-fluid bg-dark m-0">
             <div className="col-8">
                 <div className="bg-white p-4 m-2 d-flex">

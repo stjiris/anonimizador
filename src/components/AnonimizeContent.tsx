@@ -2,9 +2,8 @@ import React from 'react'
 import { AnonimizeStateState } from '../types/AnonimizeState'
 import { Entity } from '../types/Entity'
 import { EntityPool } from '../types/EntityPool'
-import { EntityTypeI, EntityTypes, _EntityType } from '../types/EntityType'
+import { EntityTypeI, getEntityType, getEntityTypes, TypeNames } from '../types/EntityTypes'
 import { TokenSelection } from '../types/Selection'
-import { typeColors } from '../util/typeColors'
 
 
 
@@ -193,9 +192,9 @@ class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
 
         
         if( isPartAnonimize && isPartAnonimizeOffset ){
-            dataAttrs['data-anonimize-cod'] = isPartAnonimize.anonimizingFunction()(isPartAnonimize.previewText, isPartAnonimize.type, isPartAnonimize.index);
-            dataAttrs['data-anonimize-type'] = isPartAnonimize.type.type;
-            dataAttrs['data-anonimize-color'] = typeColors[isPartAnonimize.type.type];
+            dataAttrs['data-anonimize-cod'] = isPartAnonimize.anonimizingFunction()(isPartAnonimize.previewText, isPartAnonimize.type.name as TypeNames, isPartAnonimize.index);
+            dataAttrs['data-anonimize-type'] = isPartAnonimize.type.name;
+            dataAttrs['data-anonimize-color'] = isPartAnonimize.type.color
             dataAttrs['data-anonimize-offset-start'] = isPartAnonimizeOffset.start.toString()
             dataAttrs['data-anonimize-offset-end'] = isPartAnonimizeOffset.end.toString()
             if( isPartAnonimizeOffset.start === this.props.offset ){
@@ -247,7 +246,7 @@ interface AnonimizeTooltipProps {
 class AnonimizeTooltip extends React.Component<AnonimizeTooltipProps>{
     
     onClickType = (type: EntityTypeI, selection: TokenSelection) => {
-        let NewEnt: Entity = new Entity(selection.text, type.type);
+        let NewEnt: Entity = new Entity(selection.text, type.name);
         NewEnt.addOffset([{...selection}])
 
         this.props.pool.addEntity(NewEnt);
@@ -275,8 +274,8 @@ class AnonimizeTooltip extends React.Component<AnonimizeTooltipProps>{
         };
         return <div style={style}>
             <div className="d-flex flex-column gap-1 bg-white p-1 border">
-                {Object.entries(typeColors).map( ([name, color],i) => 
-                    <span key={i} role="button" style={{background: color}} onMouseDown={this.onClickType.bind(this, {type: name as _EntityType, subtype: ""}, sel)}>{name}</span>
+                {getEntityTypes().map( (type,i) => 
+                    <span key={i} role="button" style={{background: type.color}} onMouseDown={this.onClickType.bind(this, type, sel)}>{type.name}</span>
                 )}
                 <span role="button" className="bg-danger" onMouseDown={this.onClickRemove.bind(this, sel)}>Remover</span>
                 <span role="button" className="bg-gray">Cancelar</span>

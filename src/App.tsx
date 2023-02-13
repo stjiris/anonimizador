@@ -4,20 +4,20 @@ import Header from './components/Header';
 import SelectFile from './components/SelectFile';
 import { UserFile } from './types/UserFile';
 import BootstrapModal from './util/BootstrapModal';
-import { _EntityType, EntityTypeI, EntityTypes } from './types/EntityType';
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table';
-import { typeColors, updateColor } from './util/typeColors';
 import { MRT_Localization_PT } from 'material-react-table/locales/pt';
+import { EntityTypeI, getEntityTypes, restoreEntityTypes, TypeNames, updateEntityType } from './types/EntityTypes';
+import { functions } from './util/anonimizeFunctions';
 
 interface AppState{
 	userFile: UserFile | undefined
-	typeColorsMap: [string, string][]
+	entitieTypes: EntityTypeI[]
 }
 
 export default class App extends React.Component<{},AppState>{
 	state: AppState = {
 		userFile: undefined,
-		typeColorsMap: Object.entries(typeColors)
+		entitieTypes: getEntityTypes()
 	}
 	setUserFile = (userFile: UserFile | undefined) => {
 		this.setState({
@@ -29,7 +29,7 @@ export default class App extends React.Component<{},AppState>{
 		return <div className="App">
 			<style>
 				{/* Generate type colors */}
-				{this.state.typeColorsMap.map( ([name, color]) => `[data-anonimize-type="${name}"]{background:${color}}`)}
+				{this.state.entitieTypes.map( ({name, color}) => `[data-anonimize-type="${name}"]{background:${color}}`)}
 			</style>
 			<Header actions={[
 				<span className="nav-link red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-types">Tipos de Entidades</span>,
@@ -75,13 +75,16 @@ export default class App extends React.Component<{},AppState>{
 									positionActionsColumn="last"
 									editingMode="row"
 									onEditingRowSave={({exitEditingMode, values, row})=>{
-										updateColor(values["Tipo"], values["Cor"])
-										this.setState({typeColorsMap: Object.entries(typeColors)})
+										this.setState({
+											entitieTypes: updateEntityType(row.original.name as TypeNames, values.color, values.functionName)
+										});
 										exitEditingMode();
 									}}
 									columns={typeTableColumns} 
-									data={this.state.typeColorsMap}
-									localization={MRT_Localization_PT}/>
+									data={this.state.entitieTypes}
+									localization={MRT_Localization_PT}
+									renderTopToolbarCustomActions={() => (<button onClick={restoreEntityTypes}>Refazer</button>)}
+								/>
 				</div>
 				<div className="modal-footer">
 					<div className="flex-grow-1"></div>
@@ -93,19 +96,28 @@ export default class App extends React.Component<{},AppState>{
 }
 
 
-const typeTableColumns: MRT_ColumnDef<[string,string]>[] = [
+const typeTableColumns: MRT_ColumnDef<EntityTypeI>[] = [
 	{
 			header: "Tipo",
-			accessorFn: ([k,_v]) => k,
-			enableEditing: false,
-			Cell: ({row}) => <span className='badge text-body' style={{background: row.original[1]}}>{row.original[0]}</span>
-	},
-	{
-			header: "Cor",
-			accessorFn: ([_k,v]) => v,
+			accessorKey: "color",
 			enableEditing: true,
 			muiTableBodyCellEditTextFieldProps: {
-				type: "color"
+				type: "color",
+				name: "color"
+				
+			},
+			Cell: ({row}) => <span className='badge text-body' style={{background: row.original.color}}>{row.original.name}</span>
+	},
+	{
+		header: "Anonimização",
+		accessorKey: "functionName",
+		enableEditing: true,
+		muiTableBodyCellEditTextFieldProps: {
+			select: true,
+			children: Object.keys(functions).map( name => <option label={name} value={name}>{name}</option>),
+			SelectProps: {
+				native: true
 			}
+		}
 	}
 ]

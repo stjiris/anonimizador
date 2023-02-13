@@ -1,5 +1,5 @@
+import { EntityTypeI, getEntityType, TypeNames } from "./EntityTypes";
 import { AnonimizeFunction, AnonimizeFunctionName, functions } from "../util/anonimizeFunctions";
-import { EntityTypeI, _EntityType } from "./EntityType"
 
 export const normalizeEntityString = (str: string): string => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]/g, "");
 
@@ -12,34 +12,26 @@ export interface EntityI {
     id: string, // internal use
     type: EntityTypeI
     offsets: OffsetRange[]
+    offsetsLength: number // helper for Material-react-table
     previewText: string
-    anonimize: boolean
-    anonimizeFunctionName: AnonimizeFunctionName
-}
-
-export interface AnonimizedEntityI extends EntityI{
-    anonimize: true
-    anonimizeFunctionName: AnonimizeFunctionName
-}
-
-export interface ExposedEntityI extends EntityI{
-    anonimize: false
-    anonimizeFunctionName: "Não anonimizar"
+    anonimizeFunctionName?: AnonimizeFunctionName // use this if exists else use type
 }
 
 export class Entity implements EntityI {
     id: string;
     type: EntityTypeI;
     offsets: OffsetRange[];
+    offsetsLength: number;
     previewText: string;
-    anonimize: boolean = true
-    anonimizeFunctionName = "Tipo incremental" as AnonimizeFunctionName
+    anonimizeFunctionName?: AnonimizeFunctionName;
     index: number;
     
     constructor(txt: string, label: string){
         this.id = normalizeEntityString(txt) + label
-        this.type = {type: label as _EntityType, subtype: ""}
+        this.type = getEntityType(label as TypeNames)
+        this.anonimizeFunctionName = this.type.functionName;
         this.offsets = [];
+        this.offsetsLength = 0;
         this.previewText = txt
         this.index = -1
     }
@@ -48,20 +40,20 @@ export class Entity implements EntityI {
         // TODO: improve this by inlining insert?
         this.offsets.push(...offset);
         this.offsets.sort( (a, b) => a.start - b.start)
+        this.offsetsLength = this.offsets.length;
     }
 
     anonimizingFunction(): AnonimizeFunction{
-        return functions[this.anonimizeFunctionName]
+        return functions[this.anonimizeFunctionName || this.type.functionName]
     }
 
     static makeEntity(obj: EntityI, index: number): Entity {
-        let e = new Entity("","");
+        let e = new Entity(obj.previewText,obj.type.name);
         e.id = obj.id
-        e.type = obj.type
         e.offsets = obj.offsets
+        e.offsetsLength = obj.offsets.length;
         e.previewText = obj.previewText
-        e.anonimize = obj.anonimize
-        e.anonimizeFunctionName = obj.anonimizeFunctionName
+        e.anonimizeFunctionName = obj.anonimizeFunctionName || e.type.functionName
         e.index = index
         return e;
     }
