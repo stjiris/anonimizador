@@ -1,43 +1,42 @@
-import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table';
-import { MRT_Localization_PT } from 'material-react-table/locales/pt';
 import React from 'react';
 import Anonimize from './components/Anonimize';
 import Header from './components/Header';
 import SelectFile from './components/SelectFile';
-import { EntType, EntTypeColors } from './types/EntType';
 import { UserFile } from './types/UserFile';
 import BootstrapModal from './util/BootstrapModal';
-import MenuItem from '@mui/material/MenuItem';
+import { _EntityType, EntityTypeI, EntityTypes } from './types/EntityType';
+import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table';
+import { typeColors, updateColor } from './util/typeColors';
+import { MRT_Localization_PT } from 'material-react-table/locales/pt';
 
 interface AppState{
-	types: EntType[]
 	userFile: UserFile | undefined
+	typeColorsMap: [string, string][]
 }
 
 export default class App extends React.Component<{},AppState>{
 	state: AppState = {
 		userFile: undefined,
-		types: []
+		typeColorsMap: Object.entries(typeColors)
 	}
 	setUserFile = (userFile: UserFile | undefined) => {
 		this.setState({
 			userFile
 		})
 	}
-	
-    componentDidMount(): void {
-        fetch("./types").then(r => r.json())
-			.then((types: string[]) => this.setState({types: types.map(s => ({name: s, color: s in EntTypeColors ? EntTypeColors[s] : EntTypeColors.default}))}));
-    }
 
 	render(): React.ReactNode {
 		return <div className="App">
+			<style>
+				{/* Generate type colors */}
+				{this.state.typeColorsMap.map( ([name, color]) => `[data-anonimize-type="${name}"]{background:${color}}`)}
+			</style>
 			<Header actions={[
 				<span className="nav-link red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-types">Tipos de Entidades</span>,
 				<i className='bi bi-dot red-link fw-bold'></i>,
 				<span className="nav-link fs-6 bg-transparent red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-about">Sobre</span>
 			]}/>
-			{this.state.userFile == null ? <SelectFile key="select" setUserFile={this.setUserFile} /> : <Anonimize key="anonimize" setUserFile={this.setUserFile} file={this.state.userFile} types={this.state.types} />}
+			{this.state.userFile == null ? <SelectFile key="select" setUserFile={this.setUserFile} /> : <Anonimize key="anonimize" setUserFile={this.setUserFile} file={this.state.userFile} />}
 			<BootstrapModal id="modal-about">
 				<div className="modal-header">
 					<div>
@@ -60,7 +59,7 @@ export default class App extends React.Component<{},AppState>{
 			</BootstrapModal>
 			<BootstrapModal id="modal-types">
 				<div className="modal-header">
-						<div><h5 className="modal-title" id="modal-types-label">Tipos de entidades</h5></div>
+					<div><h5 className="modal-title" id="modal-types-label">Tipos de entidades</h5></div>
 				</div>
 				<div className="modal-body p-0">
 					<MaterialReactTable
@@ -76,15 +75,12 @@ export default class App extends React.Component<{},AppState>{
 									positionActionsColumn="last"
 									editingMode="row"
 									onEditingRowSave={({exitEditingMode, values, row})=>{
-										console.log(values, row)
-										this.setState({
-											types: this.state.types.map( o => o.name !== row.original.name ? o : {name: row.original.name, color: values.color} )
-										})
+										updateColor(values["Tipo"], values["Cor"])
+										this.setState({typeColorsMap: Object.entries(typeColors)})
 										exitEditingMode();
 									}}
-									renderTopToolbarCustomActions={(_) => (<del>Adicionar</del>)}
 									columns={typeTableColumns} 
-									data={this.state.types}
+									data={this.state.typeColorsMap}
 									localization={MRT_Localization_PT}/>
 				</div>
 				<div className="modal-footer">
@@ -96,30 +92,20 @@ export default class App extends React.Component<{},AppState>{
 	}
 }
 
-const typeTableColumns: MRT_ColumnDef<EntType>[] = [
+
+const typeTableColumns: MRT_ColumnDef<[string,string]>[] = [
 	{
 			header: "Tipo",
-			accessorKey: "name",
+			accessorFn: ([k,_v]) => k,
 			enableEditing: false,
-			Cell: ({row}) => <span className='badge text-body' style={{background: row.original.color}}>{row.original.name}</span>
+			Cell: ({row}) => <span className='badge text-body' style={{background: row.original[1]}}>{row.original[0]}</span>
 	},
 	{
 			header: "Cor",
-			accessorKey: "color",
+			accessorFn: ([_k,v]) => v,
 			enableEditing: true,
 			muiTableBodyCellEditTextFieldProps: {
 				type: "color"
-			}
-	},
-	{
-			header: "Código",
-			enableEditing: true,
-			muiTableBodyCellEditTextFieldProps: {
-				select: true,
-				children: [
-					<MenuItem value="TODO1">TODO1</MenuItem>,
-					<MenuItem value="TODO2">TODO2</MenuItem>
-				]
 			}
 	}
 ]

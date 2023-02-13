@@ -1,77 +1,33 @@
 import React from "react";
 import { UserFile } from "../types/UserFile";
-import MaterialReactTable from "material-react-table";
+import MaterialReactTable, { MRT_ColumnDef, MRT_TableInstance } from "material-react-table";
 import AnonimizeContent from "./AnonimizeContent";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
-import { AnonimizableEnt, EntType } from "../types/EntType";
+import { Entity } from "../types/Entity";
 import RemoteNlpStatus from "./RemoteNlpStatus";
 import { updateUserFile } from '../util/UserFileCRUDL';
 import { AnonimizeStateState } from "../types/AnonimizeState";
+import { EntityTypeI } from "../types/EntityType";
+import { typeColors } from "../util/typeColors";
+import { EntityPool } from "../types/EntityPool";
 
 interface AnonimizeProps{
     file: UserFile
     setUserFile: (file: UserFile | undefined) => void,
-    types: EntType[]
 }
 
 interface AnonimizeState{
-    ents: AnonimizableEnt[]
     anonimizeState: AnonimizeStateState
+    ents: Entity[]
 }
 
 export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeState>{
     contentRef: React.RefObject<AnonimizeContent> = React.createRef();
     doc: HTMLElement = new DOMParser().parseFromString(this.props.file.html_contents, "text/html").body;
+    pool: EntityPool = new EntityPool(this.props.file.ents);
     state: AnonimizeState = {
-        ents: this.props.file.ents || [],
-        anonimizeState: AnonimizeStateState.TAGGED
-    }
-
-    addEntity = (ent: AnonimizableEnt | undefined) => {
-        console.log("Adding entity")
-        if( !ent ) return;
-
-        let currEnts = this.state.ents;
-        // Loop to remove "colisions"
-        for( let curr of currEnts ){
-            for( let off of curr.offsets ){
-                if( (ent.offsets[0].start >= off.start && ent.offsets[0].start < off.end) || (ent.offsets[0].end > off.start && ent.offsets[0].end <= off.end) ){
-                    // Entity colides with existing
-                    curr.type = ent.type;
-                    console.log("Colision - updating type")
-                    return;
-                }
-            }
-        }
-
-        let used = false;
-
-        // Loop to check similarities
-        for( let curr of currEnts ){
-            if( curr.text.trim() == ent.text.trim() && curr.type.name == ent.type.name ){
-                curr.offsets.push(ent.offsets[0])
-                used = true;
-                console.log("Used")
-                break;
-            }
-        }
-
-        // Add entity to end
-        if( !used ){
-            currEnts.push(ent)
-        }
-
-        // sort by start offset
-        currEnts.sort( (a,b) => a.offsets[0].start - b.offsets[0].start )
-        
-        this.setState({
-            ents: currEnts
-        })
-    }
-
-    componentDidUpdate(prevProps: Readonly<AnonimizeProps>, prevState: Readonly<AnonimizeState>, snapshot?: any): void {
-        this.props.file.ents = this.state.ents;
-        updateUserFile(this.props.file);
+        anonimizeState: AnonimizeStateState.TAGGED,
+        ents: [...this.pool.entities]
     }
 
     downloadHtml = () => {
@@ -84,14 +40,34 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
         formData.append("file", htmlFile);
         
         fetch("./docx", {method:"POST", body: formData}).then( r => {
-            r.blob().then(blob => {
-                let file = URL.createObjectURL(blob);
-                window.open(file, "_blank");
-            })
+            if( r.status == 200 ){
+                r.blob().then(blob => {
+                    let file = URL.createObjectURL(blob);
+                    window.open(file, "_blank");
+                })
+            }
+            else{
+                alert( `Servidor mandou código: ${r.status} (${r.statusText})` )
+            }
         })
     }
 
+    onPoolChange = (): void => {
+        this.props.file.ents = this.pool.entities;
+        updateUserFile(this.props.file);
+        this.setState({ ents: [...this.pool.entities] })
+    }
+
+    componentDidMount(): void {
+        this.pool.onChange( this.onPoolChange )
+    }
+
+    componentWillUnmount(): void {
+        this.pool.offChange( this.onPoolChange )
+    }
+
     render(): React.ReactNode {
+        let columns: MRT_ColumnDef<{} | Entity>[] = [{header: "#", accessorFn: (ent) => "offsets" in ent && Array.isArray(ent.offsets) ? ent.offsets.length : 0},{header: "Entidade", accessorKey: "previewText"}, {header: "Tipo", accessorKey: "type.type"}, {header: "Anonimização", accessorKey: "anonimizeFunctionName"}]
         return (<div className="row container-fluid bg-dark m-0">
             <div className="col-8">
                 <div className="bg-white p-4 m-2 d-flex">
@@ -112,19 +88,15 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         </select>
                     </div>
                     <div>
-                        <RemoteNlpStatus onEntity={this.addEntity} doc={this.doc} />
+                        <RemoteNlpStatus pool={this.pool} doc={this.doc} />
                     </div>
                 </div>
                 <div className="bg-white p-4 m-2">
-                    <style>
-                        {/* Generate type colors */}
-                        {this.props.types.map( o => `[data-anonimize-type="${o.name}"]{background:${o.color}}`)}
-                    </style>
-                    <AnonimizeContent ref={this.contentRef} doc={this.doc} ents={this.state.ents} onEntity={this.addEntity} types={this.props.types} anonimizeState={this.state.anonimizeState}/>
+                    <AnonimizeContent ref={this.contentRef} doc={this.doc} pool={this.pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState}/>
                 </div>
             </div>
             <div className="col-4">
-                <div className="m-2">
+                <div className="m-2 position-sticky top-0">
                     <MaterialReactTable
                         key="ent-table"
                         enableRowSelection
@@ -134,7 +106,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         enableStickyHeader
                         enablePagination={false}
                         renderTopToolbarCustomActions={(_) => (<>Hello!</>)}
-                        columns={[{header: "Texto", accessorKey: "text"},{header: "Start Offset", accessorFn: (o) => o.offsets[0].start}, {header: "End Offset", accessorFn: (o) => o.offsets[0].end}]} 
+                        columns={columns} 
                         data={this.state.ents}
                         localization={MRT_Localization_PT}/>
                 </div>

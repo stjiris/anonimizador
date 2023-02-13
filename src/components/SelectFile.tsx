@@ -1,6 +1,6 @@
 import React from "react";
-import { createUserFile, deleteUserFile, readUserFile, listUserFile } from "../util/UserFileCRUDL";
-import { UserFile } from "../types/UserFile";
+import { createUserFile, deleteUserFile, readSavedUserFile, listUserFile } from "../util/UserFileCRUDL";
+import { loadSavedUserFile, SavedUserFile, UserFile } from "../types/UserFile";
 import MaterialReactTable, { MRT_ColumnDef } from "material-react-table";
 import {MRT_Localization_PT} from "material-react-table/locales/pt";
 
@@ -9,7 +9,7 @@ type SelectFileProps = {
 }
 
 type SelectFileState = {
-    list: UserFile[]
+    list: SavedUserFile[]
 }
 
 export default class SelectFile extends React.Component<SelectFileProps,SelectFileState>{
@@ -27,10 +27,10 @@ export default class SelectFile extends React.Component<SelectFileProps,SelectFi
     }
 
     render(): React.ReactNode {
-        let cols: MRT_ColumnDef[] = [
+        let cols: MRT_ColumnDef<SavedUserFile>[] = [
             {header: "Ficheiros Locais", accessorKey: "name"},
             {header: "Número de Caracteres", accessorKey: "size"},
-            {header: "Número de Entidade", accessorKey: "ents.length"},
+            {header: "Número de Entidades", accessorFn: (o) => o.ents.length},
         ]
 
         return (<MaterialReactTable 
@@ -49,7 +49,7 @@ export default class SelectFile extends React.Component<SelectFileProps,SelectFi
 }
 
 type UserFileActionsProps = {
-    file: UserFile,
+    file: SavedUserFile,
     setUserFile: (file: UserFile) => void
 }
 
@@ -63,14 +63,14 @@ export class AddUserFileAction extends React.Component<SelectFileProps>{
         let formData = new FormData();
         formData.append("file", file);
         
-        let userFile = readUserFile(file.name);
-        if( userFile != null ){
+        let savedUserFile = readSavedUserFile(file.name);
+        if( savedUserFile != null ){
             let usrConfirm = window.confirm("Existe um ficheiro guardado localmente com o mesmo nome. Confirma que quer apagar ficheiro antigo?");
             if( !usrConfirm ){
                 event.target.value = "";
                 return;
             }
-            deleteUserFile(userFile);
+            deleteUserFile(savedUserFile);
         }
         
         event.target.disabled = true;
@@ -81,12 +81,12 @@ export class AddUserFileAction extends React.Component<SelectFileProps>{
 
             let documentDom = new DOMParser().parseFromString(content, "text/html");
             
-            userFile = {
+            let userFile: UserFile = {
                 html_contents: documentDom.body.innerHTML,
                 name: file.name,
                 size: documentDom.body.innerHTML.length,
                 ents: []
-            };
+            } as UserFile;
             
             event.target.value = "";
             try{
@@ -116,7 +116,7 @@ export class AddUserFileAction extends React.Component<SelectFileProps>{
 export class UserFileActions extends React.Component<UserFileActionsProps>{
     render(): React.ReactNode {
         return (<>
-            <i className="bi bi-pencil-fill m-1 p-1 text-primary" role="button" onClick={() => this.props.setUserFile(this.props.file)}></i>
+            <i className="bi bi-pencil-fill m-1 p-1 text-primary" role="button" onClick={() => this.props.setUserFile(loadSavedUserFile(this.props.file))}></i>
             <i className="bi bi-trash m-1 p-1 text-danger" role="button" onClick={() => deleteUserFile(this.props.file)}></i>
         </>);
     }

@@ -1,15 +1,17 @@
 import React from 'react'
 import { AnonimizeStateState } from '../types/AnonimizeState'
-import { AnonimizableEnt, EntType } from '../types/EntType'
+import { Entity } from '../types/Entity'
+import { EntityPool } from '../types/EntityPool'
+import { EntityTypeI, EntityTypes, _EntityType } from '../types/EntityType'
 import { TokenSelection } from '../types/Selection'
+import { typeColors } from '../util/typeColors'
 
 
 
 export interface AnonimizeContentProps {
     doc: HTMLElement
-    ents: AnonimizableEnt[]
-    types: EntType[]
-    onEntity: (ent: AnonimizableEnt) => void
+    pool: EntityPool
+    ents: Entity[]
     anonimizeState: AnonimizeStateState
 }
 
@@ -19,7 +21,9 @@ export interface AnonimizeContentState {
 
 export default class AnonimizeContent extends React.Component<AnonimizeContentProps,AnonimizeContentState>{
     contentRef: React.RefObject<HTMLDivElement> = React.createRef();
-    state: AnonimizeContentState = { selection: undefined }
+    state: AnonimizeContentState = {
+        selection: undefined
+    }
 
     updateSelection = (ev: MouseEvent) => {
         let sel = window.getSelection();
@@ -81,9 +85,8 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
         return <>
             <div id="content" ref={this.contentRef}>{list}</div>
             <AnonimizeTooltip 
-                addEntity={this.props.onEntity}
+                pool={this.props.pool}
                 selection={this.state.selection}
-                types={this.props.types}
             />
         </>
     }
@@ -93,7 +96,7 @@ interface AnonimizeBlockProps{
     element: ChildNode
     selection: TokenSelection | undefined
     offset: number
-    ents: AnonimizableEnt[],
+    ents: Entity[],
     anonimizeState: AnonimizeStateState
 }
 
@@ -159,7 +162,7 @@ type AnonimizeTokenProps = {
     string: string
     selection: TokenSelection | undefined
     offset: number
-    ents: AnonimizableEnt[]
+    ents: Entity[]
     anonimizeState: AnonimizeStateState
 }
 
@@ -190,9 +193,9 @@ class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
 
         
         if( isPartAnonimize && isPartAnonimizeOffset ){
-            dataAttrs['data-anonimize-cod'] = isPartAnonimize.cod;
-            dataAttrs['data-anonimize-type'] = isPartAnonimize.type.name;
-            dataAttrs['data-anonimize-color'] = isPartAnonimize.type.color;
+            dataAttrs['data-anonimize-cod'] = isPartAnonimize.anonimizingFunction()(isPartAnonimize.previewText, isPartAnonimize.type, isPartAnonimize.index);
+            dataAttrs['data-anonimize-type'] = isPartAnonimize.type.type;
+            dataAttrs['data-anonimize-color'] = typeColors[isPartAnonimize.type.type];
             dataAttrs['data-anonimize-offset-start'] = isPartAnonimizeOffset.start.toString()
             dataAttrs['data-anonimize-offset-end'] = isPartAnonimizeOffset.end.toString()
             if( isPartAnonimizeOffset.start === this.props.offset ){
@@ -217,7 +220,7 @@ class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
         switch(this.props.anonimizeState){
             case AnonimizeStateState.ANONIMIZED:
                 if( isPartAnonimize && 'data-anonimize-first' in dataAttrs ){
-                    return isPartAnonimize.cod;
+                    return dataAttrs['data-anonimize-cod'];
                 }
                 else if( isPartAnonimize ){
                     return ""
@@ -236,25 +239,22 @@ class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
 }
 
 interface AnonimizeTooltipProps {
-    types: EntType[]
     selection: TokenSelection | undefined
-    addEntity: (ent: AnonimizableEnt) => void
+    pool: EntityPool
 }
 
 // <AnonimizeTooltip>
 class AnonimizeTooltip extends React.Component<AnonimizeTooltipProps>{
-    onClick = (type: EntType, selection: TokenSelection) => {
-        let NewEnt: AnonimizableEnt = {
-            cod: "AAA",
-            offsets: [{
-                ...selection
-            }],
-            text: selection.text,
-            type: type
-        }
+    
+    onClickType = (type: EntityTypeI, selection: TokenSelection) => {
+        let NewEnt: Entity = new Entity(selection.text, type.type);
+        NewEnt.addOffset([{...selection}])
 
-        this.props.addEntity(NewEnt);
-        console.log(NewEnt)
+        this.props.pool.addEntity(NewEnt);
+    }
+
+    onClickRemove = (selection: TokenSelection) => {
+        this.props.pool.removeEntity(selection.start, selection.end)
     }
 
     render(): React.ReactNode {
@@ -275,10 +275,11 @@ class AnonimizeTooltip extends React.Component<AnonimizeTooltipProps>{
         };
         return <div style={style}>
             <div className="d-flex flex-column gap-1 bg-white p-1 border">
-                {this.props.types.map( (o,i) => 
-                    <span key={i} role="button" style={{background: o.color}} onMouseDown={this.onClick.bind(this, o, sel)}>{o.name}</span>
+                {Object.entries(typeColors).map( ([name, color],i) => 
+                    <span key={i} role="button" style={{background: color}} onMouseDown={this.onClickType.bind(this, {type: name as _EntityType, subtype: ""}, sel)}>{name}</span>
                 )}
-                <span role="button" className="bg-danger">Cancelar</span>
+                <span role="button" className="bg-danger" onMouseDown={this.onClickRemove.bind(this, sel)}>Remover</span>
+                <span role="button" className="bg-gray">Cancelar</span>
             </div>
         </div>
     }

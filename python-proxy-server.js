@@ -63,6 +63,7 @@ app.post("*/docx", upload.single('file'), (req, res) => {
         console.log("spawn: Exited with",code)
         if( code != 0 ){
             res.status(500).end();
+            return;
         }
         res.sendFile(out);
         setTimeout(() => {

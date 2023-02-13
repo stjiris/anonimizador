@@ -1,9 +1,17 @@
 import React from "react";
-import { AnonimizableEnt } from "../types/EntType";
+import { Entity, normalizeEntityString } from "../types/Entity";
+import { EntityPool } from "../types/EntityPool";
+
+interface RemoteEntity {
+    text: string,
+    label_: string,
+    start_char: number,
+    end_char: number
+}
 
 interface RemoteNlpStatusProps {
-    onEntity: (ent: AnonimizableEnt) => void
     doc: HTMLElement
+    pool: EntityPool
 }
 
 interface RemoteNlpStatusState {
@@ -30,22 +38,22 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
         let fd = new FormData()
         fd.append("file", new Blob([text]), "input.txt")
 
-        let resArray = await fetch("/from-text", {
+        let resArray: RemoteEntity[] = await fetch("/from-text", {
             method: "POST",
             body: fd
         }).then( r => r.json() )
 
+        let entities: {[key: string]: Entity} = {};
         for( let ent of resArray ){
-            this.props.onEntity({
-                cod: "AAA",
-                text: ent.text,
-                type: {name: ent.label_, color: "red"},
-                offsets: [{
-                    start: ent.start_char,
-                    end: ent.end_char
-                }]
-            })
+            let id = normalizeEntityString(ent.text) + ent.label_
+            if( !(id in entities) ){
+                entities[id] = new Entity(ent.text, ent.label_);
+            }
+            entities[id].addOffset([{start: ent.start_char, end: ent.end_char}])
         }
+
+        this.props.pool.entities = Object.values(entities).sort((a, b) => a.offsets[0].start-b.offsets[0].start)
+        this.props.pool.updateOrder();
     }
 
     render(): React.ReactNode {

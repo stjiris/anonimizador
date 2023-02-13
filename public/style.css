@@ -39,6 +39,10 @@ img{
   border-radius: 0.25rem;
 }
 
+[data-anonimize-type] {
+  padding: 3.5px 0;
+}
+
 /* ===== Scrollbar CSS ===== */
 /* Firefox */
 * {
