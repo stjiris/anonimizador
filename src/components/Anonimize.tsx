@@ -115,9 +115,9 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         enablePagination={false}
                         renderTopToolbarCustomActions={(_) => [
                             <div className="d-flex w-100">
-                                <button className="btn btn-primary" disabled={Object.keys(this.state.selected).length > 1}><i className="bi bi-union"></i> Juntar</button>
-                                <button className="btn btn-warning mx-2" disabled={Object.keys(this.state.selected).length > 0}><i className="bi bi-exclude"></i> Separar</button>
-                                <button className="btn btn-danger" disabled={Object.keys(this.state.selected).length > 0}><i className="bi bi-trash"></i> Remover</button>
+                                <button className="btn btn-primary" disabled={Object.keys(this.state.selected).length <= 1}><i className="bi bi-union"></i> Juntar</button>
+                                <button className="btn btn-warning mx-2" disabled={Object.keys(this.state.selected).length == 0}><i className="bi bi-exclude"></i> Separar</button>
+                                <button className="btn btn-danger" disabled={Object.keys(this.state.selected).length == 0}><i className="bi bi-trash"></i> Remover</button>
                             </div>
                         ]}
                         onRowSelectionChange={(updaterOrValue) => {
