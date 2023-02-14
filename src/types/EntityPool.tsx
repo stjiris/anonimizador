@@ -29,7 +29,6 @@ export class EntityPool {
     }
 
     updateOrder(){
-        console.log("update pool")
         let counts: {[key in TypeNames]?: number } = {}
 
         this.entities.sort( (a,b) => a.offsets[0].start - b.offsets[0].start ).forEach( (e, i) => {

@@ -8,6 +8,7 @@ import RemoteNlpStatus from "./RemoteNlpStatus";
 import { updateUserFile } from '../util/UserFileCRUDL';
 import { AnonimizeStateState } from "../types/AnonimizeState";
 import { EntityPool } from "../types/EntityPool";
+import { RowSelectionState } from "@tanstack/table-core/build/lib/features/RowSelection";
 
 interface AnonimizeProps{
     file: UserFile
@@ -16,16 +17,19 @@ interface AnonimizeProps{
 
 interface AnonimizeState{
     anonimizeState: AnonimizeStateState
-    ents: Entity[]
+    ents: Entity[],
+    selected: RowSelectionState
 }
 
 export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeState>{
     contentRef: React.RefObject<AnonimizeContent> = React.createRef();
+    tableRef: React.RefObject<MRT_TableInstance<Entity>> = React.createRef();
     doc: HTMLElement = new DOMParser().parseFromString(this.props.file.html_contents, "text/html").body;
     pool: EntityPool = new EntityPool(this.props.file.ents);
     state: AnonimizeState = {
         anonimizeState: AnonimizeStateState.TAGGED,
-        ents: [...this.pool.entities]
+        ents: [...this.pool.entities],
+        selected: {}
     }
 
     downloadHtml = () => {
@@ -96,6 +100,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
             <div className="col-4">
                 <div className="m-2 position-sticky top-0">
                     <MaterialReactTable
+                        tableInstanceRef={this.tableRef}
                         key="ent-table"
                         enableRowSelection
                         enableColumnOrdering
@@ -103,7 +108,19 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         enableHiding={false}
                         enableStickyHeader
                         enablePagination={false}
-                        renderTopToolbarCustomActions={(_) => (<>Hello!</>)}
+                        renderTopToolbarCustomActions={(_) => [
+                            <div className="d-flex w-100">
+                                <button className="btn btn-primary" disabled={Object.keys(this.state.selected).length > 1}><i className="bi bi-union"></i>Juntar</button>
+                                <button className="btn btn-warning mx-2" disabled={Object.keys(this.state.selected).length > 0}><i className="bi bi-exclude"></i>Separar</button>
+                                <button className="btn btn-danger" disabled={Object.keys(this.state.selected).length > 0}><i className="bi bi-trash"></i>Remover</button>
+                            </div>
+                        ]}
+                        onRowSelectionChange={(updaterOrValue) => {
+                            if( typeof updaterOrValue == "function" ){
+                                this.setState({selected: updaterOrValue(this.state.selected)})
+                            }
+                        }}
+                        state={{rowSelection: this.state.selected}}
                         columns={columns} 
                         data={this.state.ents}
                         localization={MRT_Localization_PT}/>
