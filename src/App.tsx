@@ -83,7 +83,9 @@ export default class App extends React.Component<{},AppState>{
 									columns={typeTableColumns} 
 									data={this.state.entitieTypes}
 									localization={MRT_Localization_PT}
-									renderTopToolbarCustomActions={() => (<button onClick={restoreEntityTypes}>Refazer</button>)}
+									renderTopToolbarCustomActions={() => [
+										<button className="btn btn-warning" onClick={() => {restoreEntityTypes(); this.setState({entitieTypes: getEntityTypes()})}}>Repor</button>
+									]}
 								/>
 				</div>
 				<div className="modal-footer">

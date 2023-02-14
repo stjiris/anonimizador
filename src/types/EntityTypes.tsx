@@ -12,7 +12,7 @@ export interface EntityTypeI {
 
 export type TypeNames = "PER" | "ORG" | "DAT" | "LOC" | "PRO" | "MAT" | "CEP" | "TEL" | "EMA";
 
-const EntityTypesDefaults: {[key in TypeNames ] : EntityTypeI} = {
+const EntityTypesDefaults: {[key in TypeNames] : EntityTypeI} = {
     PER: {name: "PER", color: "#84d2ff", functionName: "Tipo incremental"},
     DAT: {name: "DAT", color: "#66fc03", functionName: "Ofuscação parcial"},
     ORG: {name: "ORG", color: "#00ffa2", functionName: "Tipo incremental"},
@@ -33,27 +33,37 @@ export function getEntityTypes(): EntityTypeI[]{
     if( !EntityTypesStored ){
         localStorage.setItem(EntityTypesVersion, JSON.stringify(EntityTypesDefaults))
         return Object.values(EntityTypesDefaults);
-    } 
+    }
 
     for( let key in EntityTypesDefaults ){
-        let currentDefault = EntityTypesDefaults[key as TypeNames];
-        // Check local overrides
-        if( key in EntityTypesStored ){
-            currentDefault.color = isColor( EntityTypesStored[key].color, currentDefault.color );
-            currentDefault.functionName = isAnonimizeFunctionName( EntityTypesStored[key], currentDefault.functionName)
+        if( !(key in EntityTypesStored) ){
+            EntityTypesStored[key] = {
+                name: key,
+                color: EntityTypesDefaults[key as TypeNames].color,
+                functionName: EntityTypesDefaults[key as TypeNames].functionName
+            }
+        }
+        else{
+            EntityTypesStored[key].name = key
+            EntityTypesStored[key].color = isColor( EntityTypesStored[key].color, EntityTypesDefaults[key as TypeNames].color )
+            EntityTypesStored[key].functionName = isAnonimizeFunctionName( EntityTypesStored[key].functionName, EntityTypesDefaults[key as TypeNames].functionName )
         }
     }
 
-    return Object.values(EntityTypesDefaults);
+    return Object.values(EntityTypesStored);
 }
 
 export function updateEntityType(key: TypeNames, color: string, functionName: AnonimizeFunctionName): EntityTypeI[]{
+    let EntityTypesStored = JSON.parse( localStorage.getItem(EntityTypesVersion) || "null" );
+    if( !EntityTypesStored ){
+        EntityTypesStored = JSON.parse(JSON.stringify(EntityTypesDefaults));
+    }
     
-    EntityTypesDefaults[key].color = color
-    EntityTypesDefaults[key].functionName = functionName
+    EntityTypesStored[key].color = color
+    EntityTypesStored[key].functionName = functionName
 
-    localStorage.setItem(EntityTypesVersion, JSON.stringify(EntityTypesDefaults));
-    return Object.values(EntityTypesDefaults);
+    localStorage.setItem(EntityTypesVersion, JSON.stringify(EntityTypesStored));
+    return Object.values(EntityTypesStored);
 }
 
 export function restoreEntityTypes(){
