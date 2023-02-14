@@ -172,7 +172,7 @@ class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
         let isPartAnonimizeOffset = null;
         for( let ent of this.props.ents ){
             for(let offset of ent.offsets){
-                if(offset.start <= this.props.offset && this.props.offset + this.props.string.length <= offset.end){
+                if(offset.start <= this.props.offset && this.props.offset + this.props.string.length-1 <= offset.end){
                     isPartAnonimizeOffset = offset;
                     isPartAnonimize = ent;
                     break;
@@ -198,7 +198,7 @@ class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
             if( isPartAnonimizeOffset.start === this.props.offset ){
                 dataAttrs['data-anonimize-first'] = "true";
             }
-            if(  this.props.offset === isPartAnonimizeOffset.end-this.props.string.length ){
+            if(  this.props.offset === isPartAnonimizeOffset.end-this.props.string.length+1 ){
                 dataAttrs['data-anonimize-last'] = "true";
             }
         }
