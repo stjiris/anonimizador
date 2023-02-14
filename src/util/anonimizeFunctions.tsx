@@ -1,12 +1,12 @@
 import { TypeNames } from "../types/EntityTypes";
 
-export type AnonimizeFunction = (str:string, type: TypeNames,idx:number) => string;
+export type AnonimizeFunction = (str:string, type: TypeNames,idx:number,typeIdx: number) => string;
 
 export const identity: AnonimizeFunction = (str) => str
-export const increment: AnonimizeFunction = (_str, type, idx) => type.toString()+idx.toString().padStart(4, '0')
+export const increment: AnonimizeFunction = (_str, type, _idx,  tidx) => type.toString()+tidx.toString().padStart(4, '0')
 export const ofuscate: AnonimizeFunction = (str, _type, _idx) => str[0] + str.slice(1).replace(/\S/g,".")
 
-export type AnonimizeFunctionName = "Não anonimizar" | "Tipo incremental" | "Ofuscação parcial"
+export type AnonimizeFunctionName = "Não anonimizar" | "Tipo incremental" | "Ofuscação parcial";
 
 export const functions: { [key in AnonimizeFunctionName]: AnonimizeFunction } = {
     "Não anonimizar": identity,

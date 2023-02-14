@@ -25,6 +25,7 @@ export class Entity implements EntityI {
     previewText: string;
     anonimizeFunctionName?: AnonimizeFunctionName;
     index: number;
+    typeIndex: number;
     
     constructor(txt: string, label: string){
         this.id = normalizeEntityString(txt) + label
@@ -33,6 +34,7 @@ export class Entity implements EntityI {
         this.offsetsLength = 0;
         this.previewText = txt
         this.index = -1
+        this.typeIndex = -1
     }
 
     addOffset(offset: OffsetRange[]){

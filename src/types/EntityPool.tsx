@@ -1,4 +1,5 @@
 import { Entity, EntityI } from "./Entity";
+import { TypeNames } from "./EntityTypes";
 
 export enum AddEntityDryRun {
     CHANGE_TYPE,
@@ -29,7 +30,15 @@ export class EntityPool {
 
     updateOrder(){
         console.log("update pool")
-        this.entities.sort( (a,b) => a.offsets[0].start - b.offsets[0].start ).forEach( (e, i) => e.index = i+1);
+        let counts: {[key in TypeNames]?: number } = {}
+
+        this.entities.sort( (a,b) => a.offsets[0].start - b.offsets[0].start ).forEach( (e, i) => {
+            e.index = i+1;
+            if( !counts[e.type] ){
+                counts[e.type] = 0;
+            }
+            e.typeIndex = ++counts[e.type]!;
+        });
         for( let l of this.listeners ){
             console.log(l)
             l();
