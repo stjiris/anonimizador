@@ -12,6 +12,7 @@ interface RemoteEntity {
 interface RemoteNlpStatusProps {
     doc: HTMLElement
     pool: EntityPool
+    disabled: boolean
 }
 
 interface RemoteNlpStatusState {
@@ -57,6 +58,6 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
     }
 
     render(): React.ReactNode {
-        return <button className="red-link fw-bold btn" onClick={this.runRemoteNlp} disabled={this.props.pool.entities.length > 0 || this.state.requested}>Sugerir</button>;
+        return <button className="red-link fw-bold btn" onClick={this.runRemoteNlp} disabled={this.props.pool.entities.length > 0 || this.state.requested || this.props.disabled}>Sugerir</button>;
     }
 }

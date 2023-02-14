@@ -85,7 +85,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                     </div>
                     <div className="flex-grow-1"></div>
                     <div>
-                        <button className="red-link fw-bold btn" onClick={this.downloadHtml}>Download</button>
+                        <button className="red-link fw-bold btn" onClick={this.downloadHtml} disabled={this.state.anonimizeState === AnonimizeStateState.TAGGED}>Download</button>
                     </div>
                     <div>
                         <select className="red-link fw-bold btn" onChange={(ev) => this.setState({anonimizeState: ev.target.value as AnonimizeStateState}) }>
@@ -95,7 +95,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         </select>
                     </div>
                     <div>
-                        <RemoteNlpStatus pool={this.pool} doc={this.doc} />
+                        <RemoteNlpStatus pool={this.pool} doc={this.doc} disabled={this.state.anonimizeState != AnonimizeStateState.TAGGED}/>
                     </div>
                 </div>
                 <div className="bg-white p-4 m-2">
@@ -115,9 +115,9 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         enablePagination={false}
                         renderTopToolbarCustomActions={(_) => [
                             <div className="d-flex w-100">
-                                <button className="btn btn-primary" disabled={Object.keys(this.state.selected).length > 1}><i className="bi bi-union"></i>Juntar</button>
-                                <button className="btn btn-warning mx-2" disabled={Object.keys(this.state.selected).length > 0}><i className="bi bi-exclude"></i>Separar</button>
-                                <button className="btn btn-danger" disabled={Object.keys(this.state.selected).length > 0}><i className="bi bi-trash"></i>Remover</button>
+                                <button className="btn btn-primary" disabled={Object.keys(this.state.selected).length > 1}><i className="bi bi-union"></i> Juntar</button>
+                                <button className="btn btn-warning mx-2" disabled={Object.keys(this.state.selected).length > 0}><i className="bi bi-exclude"></i> Separar</button>
+                                <button className="btn btn-danger" disabled={Object.keys(this.state.selected).length > 0}><i className="bi bi-trash"></i> Remover</button>
                             </div>
                         ]}
                         onRowSelectionChange={(updaterOrValue) => {
