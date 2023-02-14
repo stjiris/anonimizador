@@ -57,6 +57,6 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
     }
 
     render(): React.ReactNode {
-        return !this.state.requested ? <button className="red-link fw-bold" onClick={this.runRemoteNlp}>Sugerir</button> : <>Sugerido</>;
+        return <button className="red-link fw-bold btn" onClick={this.runRemoteNlp} disabled={this.props.pool.entities.length > 0 || this.state.requested}>Sugerir</button>;
     }
 }

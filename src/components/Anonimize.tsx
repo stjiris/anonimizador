@@ -45,11 +45,15 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
             if( r.status == 200 ){
                 r.blob().then(blob => {
                     let file = URL.createObjectURL(blob);
-                    window.open(file, "_blank");
+                    let stubA = document.createElement("a");
+                    stubA.href = file;
+                    stubA.target = "_blank";
+                    stubA.download = `${this.state.anonimizeState}_${this.props.file.name}`
+                    stubA.click();
                 })
             }
             else{
-                alert( `Servidor mandou código: ${r.status} (${r.statusText})` )
+                alert( `Servidor respondeu: ${r.status} (${r.statusText})` )
             }
         })
     }
@@ -72,18 +76,19 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
         let columns: MRT_ColumnDef<Entity>[] = [{header: "#", accessorKey: "offsetsLength"},{header: "Entidade", accessorKey: "previewText"}, {header: "Tipo", accessorKey: "type"}, {header: "Anonimização", accessorKey: "anonimizeFunctionName"}]
         return (<div className="row container-fluid bg-dark m-0">
             <div className="col-8">
-                <div className="bg-white p-4 m-2 d-flex">
+                <div className="bg-white py-3 px-4 m-2 d-flex">
                     <div className="mx-2">
-                        <span className="text-danger" role="button" onClick={() => this.props.setUserFile(undefined)}><i className="bi bi-x"></i> Fechar</span>
+                        <button className="btn red-link fw-bold" onClick={() => this.props.setUserFile(undefined)}><i className="bi bi-x"></i> Fechar</button>
                     </div>
                     <div className="mx-2">
-                        <code className="text-body">{this.props.file.name}</code>
+                        <span className="text-body btn">{this.props.file.name}</span>
+                    </div>
+                    <div className="flex-grow-1"></div>
+                    <div>
+                        <button className="red-link fw-bold btn" onClick={this.downloadHtml}>Download</button>
                     </div>
                     <div>
-                        <a className="red-link fw-bold" role="button" onClick={this.downloadHtml}>Download</a>
-                    </div>
-                    <div>
-                        <select onChange={(ev) => this.setState({anonimizeState: ev.target.value as AnonimizeStateState}) }>
+                        <select className="red-link fw-bold btn" onChange={(ev) => this.setState({anonimizeState: ev.target.value as AnonimizeStateState}) }>
                             <option value={AnonimizeStateState.ORIGINAL}>{AnonimizeStateState.ORIGINAL}</option>
                             <option selected value={AnonimizeStateState.TAGGED}>{AnonimizeStateState.TAGGED}</option>
                             <option value={AnonimizeStateState.ANONIMIZED}>{AnonimizeStateState.ANONIMIZED}</option>
