@@ -39,15 +39,12 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
             let startOffset = parseInt(sel.getRangeAt(0).startContainer.parentElement?.dataset.offset || "-1");
             let endOffset = parseInt(sel.getRangeAt(0).endContainer.parentElement?.dataset.offset || "-1") + (sel.getRangeAt(0).endContainer.parentElement?.textContent?.length || 0);
             if( startOffset >= 0 && endOffset >= 0){
-                let text = "";
-                for(let i = startOffset; i <= endOffset; i++){
-                    text += document.querySelector(`[data-offset="${i}"]`)?.textContent || ""
-                }
+                let text = Array.from(document.querySelectorAll(`[data-offset]`) as NodeListOf<HTMLElement>).filter((e: HTMLElement) => parseInt(e.dataset.offset || "-1") >= startOffset && parseInt(e.dataset.offset || "-1") < endOffset ).map(e => e.textContent).join("")
                 this.setState({
                     selection: {
                         text: text,
                         start: startOffset,
-                        end: endOffset
+                        end: endOffset-1
                     }
                 })
             }
