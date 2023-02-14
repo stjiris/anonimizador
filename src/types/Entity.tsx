@@ -10,7 +10,7 @@ export interface OffsetRange{
 
 export interface EntityI {
     id: string, // internal use
-    type: EntityTypeI
+    type: TypeNames
     offsets: OffsetRange[]
     offsetsLength: number // helper for Material-react-table
     previewText: string
@@ -19,7 +19,7 @@ export interface EntityI {
 
 export class Entity implements EntityI {
     id: string;
-    type: EntityTypeI;
+    type: TypeNames;
     offsets: OffsetRange[];
     offsetsLength: number;
     previewText: string;
@@ -28,8 +28,7 @@ export class Entity implements EntityI {
     
     constructor(txt: string, label: string){
         this.id = normalizeEntityString(txt) + label
-        this.type = getEntityType(label as TypeNames)
-        this.anonimizeFunctionName = this.type.functionName;
+        this.type = label as TypeNames
         this.offsets = [];
         this.offsetsLength = 0;
         this.previewText = txt
@@ -44,16 +43,22 @@ export class Entity implements EntityI {
     }
 
     anonimizingFunction(): AnonimizeFunction{
-        return functions[this.anonimizeFunctionName || this.type.functionName]
+        if( this.anonimizeFunctionName ){
+            return functions[this.anonimizeFunctionName];
+        }
+        else{
+            let type = getEntityType(this.type);
+            return functions[type.functionName];
+        }
     }
 
     static makeEntity(obj: EntityI, index: number): Entity {
-        let e = new Entity(obj.previewText,obj.type.name);
+        let e = new Entity(obj.previewText,obj.type);
         e.id = obj.id
         e.offsets = obj.offsets
         e.offsetsLength = obj.offsets.length;
         e.previewText = obj.previewText
-        e.anonimizeFunctionName = obj.anonimizeFunctionName || e.type.functionName
+        e.anonimizeFunctionName = obj.anonimizeFunctionName
         e.index = index
         return e;
     }

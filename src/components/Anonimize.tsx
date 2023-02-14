@@ -65,7 +65,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     }
 
     render(): React.ReactNode {
-        let columns: MRT_ColumnDef<Entity>[] = [{header: "#", accessorKey: "offsetsLength"},{header: "Entidade", accessorKey: "previewText"}, {header: "Tipo", accessorKey: "type.name"}, {header: "Anonimização", accessorKey: "anonimizeFunctionName"}]
+        let columns: MRT_ColumnDef<Entity>[] = [{header: "#", accessorKey: "offsetsLength"},{header: "Entidade", accessorKey: "previewText"}, {header: "Tipo", accessorKey: "type"}, {header: "Anonimização", accessorKey: "anonimizeFunctionName"}]
         return (<div className="row container-fluid bg-dark m-0">
             <div className="col-8">
                 <div className="bg-white p-4 m-2 d-flex">

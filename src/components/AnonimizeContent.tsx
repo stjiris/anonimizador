@@ -192,9 +192,10 @@ class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
 
         
         if( isPartAnonimize && isPartAnonimizeOffset ){
-            dataAttrs['data-anonimize-cod'] = isPartAnonimize.anonimizingFunction()(isPartAnonimize.previewText, isPartAnonimize.type.name as TypeNames, isPartAnonimize.index);
-            dataAttrs['data-anonimize-type'] = isPartAnonimize.type.name;
-            dataAttrs['data-anonimize-color'] = isPartAnonimize.type.color
+            let type: EntityTypeI = getEntityType(isPartAnonimize.type);
+            dataAttrs['data-anonimize-cod'] = isPartAnonimize.anonimizingFunction()(isPartAnonimize.previewText, isPartAnonimize.type, isPartAnonimize.index);
+            dataAttrs['data-anonimize-type'] = type.name;
+            dataAttrs['data-anonimize-color'] = type.color;
             dataAttrs['data-anonimize-offset-start'] = isPartAnonimizeOffset.start.toString()
             dataAttrs['data-anonimize-offset-end'] = isPartAnonimizeOffset.end.toString()
             if( isPartAnonimizeOffset.start === this.props.offset ){

@@ -84,7 +84,7 @@ export default class App extends React.Component<{},AppState>{
 									data={this.state.entitieTypes}
 									localization={MRT_Localization_PT}
 									renderTopToolbarCustomActions={() => [
-										<button className="btn btn-warning" onClick={() => {restoreEntityTypes(); this.setState({entitieTypes: getEntityTypes()})}}>Repor</button>
+										<button className="btn btn-warning" onClick={() => this.setState({entitieTypes: restoreEntityTypes()})}>Repor</button>
 									]}
 								/>
 				</div>

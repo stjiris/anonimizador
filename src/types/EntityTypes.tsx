@@ -24,8 +24,17 @@ const EntityTypesDefaults: {[key in TypeNames] : EntityTypeI} = {
     EMA: {name: "EMA", color: "#f5d142", functionName: "Ofuscação parcial"}
 }
 
+const cache: {[key in TypeNames]?: EntityTypeI} = {}
+
 export function getEntityType(label: TypeNames): EntityTypeI{
-    return EntityTypesDefaults[label];
+    if( cache[label] !== undefined){
+        return cache[label] as EntityTypeI;
+    }
+    let types = getEntityTypes();
+    for( let t of types ){
+        cache[t.name as TypeNames] = t;
+    }
+    return cache[label] as EntityTypeI
 }
 
 export function getEntityTypes(): EntityTypeI[]{
@@ -61,14 +70,18 @@ export function updateEntityType(key: TypeNames, color: string, functionName: An
     
     EntityTypesStored[key].color = color
     EntityTypesStored[key].functionName = functionName
+    delete cache[key];
 
     localStorage.setItem(EntityTypesVersion, JSON.stringify(EntityTypesStored));
     return Object.values(EntityTypesStored);
 }
 
-export function restoreEntityTypes(){
-    // TODO: update without refresh
+export function restoreEntityTypes(): EntityTypeI[]{
     localStorage.removeItem(EntityTypesVersion);
+    for(let key in cache){
+        delete cache[key as TypeNames]
+    }
+    return getEntityTypes();
 }
 
 // https://stackoverflow.com/a/56266358 (adapted)
