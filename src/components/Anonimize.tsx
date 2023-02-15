@@ -17,8 +17,7 @@ interface AnonimizeProps{
 
 interface AnonimizeState{
     anonimizeState: AnonimizeStateState
-    ents: Entity[],
-    selected: RowSelectionState
+    ents: Entity[]
 }
 
 export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeState>{
@@ -28,33 +27,40 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     pool: EntityPool = new EntityPool(this.doc.textContent || "" ,this.props.file.ents);
     state: AnonimizeState = {
         anonimizeState: AnonimizeStateState.TAGGED,
-        ents: [...this.pool.entities],
-        selected: {}
+        ents: [...this.pool.entities]
+    }
+
+    selectedIndexes(): number[]{
+        if( !this.tableRef.current ) return [];
+        let state = this.tableRef.current.getState();
+
+        return Object.keys(state.rowSelection).map( k => parseInt(k) ).filter( k => !isNaN(k) )
+    }
+
+    removeTableSelection() {
+        if( !this.tableRef.current ) return;
+        let state = this.tableRef.current.getState();
+
+        this.tableRef.current.setState({...state, rowSelection: {}});
     }
 
 
     joinSelectedEntities = () => {
-        let indexes = Object.keys(this.state.selected).map( k => parseInt(k) ).filter( k => !isNaN(k) )
+        let indexes = this.selectedIndexes();
         this.pool.joinEntities(indexes);
-        this.setState({
-            selected: {}
-        })
+        this.removeTableSelection();
     }
 
     splitSelectedEntities = () => {
-        let indexes = Object.keys(this.state.selected).map( k => parseInt(k) ).filter( k => !isNaN(k) )
+        let indexes = this.selectedIndexes();
         this.pool.splitEntities(indexes);
-        this.setState({
-            selected: {}
-        })
+        this.removeTableSelection();
     }
 
     removeSelectedEntities = () => {
-        let indexes = Object.keys(this.state.selected).map( k => parseInt(k) ).filter( k => !isNaN(k) )
+        let indexes = this.selectedIndexes();
         this.pool.removeEntities(indexes);
-        this.setState({
-            selected: {}
-        });
+        this.removeTableSelection();
     }
 
     downloadHtml = () => {
@@ -98,7 +104,6 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     }
 
     render(): React.ReactNode {
-        let columns: MRT_ColumnDef<Entity>[] = [{header: "#", accessorKey: "offsetsLength",size: 10},{header: "Entidade", accessorKey: "previewText"}, {header: "Tipo", accessorKey: "type",size:10}, {header: "Anonimização", accessorKey: "anonimizeFunctionName"}]
         return (<div className="row container-fluid bg-dark m-0">
             <div className="col-8">
                 <div className="bg-white py-3 px-4 m-2 d-flex">
@@ -128,7 +133,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                 </div>
             </div>
             <div className="col-4">
-                <div className="m-2 position-sticky top-0">
+                <div className="mt-2 position-sticky top-0">
                     <MaterialReactTable
                         tableInstanceRef={this.tableRef}
                         key="ent-table"
@@ -138,17 +143,24 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         enableHiding={false}
                         enableStickyHeader
                         enablePagination={false}
-                        renderTopToolbarCustomActions={(_) => <div className="d-flex w-100">
-                                <button className="btn btn-primary" disabled={Object.keys(this.state.selected).length <= 1} onClick={this.joinSelectedEntities}><i className="bi bi-union"></i> Juntar</button>
-                                <button className="btn btn-warning mx-2" disabled={Object.keys(this.state.selected).length == 0} onClick={this.splitSelectedEntities}><i className="bi bi-exclude"></i> Separar</button>
-                                <button className="btn btn-danger" disabled={Object.keys(this.state.selected).length == 0} onClick={this.removeSelectedEntities}><i className="bi bi-trash"></i> Remover</button>
-                            </div>}
-                        onRowSelectionChange={(updaterOrValue) => {
-                            if( typeof updaterOrValue == "function" ){
-                                this.setState({selected: updaterOrValue(this.state.selected)})
-                            }
+                        renderTopToolbarCustomActions={(_) => {
+                            let selectedeKeys = this.selectedIndexes().length
+                            return <div className="d-flex w-100">
+                                <button className="btn btn-primary" disabled={selectedeKeys <= 1} onClick={this.joinSelectedEntities}><i className="bi bi-union"></i> Juntar</button>
+                                <button className="btn btn-warning mx-2" disabled={selectedeKeys == 0} onClick={this.splitSelectedEntities}><i className="bi bi-exclude"></i> Separar</button>
+                                <button className="btn btn-danger" disabled={selectedeKeys == 0} onClick={this.removeSelectedEntities}><i className="bi bi-trash"></i> Remover</button>
+                            </div>
                         }}
-                        state={{rowSelection: this.state.selected}}
+                        onRowSelectionChange={(updaterOrValue) => {
+                            let instance = this.tableRef.current;
+                            if( !instance ) return;
+                            let state = instance.getState();
+                            instance.setState({
+                                ...state,
+                                rowSelection: typeof updaterOrValue === "function" ? updaterOrValue(state.rowSelection) : updaterOrValue
+                            });
+                        }}
+                        initialState={{density: 'compact'}}
                         columns={columns} 
                         data={this.state.ents}
                         localization={MRT_Localization_PT}/>
@@ -157,3 +169,30 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
         </div>);
     }
 }
+
+let columns: MRT_ColumnDef<Entity>[] = [{
+    header: "#",
+    accessorKey: "offsetsLength",
+    size: 5,
+    enableColumnFilter: false,
+    enableColumnDragging: false,
+    enableColumnActions: false
+},
+{
+    header: "Entidade", 
+    accessorKey: "previewText",
+    maxSize: 20
+},
+{
+    header: "Tipo",
+    accessorKey: "type",
+    size:5
+},
+{
+    header: "Anonimização",
+    accessorKey: "anonimizeFunctionName",
+    maxSize: 20,
+    enableColumnFilter: false,
+    enableColumnDragging: false,
+    enableColumnActions: false
+}]
