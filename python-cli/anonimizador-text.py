@@ -14,26 +14,24 @@ import click
 def process(input_file, output_file, format, model):
     with input_file:
         contents = input_file.read()
-    match model:
-        case 'model-best':
-            model = spacy.load("./python-cli/model-best")
-        case 'spacy-pt':
-            model = spacy.load("pt_core_news_lg")
-        case 'none':
-            model = lambda txt: FakeDoc([], txt)
+    if model == 'model-best':
+        model = spacy.load("./python-cli/model-best")
+    if model == 'spacy-pt':
+        model = spacy.load("pt_core_news_lg")
+    if model == 'none':
+        model = lambda txt: FakeDoc([], txt)
 
     doc = nlp(contents, model)
     
     with output_file:
         entities = list({'text':e.text, 'label_': e.label_, 'start_char': e.start_char, 'end_char': e.end_char} for e in doc.ents)
-        match format:
-            case 'json':
-                json.dump(entities, output_file)
-            case 'csv':
-                writer = csv.DictWriter(output_file, ['text', 'label_','start_char','end_char'])
+        if format == 'json':
+            json.dump(entities, output_file)
+        if format == 'csv':
+            writer = csv.DictWriter(output_file, ['text', 'label_','start_char','end_char'])
 
-                writer.writeheader()
-                writer.writerows(entities)
+            writer.writeheader()
+            writer.writerows(entities)
 
 
 
