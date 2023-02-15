@@ -25,10 +25,29 @@ img{
   max-width: 100%;
 }
 
+[data-anonimize-type] {
+  padding: 0.4em 0em;
+}
+
+[data-anonimize-last=true]{
+  border-radius: 0 0.5em 0.5em 0;
+  padding-right: 0.4em;
+}
+
+[data-anonimize-first=true]{
+  border-radius: 0.5em 0 0 0.5em;
+  padding-left: 0.4em;
+}
+
+[data-anonimize-last=true][data-anonimize-first=true]{
+  border-radius: 0.5em 0.5em 0.5em 0.5em;
+}
+
 [data-anonimize-last=true]:after {
   content: attr(data-anonimize-type);
   display: inline-block;
   padding: 0.35em 0.65em;
+  margin: 0 0.35em;
   font-size: .75em;
   font-weight: 700;
   line-height: 1;
@@ -37,10 +56,6 @@ img{
   white-space: nowrap;
   vertical-align: baseline;
   border-radius: 0.25rem;
-}
-
-[data-anonimize-type] {
-  padding: 3.5px 0;
 }
 
 /* ===== Scrollbar CSS ===== */

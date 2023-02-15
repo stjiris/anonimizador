@@ -12,11 +12,14 @@ EXCLUDE = ['Tribunal','Réu','Reu','Ré','Supremo Tribunal de Justiça',"STJ","S
 EXCLUDE = [x.lower() for x in EXCLUDE]
 
 class FakeEntity:
-    def __init__(self,label,start,end,text):
+    def __init__(self,label,start,end,text: str):
+        soff = len(text) - len(text.lstrip())
+
         self.label_ = label
-        self.start_char = start
-        self.end_char = end
-        self.text = text
+        self.start_char = start+soff
+        self.text = text.strip()
+        self.end_char = self.start_char+len(self.text)
+        assert self.start_char + len(self.text) == self.end_char
 
 class FakeDoc:
     def __init__(self,ents, text):
