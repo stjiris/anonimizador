@@ -1,7 +1,8 @@
 import React from 'react'
+import { start } from 'repl'
 import { AnonimizeStateState } from '../types/AnonimizeState'
 import { Entity } from '../types/Entity'
-import { EntityPool } from '../types/EntityPool'
+import { AddEntityDryRun, EntityPool } from '../types/EntityPool'
 import { EntityTypeI, getEntityType, getEntityTypes, TypeNames } from '../types/EntityTypes'
 import { TokenSelection } from '../types/Selection'
 
@@ -16,12 +17,16 @@ export interface AnonimizeContentProps {
 
 export interface AnonimizeContentState {
     selection: TokenSelection | undefined
+    selectionWould: AddEntityDryRun | undefined
+    selectionAffects: number
 }
 
 export default class AnonimizeContent extends React.Component<AnonimizeContentProps,AnonimizeContentState>{
     contentRef: React.RefObject<HTMLDivElement> = React.createRef();
     state: AnonimizeContentState = {
-        selection: undefined
+        selection: undefined,
+        selectionWould: undefined,
+        selectionAffects: 0
     }
 
     updateSelection = (ev: MouseEvent) => {
@@ -40,12 +45,15 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
             let endOffset = parseInt(sel.getRangeAt(0).endContainer.parentElement?.dataset.offset || "-1") + (sel.getRangeAt(0).endContainer.parentElement?.textContent?.length || 0);
             if( startOffset >= 0 && endOffset >= 0){
                 let text = Array.from(document.querySelectorAll(`[data-offset]`) as NodeListOf<HTMLElement>).filter((e: HTMLElement) => parseInt(e.dataset.offset || "-1") >= startOffset && parseInt(e.dataset.offset || "-1") < endOffset ).map(e => e.textContent).join("")
+                let r = this.props.pool.addEntityDryRun(startOffset, endOffset-1, text)
                 this.setState({
                     selection: {
                         text: text,
                         start: startOffset,
                         end: endOffset-1
-                    }
+                    },
+                    selectionWould: r[0],
+                    selectionAffects: r[1]
                 })
             }
             else{
@@ -72,17 +80,13 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
             list.push(<AnonimizeBlock key={i} selection={this.state.selection} element={this.props.doc.childNodes[i]} offset={offset} ents={this.props.ents} anonimizeState={this.props.anonimizeState}/>)
             offset += (this.props.doc.childNodes[i].textContent || "").length;
         }
-        /*
-         TODO Several AnonimizaeTooltip
-          - The current one allows to create more entities,
-          - We need one to: remove current entiti(es) selected
-          - ...
-        */
         return <>
             <div id="content" ref={this.contentRef}>{list}</div>
             <AnonimizeTooltip 
                 pool={this.props.pool}
                 selection={this.state.selection}
+                selectionWould={this.state.selectionWould}
+                selectionAffects={this.state.selectionAffects}
             />
         </>
     }
@@ -203,17 +207,6 @@ class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
             }
         }
 
-        /*if( isPartAnonimize ){
-            if( dataAttrs['data-anonimize-first'] === "true" ){
-            }
-            else{
-                return <span>{this.props.string}</span>;
-            }
-        }
-        else{
-            return <span>{this.props.string}</span>;
-        }*/
-
         switch(this.props.anonimizeState){
             case AnonimizeStateState.ANONIMIZED:
                 if( isPartAnonimize && 'data-anonimize-first' in dataAttrs ){
@@ -236,6 +229,8 @@ class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
 }
 
 interface AnonimizeTooltipProps {
+    selectionWould: AddEntityDryRun | undefined
+    selectionAffects: number
     selection: TokenSelection | undefined
     pool: EntityPool
 }
@@ -244,10 +239,7 @@ interface AnonimizeTooltipProps {
 class AnonimizeTooltip extends React.Component<AnonimizeTooltipProps>{
     
     onClickType = (type: EntityTypeI, selection: TokenSelection) => {
-        let NewEnt: Entity = new Entity(selection.text, type.name);
-        NewEnt.addOffset([{...selection}])
-
-        this.props.pool.addEntity(NewEnt);
+        this.props.pool.addEntity(selection.start, selection.end, selection.text, type.name);
     }
 
     onClickRemove = (selection: TokenSelection) => {
@@ -270,12 +262,47 @@ class AnonimizeTooltip extends React.Component<AnonimizeTooltipProps>{
             left: rects[0].right,
             width: "fit-content"
         };
+
+        switch(this.props.selectionWould){
+            case AddEntityDryRun.CHANGE_ARRAY:
+                return <div style={style}>
+                    <div className='alert alert-info'>Criar nova uma entidade com o tipo?</div>
+                    <div className="d-flex flex-column gap-1 bg-white p-1 border">
+                        {getEntityTypes().map( (type,i) => 
+                            <span key={i} role="button" style={{background: type.color}} onMouseDown={this.onClickType.bind(this, type, sel)}>{type.name}</span>
+                        )}
+                        <span role="button" className="bg-gray">Cancelar</span>
+                    </div>
+                </div>;
+            case AddEntityDryRun.CHANGE_OFFSET:
+                return <div style={style}>
+                    <div className='alert alert-warning'>Existem {this.props.selectionAffects} entidade(s) parecidas. Dependendo do tipo a ação pode unir as entidades.</div>
+                    <div className="d-flex flex-column gap-1 bg-white p-1 border">
+                        {getEntityTypes().map( (type,i) => 
+                            <span key={i} role="button" style={{background: type.color}} onMouseDown={this.onClickType.bind(this, type, sel)}>{type.name}</span>
+                        )}
+                        <span role="button" className="bg-gray">Cancelar</span>
+                    </div>
+                </div>;
+            case AddEntityDryRun.CHANGE_TYPE:
+                return <div style={style}>
+                <div className='alert alert-warning'>Modificar {this.props.selectionAffects} entidade(s)</div>
+                <div className="d-flex flex-column gap-1 bg-white p-1 border">
+                    {getEntityTypes().map( (type,i) => 
+                        <span key={i} role="button" style={{background: type.color}} onMouseDown={this.onClickType.bind(this, type, sel)}>{type.name}</span>
+                    )}
+                    <span role="button" className="bg-danger" onMouseDown={this.onClickRemove.bind(this, sel)}>Remover</span>
+                    <span role="button" className="bg-gray">Cancelar</span>
+                </div>
+            </div>;
+
+        }
+
         return <div style={style}>
             <div className="d-flex flex-column gap-1 bg-white p-1 border">
                 {getEntityTypes().map( (type,i) => 
                     <span key={i} role="button" style={{background: type.color}} onMouseDown={this.onClickType.bind(this, type, sel)}>{type.name}</span>
                 )}
-                <span role="button" className="bg-danger" onMouseDown={this.onClickRemove.bind(this, sel)}>Remover</span>
                 <span role="button" className="bg-gray">Cancelar</span>
             </div>
         </div>

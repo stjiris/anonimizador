@@ -1,4 +1,4 @@
-import { Entity, EntityI } from "./Entity";
+import { Entity, EntityI, normalizeEntityString } from "./Entity";
 import { TypeNames } from "./EntityTypes";
 
 export enum AddEntityDryRun {
@@ -52,7 +52,7 @@ export class EntityPool {
             let i = 0;
             let toDel = []
             for( let off of curr.offsets ){
-                if( (off.start >= startOffset && off.start < endOffset) || (off.end >= startOffset && off.end < endOffset ) ){
+                if( (off.start >= startOffset && off.end < endOffset) || (off.start < endOffset && off.end >= startOffset) ){
                     toDel.push(i);
                 }
                 i++;
@@ -65,6 +65,7 @@ export class EntityPool {
                 for( let i of toDel.reverse() ){
                     curr.offsets.splice(i, 1);
                 }
+                curr.offsetsLength = curr.offsets.length
             }
             j++;
         }
@@ -76,52 +77,63 @@ export class EntityPool {
         }
     }
 
-    addEntityDryRun(entity: Entity): AddEntityDryRun{
+    addEntityDryRun(startOffset: number, endOffset: number, text: string): [AddEntityDryRun, number]{
+        let affected = 0;
         // Loop to remove "colisions"
         for( let curr of this.entities ){
             for( let off of curr.offsets ){
-                if( (entity.offsets[0].start >= off.start && entity.offsets[0].start < off.end) || (entity.offsets[0].end > off.start && entity.offsets[0].end <= off.end) ){
+                if( (off.start >= startOffset && off.end < endOffset) || (off.start < endOffset && off.end >= startOffset) ){
                     // Entity colides with existing
-                    return AddEntityDryRun.CHANGE_TYPE;
+                    affected++;
                 }
             }
+        }
+        if( affected > 0 ){
+            return [AddEntityDryRun.CHANGE_TYPE, affected]
         }
 
         // Loop to check similarities
         for( let curr of this.entities ){
-            if( curr.id == entity.id ){
-                return AddEntityDryRun.CHANGE_OFFSET;
+            if( normalizeEntityString(curr.previewText) == normalizeEntityString(text) ){
+                affected++;
             }
         }
+        if( affected > 0 ){
+            return [AddEntityDryRun.CHANGE_OFFSET, affected];
+        }
 
-        return AddEntityDryRun.CHANGE_ARRAY;
+        return [AddEntityDryRun.CHANGE_ARRAY, affected];
     }
 
-    addEntity(entity: Entity){
+    addEntity(startOffset: number, endOffset: number, text: string, label: string){
+        let used = false;
         // Loop to remove "colisions"
         for( let curr of this.entities ){
             for( let off of curr.offsets ){
-                if( (entity.offsets[0].start >= off.start && entity.offsets[0].start < off.end) || (entity.offsets[0].end > off.start && entity.offsets[0].end <= off.end) ){
+                if( (off.start >= startOffset && off.end < endOffset) || (off.start < endOffset && off.end >= startOffset) ){
                     // Entity colides with existing
-                    curr.type = entity.type;
-                    return;
+                    curr.type = label as TypeNames;
+                    used = true;
                 }
             }
         }
 
-        let used = false;
+        if( used ) return;
 
         // Loop to check similarities
         for( let curr of this.entities ){
-            if( curr.id == entity.id ){
-                curr.addOffset(entity.offsets)
+            if( curr.id == (normalizeEntityString(text) + label) ){
+                curr.addOffset([{start: startOffset, end: endOffset}])
                 used = true
+                break;
             }
         }
 
         // Add entity to end
         if( !used ){
-            this.entities.push(entity)
+            let ent = new Entity(text, label);
+            ent.addOffset([{start: startOffset, end: endOffset}])
+            this.entities.push(ent)
         }
 
         // sort by start offset
