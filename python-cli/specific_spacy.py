@@ -19,7 +19,6 @@ class FakeEntity:
         self.start_char = start+soff
         self.text = text.strip()
         self.end_char = self.start_char+len(self.text)
-        assert self.start_char + len(self.text) == self.end_char
 
 class FakeDoc:
     def __init__(self,ents, text):

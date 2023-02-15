@@ -1,4 +1,4 @@
-import { Entity, EntityI, normalizeEntityString } from "./Entity";
+import { Entity, EntityI, normalizeEntityString, OffsetRange } from "./Entity";
 import { TypeNames } from "./EntityTypes";
 
 export enum AddEntityDryRun {
@@ -9,11 +9,13 @@ export enum AddEntityDryRun {
 
 export class EntityPool {
     entities: Entity[]
+    originalText: string
     listeners: (() => void)[]
-
-    constructor(initial?: EntityI[]){
+    
+    constructor(text:string, initial?: EntityI[]){
         this.entities = initial?.map( (e, i) => Entity.makeEntity(e, i) ) || [];
         this.listeners = [];
+        this.originalText = text;
         this.updateOrder()
     }
 
@@ -24,8 +26,53 @@ export class EntityPool {
     offChange( cb: () => void ){
         let idx = this.listeners.findIndex((fn) => fn == cb);
         if( idx >= 0 ){
-            this.listeners.splice(idx)
+            this.listeners.splice(idx, 1)
         }
+    }
+
+    joinEntities(indexes: number[]) {
+        if( indexes.length <= 1 ) return;
+        indexes.sort() // indexes are sorted
+
+        let first: Entity = this.entities[indexes.shift()!];
+        let removed: OffsetRange[] = []
+        indexes.reverse().forEach( i => {
+            let cEnt = this.entities.splice(i, 1)[0];
+            removed.push( ...cEnt.offsets )
+        })
+
+        first.addOffset(removed);
+        first.offsetsLength = first.offsets.length;
+        this.updateOrder();
+    }
+
+    splitEntities(indexes: number[]) {
+        if( indexes.length == 0 ) return;
+        let newEnt: Entity[] = [];
+        this.entities.forEach( (ent, i) => {
+            if( indexes.indexOf(i) == -1 || ent.offsets.length <= 1 ) return newEnt.push(ent);
+
+            let otherOffs = ent.offsets.splice(1); // Changes current ent
+            for( let off of otherOffs ){
+                let nent = new Entity(this.originalText.substring(off.start, off.end), ent.type);
+                nent.addOffset([off]);
+                newEnt.push(nent);
+            }
+            ent.offsetsLength = ent.offsets.length;
+            newEnt.push(ent);
+        });
+
+        this.entities = newEnt;
+        this.updateOrder();
+    }
+
+    removeEntities(indexes: number[]) {
+        if( indexes.length == 0 ) return;
+        indexes.sort().reverse().forEach( i => {
+            this.entities.splice(i, 1);
+        }) // indexes are sorted
+
+        this.updateOrder();
     }
 
     updateOrder(){
@@ -118,7 +165,7 @@ export class EntityPool {
             }
         }
 
-        if( used ) return;
+        if( used ) return this.updateOrder();
 
         // Loop to check similarities
         for( let curr of this.entities ){

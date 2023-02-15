@@ -25,11 +25,36 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     contentRef: React.RefObject<AnonimizeContent> = React.createRef();
     tableRef: React.RefObject<MRT_TableInstance<Entity>> = React.createRef();
     doc: HTMLElement = new DOMParser().parseFromString(this.props.file.html_contents, "text/html").body;
-    pool: EntityPool = new EntityPool(this.props.file.ents);
+    pool: EntityPool = new EntityPool(this.doc.textContent || "" ,this.props.file.ents);
     state: AnonimizeState = {
         anonimizeState: AnonimizeStateState.TAGGED,
         ents: [...this.pool.entities],
         selected: {}
+    }
+
+
+    joinSelectedEntities = () => {
+        let indexes = Object.keys(this.state.selected).map( k => parseInt(k) ).filter( k => !isNaN(k) )
+        this.pool.joinEntities(indexes);
+        this.setState({
+            selected: {}
+        })
+    }
+
+    splitSelectedEntities = () => {
+        let indexes = Object.keys(this.state.selected).map( k => parseInt(k) ).filter( k => !isNaN(k) )
+        this.pool.splitEntities(indexes);
+        this.setState({
+            selected: {}
+        })
+    }
+
+    removeSelectedEntities = () => {
+        let indexes = Object.keys(this.state.selected).map( k => parseInt(k) ).filter( k => !isNaN(k) )
+        this.pool.removeEntities(indexes);
+        this.setState({
+            selected: {}
+        });
     }
 
     downloadHtml = () => {
@@ -95,7 +120,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         </select>
                     </div>
                     <div>
-                        <RemoteNlpStatus pool={this.pool} doc={this.doc} disabled={this.state.anonimizeState != AnonimizeStateState.TAGGED}/>
+                        <RemoteNlpStatus pool={this.pool} disabled={this.state.anonimizeState != AnonimizeStateState.TAGGED}/>
                     </div>
                 </div>
                 <div className="bg-white p-4 m-2">
@@ -115,9 +140,9 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         enablePagination={false}
                         renderTopToolbarCustomActions={(_) => [
                             <div className="d-flex w-100">
-                                <button className="btn btn-primary" disabled={Object.keys(this.state.selected).length <= 1}><i className="bi bi-union"></i> Juntar</button>
-                                <button className="btn btn-warning mx-2" disabled={Object.keys(this.state.selected).length == 0}><i className="bi bi-exclude"></i> Separar</button>
-                                <button className="btn btn-danger" disabled={Object.keys(this.state.selected).length == 0}><i className="bi bi-trash"></i> Remover</button>
+                                <button className="btn btn-primary" disabled={Object.keys(this.state.selected).length <= 1} onClick={this.joinSelectedEntities}><i className="bi bi-union"></i> Juntar</button>
+                                <button className="btn btn-warning mx-2" disabled={Object.keys(this.state.selected).length == 0} onClick={this.splitSelectedEntities}><i className="bi bi-exclude"></i> Separar</button>
+                                <button className="btn btn-danger" disabled={Object.keys(this.state.selected).length == 0} onClick={this.removeSelectedEntities}><i className="bi bi-trash"></i> Remover</button>
                             </div>
                         ]}
                         onRowSelectionChange={(updaterOrValue) => {

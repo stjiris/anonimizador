@@ -10,7 +10,6 @@ interface RemoteEntity {
 }
 
 interface RemoteNlpStatusProps {
-    doc: HTMLElement
     pool: EntityPool
     disabled: boolean
 }
@@ -28,7 +27,7 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
     
     runRemoteNlp = async () => {
         if( this.state.requested ) return;
-        let text = this.props.doc.textContent;
+        let text = this.props.pool.originalText;
         if( text == null ) return;
         this.setState({
             requested: true,
@@ -55,6 +54,7 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
 
         this.props.pool.entities = Object.values(entities).sort((a, b) => a.offsets[0].start-b.offsets[0].start)
         this.props.pool.updateOrder();
+        this.setState({requested: false});
     }
 
     render(): React.ReactNode {
