@@ -38,7 +38,7 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
         let fd = new FormData()
         fd.append("file", new Blob([text]), "input.txt")
 
-        let resArray: RemoteEntity[] = await fetch("/from-text", {
+        let resArray: RemoteEntity[] = await fetch("./from-text", {
             method: "POST",
             body: fd
         }).then( r => r.json() )
