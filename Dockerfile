@@ -27,6 +27,8 @@ COPY . .
 
 RUN mv iris-lfs-storage/model-best/ ./python-cli/
 
+ENV PUBLIC_URL="."
+
 RUN npm run build
 
 EXPOSE 7998
