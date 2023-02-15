@@ -32,12 +32,12 @@ export default class App extends React.Component<{},AppState>{
 				{this.state.entitieTypes.map( ({name, color}) => `[data-anonimize-type="${name}"]{background:${color}}`)}
 			</style>
 			<Header actions={[
-				<span className="nav-link red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-types">Tipos de Entidades</span>,
-				<i className='bi bi-dot red-link fw-bold'></i>,
-				<span className="nav-link fs-6 bg-transparent red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-about">Sobre</span>
+				<span key="types" className="nav-link red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-types">Tipos de Entidades</span>,
+				<i key="space" className='bi bi-dot red-link fw-bold'></i>,
+				<span key="about" className="nav-link fs-6 bg-transparent red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-about">Sobre</span>
 			]}/>
 			{this.state.userFile == null ? <SelectFile key="select" setUserFile={this.setUserFile} /> : <Anonimize key="anonimize" setUserFile={this.setUserFile} file={this.state.userFile} />}
-			<BootstrapModal id="modal-about">
+			<BootstrapModal key="modal-about" id="modal-about">
 				<div className="modal-header">
 					<div>
 						<h5 className="modal-title" id="modal-about-label">Sobre o Anonimizador</h5>
@@ -57,7 +57,7 @@ export default class App extends React.Component<{},AppState>{
             	  	<button className="btn btn-secondary" type="button" data-bs-dismiss="modal">Fechar</button>
           		</div>
 			</BootstrapModal>
-			<BootstrapModal id="modal-types">
+			<BootstrapModal key="modal-types" id="modal-types">
 				<div className="modal-header">
 					<div><h5 className="modal-title" id="modal-types-label">Tipos de entidades</h5></div>
 				</div>
@@ -84,7 +84,7 @@ export default class App extends React.Component<{},AppState>{
 									data={this.state.entitieTypes}
 									localization={MRT_Localization_PT}
 									renderTopToolbarCustomActions={() => [
-										<button className="btn btn-warning" onClick={() => this.setState({entitieTypes: restoreEntityTypes()})}>Repor</button>
+										<button key="reset" className="btn btn-warning" onClick={() => this.setState({entitieTypes: restoreEntityTypes()})}>Repor</button>
 									]}
 								/>
 				</div>

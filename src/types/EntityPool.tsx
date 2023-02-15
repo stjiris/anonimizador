@@ -54,7 +54,7 @@ export class EntityPool {
 
             let otherOffs = ent.offsets.splice(1); // Changes current ent
             for( let off of otherOffs ){
-                let nent = new Entity(this.originalText.substring(off.start, off.end), ent.type);
+                let nent = new Entity(this.originalText.substring(off.start, off.end+1), ent.type);
                 nent.addOffset([off]);
                 newEnt.push(nent);
             }
@@ -86,7 +86,6 @@ export class EntityPool {
             e.typeIndex = ++counts[e.type]!;
         });
         for( let l of this.listeners ){
-            console.log(l)
             l();
         }
     }

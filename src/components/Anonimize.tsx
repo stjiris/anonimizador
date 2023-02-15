@@ -98,7 +98,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     }
 
     render(): React.ReactNode {
-        let columns: MRT_ColumnDef<Entity>[] = [{header: "#", accessorKey: "offsetsLength"},{header: "Entidade", accessorKey: "previewText"}, {header: "Tipo", accessorKey: "type"}, {header: "Anonimização", accessorKey: "anonimizeFunctionName"}]
+        let columns: MRT_ColumnDef<Entity>[] = [{header: "#", accessorKey: "offsetsLength",size: 10},{header: "Entidade", accessorKey: "previewText"}, {header: "Tipo", accessorKey: "type",size:10}, {header: "Anonimização", accessorKey: "anonimizeFunctionName"}]
         return (<div className="row container-fluid bg-dark m-0">
             <div className="col-8">
                 <div className="bg-white py-3 px-4 m-2 d-flex">
@@ -113,9 +113,9 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         <button className="red-link fw-bold btn" onClick={this.downloadHtml} disabled={this.state.anonimizeState === AnonimizeStateState.TAGGED}>Download</button>
                     </div>
                     <div>
-                        <select className="red-link fw-bold btn" onChange={(ev) => this.setState({anonimizeState: ev.target.value as AnonimizeStateState}) }>
+                        <select className="red-link fw-bold btn" onChange={(ev) => this.setState({anonimizeState: ev.target.value as AnonimizeStateState}) } defaultValue={AnonimizeStateState.TAGGED}>
                             <option value={AnonimizeStateState.ORIGINAL}>{AnonimizeStateState.ORIGINAL}</option>
-                            <option selected value={AnonimizeStateState.TAGGED}>{AnonimizeStateState.TAGGED}</option>
+                            <option value={AnonimizeStateState.TAGGED}>{AnonimizeStateState.TAGGED}</option>
                             <option value={AnonimizeStateState.ANONIMIZED}>{AnonimizeStateState.ANONIMIZED}</option>
                         </select>
                     </div>
@@ -138,13 +138,11 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         enableHiding={false}
                         enableStickyHeader
                         enablePagination={false}
-                        renderTopToolbarCustomActions={(_) => [
-                            <div className="d-flex w-100">
+                        renderTopToolbarCustomActions={(_) => <div className="d-flex w-100">
                                 <button className="btn btn-primary" disabled={Object.keys(this.state.selected).length <= 1} onClick={this.joinSelectedEntities}><i className="bi bi-union"></i> Juntar</button>
                                 <button className="btn btn-warning mx-2" disabled={Object.keys(this.state.selected).length == 0} onClick={this.splitSelectedEntities}><i className="bi bi-exclude"></i> Separar</button>
                                 <button className="btn btn-danger" disabled={Object.keys(this.state.selected).length == 0} onClick={this.removeSelectedEntities}><i className="bi bi-trash"></i> Remover</button>
-                            </div>
-                        ]}
+                            </div>}
                         onRowSelectionChange={(updaterOrValue) => {
                             if( typeof updaterOrValue == "function" ){
                                 this.setState({selected: updaterOrValue(this.state.selected)})
