@@ -32,7 +32,7 @@ export class EntityPool {
 
     joinEntities(indexes: number[]) {
         if( indexes.length <= 1 ) return;
-        indexes.sort() // indexes are sorted
+        indexes.sort((a,b) => a-b) // indexes are sorted
 
         let first: Entity = this.entities[indexes.shift()!];
         let removed: OffsetRange[] = []
@@ -68,7 +68,7 @@ export class EntityPool {
 
     removeEntities(indexes: number[]) {
         if( indexes.length == 0 ) return;
-        indexes.sort().reverse().forEach( i => {
+        indexes.sort((a,b) => a-b).reverse().forEach( i => {
             this.entities.splice(i, 1);
         }) // indexes are sorted
 
