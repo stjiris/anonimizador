@@ -61,8 +61,30 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
             }
         }
 
-        if( this.state.selection !== null && sel === null ){
+        if( this.state.selection !== undefined && sel === null ){
             this.setState({selection: undefined})
+        }
+        else{
+            let target = ev.target;
+            if( target instanceof HTMLElement ){
+                let startOffset = parseInt(target.dataset.offset || "-1");
+                let iresult = this.props.pool.entitiesAt(startOffset, startOffset+1);
+                let ent = iresult[0];
+                if( ent ){
+                    let off = ent.offsets.find( off => startOffset >= off.start && startOffset < off.end );
+                    if( off ){
+                        this.setState({
+                            selection: {
+                                text: this.props.pool.originalText.substring(off.start, off.end+1),
+                                start: off.start,
+                                end: off.end
+                            },
+                            selectionWould: AddEntityDryRun.CHANGE_TYPE,
+                            selectionAffects: 1
+                        })
+                    }
+                }
+            }
         }
     }
 

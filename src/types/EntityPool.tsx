@@ -123,17 +123,22 @@ export class EntityPool {
         }
     }
 
-    addEntityDryRun(startOffset: number, endOffset: number, text: string): [AddEntityDryRun, number]{
-        let affected = 0;
-        // Loop to remove "colisions"
+    entitiesAt(startOffset: number, endOffset: number): Entity[]{
+        let r = []
         for( let curr of this.entities ){
             for( let off of curr.offsets ){
                 if( (off.start >= startOffset && off.end < endOffset) || (off.start < endOffset && off.end >= startOffset) ){
                     // Entity colides with existing
-                    affected++;
+                    r.push(curr);
+                    break; // Next entity
                 }
             }
         }
+        return r;
+    }
+
+    addEntityDryRun(startOffset: number, endOffset: number, text: string): [AddEntityDryRun, number]{
+        let affected = this.entitiesAt(startOffset, endOffset).length;
         if( affected > 0 ){
             return [AddEntityDryRun.CHANGE_TYPE, affected]
         }
@@ -154,14 +159,9 @@ export class EntityPool {
     addEntity(startOffset: number, endOffset: number, text: string, label: string){
         let used = false;
         // Loop to remove "colisions"
-        for( let curr of this.entities ){
-            for( let off of curr.offsets ){
-                if( (off.start >= startOffset && off.end < endOffset) || (off.start < endOffset && off.end >= startOffset) ){
-                    // Entity colides with existing
-                    curr.type = label as TypeNames;
-                    used = true;
-                }
-            }
+        for(let ent of this.entitiesAt(startOffset, endOffset)){
+            ent.type = label as TypeNames;
+            used = true;
         }
 
         if( used ) return this.updateOrder();
