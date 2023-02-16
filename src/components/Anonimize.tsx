@@ -111,11 +111,11 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         <button className="btn red-link fw-bold" onClick={() => this.props.setUserFile(undefined)}><i className="bi bi-x"></i> Fechar</button>
                     </div>
                     <div className="mx-2">
-                        <span className="text-body btn">{this.props.file.name}</span>
+                        <span className="text-body btn"><i className="bi bi-file-earmark-fill"></i> {this.props.file.name}</span>
                     </div>
                     <div className="flex-grow-1"></div>
                     <div>
-                        <button className="red-link fw-bold btn" onClick={this.downloadHtml} disabled={this.state.anonimizeState === AnonimizeStateState.TAGGED}>Download</button>
+                        <button className="red-link fw-bold btn" onClick={this.downloadHtml} disabled={this.state.anonimizeState === AnonimizeStateState.TAGGED}><i className="bi bi-download"></i> Download</button>
                     </div>
                     <div>
                         <select className="red-link fw-bold btn" onChange={(ev) => this.setState({anonimizeState: ev.target.value as AnonimizeStateState}) } defaultValue={AnonimizeStateState.TAGGED}>

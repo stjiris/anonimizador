@@ -41,7 +41,15 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
         let resArray: RemoteEntity[] = await fetch("./from-text", {
             method: "POST",
             body: fd
-        }).then( r => r.json() )
+        }).then( r => {
+            if( r.status == 200 )
+                return r.json();
+            alert( `Servidor respondeu: ${r.status} (${r.statusText})` )
+            return [];
+        }).catch( e => {
+            alert( e );
+            return [];
+        })
 
         let entities: {[key: string]: Entity} = {};
         for( let ent of resArray ){
@@ -58,6 +66,6 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
     }
 
     render(): React.ReactNode {
-        return <button className="red-link fw-bold btn" onClick={this.runRemoteNlp} disabled={this.props.pool.entities.length > 0 || this.state.requested || this.props.disabled}>Sugerir</button>;
+        return <button className="red-link fw-bold btn" onClick={this.runRemoteNlp} disabled={this.props.pool.entities.length > 0 || this.state.requested || this.props.disabled}><i className="bi bi-file-earmark-break"></i> Sugerir</button>;
     }
 }
