@@ -128,6 +128,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         <select className="red-link fw-bold btn" onChange={(ev) => this.setState({anonimizeState: ev.target.value as AnonimizeStateState}) } defaultValue={AnonimizeStateState.TAGGED}>
                             <option value={AnonimizeStateState.ORIGINAL}>{AnonimizeStateState.ORIGINAL}</option>
                             <option value={AnonimizeStateState.TAGGED}>{AnonimizeStateState.TAGGED}</option>
+                            <option value={AnonimizeStateState.TAGGED_ANONIMIZED}>{AnonimizeStateState.TAGGED_ANONIMIZED}</option>
                             <option value={AnonimizeStateState.ANONIMIZED}>{AnonimizeStateState.ANONIMIZED}</option>
                         </select>
                     </div>

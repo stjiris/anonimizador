@@ -208,6 +208,16 @@ class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
         }
 
         switch(this.props.anonimizeState){
+            case AnonimizeStateState.TAGGED_ANONIMIZED:
+                if( isPartAnonimize && 'data-anonimize-first' in dataAttrs ){
+                    return <span data-anonimize-type={dataAttrs['data-anonimize-type']}>{dataAttrs['data-anonimize-cod']}</span>;
+                }
+                else if( isPartAnonimize ){
+                    return ""
+                }
+                else{
+                    return this.props.string
+                }
             case AnonimizeStateState.ANONIMIZED:
                 if( isPartAnonimize && 'data-anonimize-first' in dataAttrs ){
                     return dataAttrs['data-anonimize-cod'];
