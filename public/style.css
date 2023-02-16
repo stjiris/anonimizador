@@ -25,10 +25,6 @@ img{
   max-width: 100%;
 }
 
-[data-anonimize-type] {
-  padding: 0.4em 0em;
-}
-
 [data-anonimize-last=true]{
   border-radius: 0 0.5em 0.5em 0;
   padding-right: 0.4em;
@@ -46,8 +42,8 @@ img{
 [data-anonimize-last=true]:after {
   content: attr(data-anonimize-type);
   display: inline-block;
-  padding: 0.35em 0.65em;
-  margin: 0 0.35em;
+  padding: 0 0.2em;
+  margin: 0 0 0 0.5em;
   font-size: .75em;
   font-weight: 700;
   line-height: 1;
