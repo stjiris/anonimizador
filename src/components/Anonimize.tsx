@@ -162,21 +162,6 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                                 <button className="btn btn-danger" disabled={selectedeKeys == 0} onClick={this.removeSelectedEntities}><i className="bi bi-trash"></i> Remover</button>
                             </div>
                         }}
-                        onRowSelectionChange={(updaterOrValue) => {
-                            let instance = this.tableRef.current;
-                            if( !instance ) return;
-                            let state = instance.getState();
-                            instance.setState({
-                                ...state,
-                                rowSelection: typeof updaterOrValue === "function" ? updaterOrValue(state.rowSelection) : updaterOrValue
-                            });
-                        }}
-                        onEditingRowSave={({exitEditingMode, values, row}) => {
-                                row.original.type = values.type;
-                                row.original.overwriteAnonimization = values.overwriteAnonimization;
-                                pool.updateOrder();
-                                exitEditingMode();
-                        }}
                         initialState={{density: 'compact'}}
                         columns={columns} 
                         data={this.state.ents}
