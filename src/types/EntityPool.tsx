@@ -24,7 +24,7 @@ export class EntityPool {
     }
 
     offChange( cb: () => void ){
-        let idx = this.listeners.findIndex((fn) => fn == cb);
+        let idx = this.listeners.findIndex((fn) => fn === cb);
         if( idx >= 0 ){
             this.listeners.splice(idx, 1)
         }
@@ -47,10 +47,10 @@ export class EntityPool {
     }
 
     splitEntities(indexes: number[]) {
-        if( indexes.length == 0 ) return;
+        if( indexes.length === 0 ) return;
         let newEnt: Entity[] = [];
         this.entities.forEach( (ent, i) => {
-            if( indexes.indexOf(i) == -1 || ent.offsets.length <= 1 ) return newEnt.push(ent);
+            if( indexes.indexOf(i) === -1 || ent.offsets.length <= 1 ) return newEnt.push(ent);
 
             let otherOffs = ent.offsets.splice(1); // Changes current ent
             for( let off of otherOffs ){
@@ -67,7 +67,7 @@ export class EntityPool {
     }
 
     removeEntities(indexes: number[]) {
-        if( indexes.length == 0 ) return;
+        if( indexes.length === 0 ) return;
         indexes.sort((a,b) => a-b).reverse().forEach( i => {
             this.entities.splice(i, 1);
         }) // indexes are sorted
@@ -104,7 +104,7 @@ export class EntityPool {
                 i++;
             }
             deleted+=toDel.length;
-            if( toDel.length == curr.offsets.length ){
+            if( toDel.length === curr.offsets.length ){
                 entsToDel.push( j );
             }
             else{
@@ -145,7 +145,7 @@ export class EntityPool {
 
         // Loop to check similarities
         for( let curr of this.entities ){
-            if( normalizeEntityString(curr.previewText) == normalizeEntityString(text) ){
+            if( normalizeEntityString(curr.previewText) === normalizeEntityString(text) ){
                 affected++;
             }
         }
@@ -168,7 +168,7 @@ export class EntityPool {
 
         // Loop to check similarities
         for( let curr of this.entities ){
-            if( curr.id == (normalizeEntityString(text) + label) ){
+            if( curr.id === (normalizeEntityString(text) + label) ){
                 curr.addOffset([{start: startOffset, end: endOffset}])
                 used = true
                 break;

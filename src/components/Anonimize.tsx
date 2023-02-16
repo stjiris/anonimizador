@@ -1,6 +1,6 @@
 import React from "react";
 import { UserFile } from "../types/UserFile";
-import MaterialReactTable, { MRT_Cell, MRT_ColumnDef, MRT_TableInstance } from "material-react-table";
+import MaterialReactTable, { MRT_ColumnDef, MRT_TableInstance } from "material-react-table";
 import AnonimizeContent from "./AnonimizeContent";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { Entity } from "../types/Entity";
@@ -8,8 +8,7 @@ import RemoteNlpStatus from "./RemoteNlpStatus";
 import { updateUserFile } from '../util/UserFileCRUDL';
 import { AnonimizeStateState } from "../types/AnonimizeState";
 import { EntityPool } from "../types/EntityPool";
-import { RowSelectionState } from "@tanstack/table-core/build/lib/features/RowSelection";
-import { EntityTypeI, getEntityType, getEntityTypes, TypeNames } from "../types/EntityTypes";
+import { getEntityType, getEntityTypes, TypeNames } from "../types/EntityTypes";
 
 interface AnonimizeProps{
     file: UserFile
@@ -81,7 +80,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
         formData.append("file", htmlFile);
         
         fetch("./docx", {method:"POST", body: formData}).then( r => {
-            if( r.status == 200 ){
+            if( r.status === 200 ){
                 r.blob().then(blob => {
                     let file = URL.createObjectURL(blob);
                     let stubA = document.createElement("a");
@@ -134,7 +133,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         </select>
                     </div>
                     <div>
-                        <RemoteNlpStatus pool={pool} disabled={this.state.anonimizeState != AnonimizeStateState.TAGGED}/>
+                        <RemoteNlpStatus pool={pool} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}/>
                     </div>
                 </div>
                 <div className="bg-white p-4 m-2">
@@ -159,8 +158,8 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                             let selectedeKeys = this.selectedIndexes().length
                             return <div className="d-flex w-100">
                                 <button className="btn btn-primary" disabled={selectedeKeys <= 1} onClick={this.joinSelectedEntities}><i className="bi bi-union"></i> Juntar</button>
-                                <button className="btn btn-warning mx-2" disabled={selectedeKeys == 0} onClick={this.splitSelectedEntities}><i className="bi bi-exclude"></i> Separar</button>
-                                <button className="btn btn-danger" disabled={selectedeKeys == 0} onClick={this.removeSelectedEntities}><i className="bi bi-trash"></i> Remover</button>
+                                <button className="btn btn-warning mx-2" disabled={selectedeKeys === 0} onClick={this.splitSelectedEntities}><i className="bi bi-exclude"></i> Separar</button>
+                                <button className="btn btn-danger" disabled={selectedeKeys === 0} onClick={this.removeSelectedEntities}><i className="bi bi-trash"></i> Remover</button>
                             </div>
                         }}
                         muiTableBodyCellProps={{style: {
@@ -193,7 +192,7 @@ let columns: MRT_ColumnDef<Entity>[] = [{
     size: 40,
     muiTableBodyCellProps: ({row}) => ({
         onClick: () => {
-            if( row.original.offsets.length == 0 ) return;
+            if( row.original.offsets.length === 0 ) return;
             let off = row.original.offsets[0];
             let elm = document.querySelector(`[data-offset="${off.start}"]`);
             if( elm ){
@@ -219,7 +218,7 @@ let columns: MRT_ColumnDef<Entity>[] = [{
         onChange: (event) => {
             let o = row.original.type;
             row.original.type = event.target.value as TypeNames;
-            if( o != row.original.type ) pool.updateOrder();
+            if( o !== row.original.type ) pool.updateOrder();
         }
     })
     
@@ -236,7 +235,7 @@ let columns: MRT_ColumnDef<Entity>[] = [{
         onBlur: (event) => {
             let o = row.original.overwriteAnonimization;
             row.original.overwriteAnonimization = event.target.value;
-            if( o != row.original.overwriteAnonimization ) pool.updateOrder();
+            if( o !== row.original.overwriteAnonimization ) pool.updateOrder();
         }
     })
 }]

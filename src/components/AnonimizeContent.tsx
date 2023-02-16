@@ -1,9 +1,8 @@
 import React from 'react'
-import { start } from 'repl'
 import { AnonimizeStateState } from '../types/AnonimizeState'
 import { Entity } from '../types/Entity'
 import { AddEntityDryRun, EntityPool } from '../types/EntityPool'
-import { EntityTypeI, getEntityType, getEntityTypes, TypeNames } from '../types/EntityTypes'
+import { EntityTypeI, getEntityType, getEntityTypes } from '../types/EntityTypes'
 import { TokenSelection } from '../types/Selection'
 
 

@@ -16,13 +16,13 @@ interface RemoteNlpStatusProps {
 
 interface RemoteNlpStatusState {
     requested: boolean
-    messages: any[]
+    text: string
 }
 
 export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProps, RemoteNlpStatusState>{
     state: RemoteNlpStatusState = {
         requested: false,
-        messages: []
+        text: "Sugerir"
     }
     
     runRemoteNlp = async () => {
@@ -31,7 +31,7 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
         if( text == null ) return;
         this.setState({
             requested: true,
-            messages: []
+            text: "Aguarde"
         })
 
 
@@ -42,7 +42,7 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
             method: "POST",
             body: fd
         }).then( r => {
-            if( r.status == 200 )
+            if( r.status === 200 )
                 return r.json();
             alert( `Servidor respondeu: ${r.status} (${r.statusText})` )
             return [];
@@ -62,10 +62,13 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
 
         this.props.pool.entities = Object.values(entities).sort((a, b) => a.offsets[0].start-b.offsets[0].start)
         this.props.pool.updateOrder();
-        this.setState({requested: false});
+        this.setState({
+            requested: false,
+            text: "Sugerir"
+        });
     }
 
     render(): React.ReactNode {
-        return <button className="red-link fw-bold btn" onClick={this.runRemoteNlp} disabled={this.props.pool.entities.length > 0 || this.state.requested || this.props.disabled}><i className="bi bi-file-earmark-break"></i> Sugerir</button>;
+        return <button className="red-link fw-bold btn" onClick={this.runRemoteNlp} disabled={this.props.pool.entities.length > 0 || this.state.requested || this.props.disabled}><i className="bi bi-file-earmark-break"></i> {this.state.text}</button>;
     }
 }
