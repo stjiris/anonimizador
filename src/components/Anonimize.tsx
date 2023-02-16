@@ -166,6 +166,12 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                             whiteSpace: "normal",
                             wordWrap:"break-word" 
                         }}}
+                        muiTableHeadCellProps={{
+                            style: {
+                                borderBottom: "5px solid #161616"
+                            }
+                        }}
+                        positionToolbarAlertBanner="bottom"
                         initialState={{density: 'compact'}}
                         columns={columns} 
                         data={this.state.ents}
