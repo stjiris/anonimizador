@@ -186,7 +186,17 @@ let columns: MRT_ColumnDef<Entity>[] = [{
     header: "Entidade", 
     accessorKey: "previewText",
     enableEditing: false,
-    size: 40
+    size: 40,
+    muiTableBodyCellProps: ({row}) => ({
+        onClick: () => {
+            if( row.original.offsets.length == 0 ) return;
+            let off = row.original.offsets[0];
+            let elm = document.querySelector(`[data-offset="${off.start}"]`);
+            if( elm ){
+                elm.scrollIntoView();
+            }
+        }
+    })
 },
 {
     header: "Tipo",
@@ -198,7 +208,7 @@ let columns: MRT_ColumnDef<Entity>[] = [{
     },
     muiTableBodyCellEditTextFieldProps: ({row}) => ({
         select: true,
-        children: getEntityTypes().map( t => <option label={t.name} value={t.name}>{t.name}</option>),
+        children: getEntityTypes().map( t => <option key={t.name} label={t.name} value={t.name}>{t.name}</option>),
         SelectProps: {
             native: true
         },
