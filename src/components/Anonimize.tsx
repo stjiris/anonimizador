@@ -163,6 +163,10 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                                 <button className="btn btn-danger" disabled={selectedeKeys == 0} onClick={this.removeSelectedEntities}><i className="bi bi-trash"></i> Remover</button>
                             </div>
                         }}
+                        muiTableBodyCellProps={{style: {
+                            whiteSpace: "normal",
+                            wordWrap:"break-word" 
+                        }}}
                         initialState={{density: 'compact'}}
                         columns={columns} 
                         data={this.state.ents}

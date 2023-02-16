@@ -34,7 +34,8 @@ app.get("*/types", (req, res) => {
 
 app.post("*/html", upload.single('file'), (req, res) => {
     let subproc = spawn(PYTHON_COMMAND,["python-cli/pandoc.py", req.file.path], {...process.env, PYTHONIOENCODING: 'utf-8', PYTHONLEGACYWINDOWSSTDIO: 'utf-8' })
-    subproc.stdout.pipe(res);
+    let buffer = new PassThrough();
+    subproc.stdout.pipe(buffer);
     subproc.on("error", (err) => {
         console.log(err);  
     })
@@ -45,6 +46,9 @@ app.post("*/html", upload.single('file'), (req, res) => {
         console.log("spawn: Exited with",code)
         if( code != 0 ){
             res.status(500).end();
+        }
+        else{
+            buffer.pipe(res);
         }
         rmSync(req.file.path);
     })
@@ -120,6 +124,7 @@ if( url ){
 }
 
 let http = require("http");
+const { PassThrough } = require('stream');
 let server = http.createServer(app);
 let wss = new ws.WebSocketServer({ clientTracking: false, noServer: true });
 
