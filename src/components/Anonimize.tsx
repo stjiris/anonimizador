@@ -27,14 +27,15 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     contentRef: React.RefObject<AnonimizeContent> = React.createRef();
     tableRef: React.RefObject<MRT_TableInstance<Entity>> = React.createRef();
     doc: HTMLElement = new DOMParser().parseFromString(this.props.file.html_contents, "text/html").body;
-    state: AnonimizeState = {
-        anonimizeState: AnonimizeStateState.TAGGED,
-        ents: [...pool.entities]
-    }
-
+    
     constructor(props: AnonimizeProps){
         super(props);
-        pool = new EntityPool(this.doc.textContent || "" ,this.props.file.ents);
+        pool.originalText = this.doc.textContent || ""
+        pool.entities = this.props.file.ents;
+        this.state ={
+            anonimizeState: AnonimizeStateState.TAGGED,
+            ents: [...pool.entities]
+        };
     }
 
     selectedIndexes(): number[]{
