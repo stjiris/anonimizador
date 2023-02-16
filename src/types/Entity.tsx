@@ -14,7 +14,7 @@ export interface EntityI {
     offsets: OffsetRange[]
     offsetsLength: number // helper for Material-react-table
     previewText: string
-    anonimizeFunctionName?: AnonimizeFunctionName // use this if exists else use type
+    overwriteAnonimization?: string // use this if exists else use type
 }
 
 export class Entity implements EntityI {
@@ -23,7 +23,7 @@ export class Entity implements EntityI {
     offsets: OffsetRange[];
     offsetsLength: number;
     previewText: string;
-    anonimizeFunctionName?: AnonimizeFunctionName;
+    overwriteAnonimization?: string;
     index: number;
     typeIndex: number;
     
@@ -45,8 +45,8 @@ export class Entity implements EntityI {
     }
 
     anonimizingFunction(): AnonimizeFunction{
-        if( this.anonimizeFunctionName ){
-            return functions[this.anonimizeFunctionName];
+        if( this.overwriteAnonimization ){
+            return () => this.overwriteAnonimization!;
         }
         else{
             let type = getEntityType(this.type);
@@ -60,7 +60,7 @@ export class Entity implements EntityI {
         e.offsets = obj.offsets
         e.offsetsLength = obj.offsets.length;
         e.previewText = obj.previewText
-        e.anonimizeFunctionName = obj.anonimizeFunctionName
+        e.overwriteAnonimization = obj.overwriteAnonimization
         e.index = index
         return e;
     }

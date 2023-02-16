@@ -1,6 +1,6 @@
 import React from "react";
 import { UserFile } from "../types/UserFile";
-import MaterialReactTable, { MRT_ColumnDef, MRT_TableInstance } from "material-react-table";
+import MaterialReactTable, { MRT_Cell, MRT_ColumnDef, MRT_TableInstance } from "material-react-table";
 import AnonimizeContent from "./AnonimizeContent";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { Entity } from "../types/Entity";
@@ -9,6 +9,7 @@ import { updateUserFile } from '../util/UserFileCRUDL';
 import { AnonimizeStateState } from "../types/AnonimizeState";
 import { EntityPool } from "../types/EntityPool";
 import { RowSelectionState } from "@tanstack/table-core/build/lib/features/RowSelection";
+import { EntityTypeI, getEntityType, getEntityTypes, TypeNames } from "../types/EntityTypes";
 
 interface AnonimizeProps{
     file: UserFile
@@ -20,14 +21,20 @@ interface AnonimizeState{
     ents: Entity[]
 }
 
+let pool: EntityPool = new EntityPool("",[]);
+
 export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeState>{
     contentRef: React.RefObject<AnonimizeContent> = React.createRef();
     tableRef: React.RefObject<MRT_TableInstance<Entity>> = React.createRef();
     doc: HTMLElement = new DOMParser().parseFromString(this.props.file.html_contents, "text/html").body;
-    pool: EntityPool = new EntityPool(this.doc.textContent || "" ,this.props.file.ents);
     state: AnonimizeState = {
         anonimizeState: AnonimizeStateState.TAGGED,
-        ents: [...this.pool.entities]
+        ents: [...pool.entities]
+    }
+
+    constructor(props: AnonimizeProps){
+        super(props);
+        pool = new EntityPool(this.doc.textContent || "" ,this.props.file.ents);
     }
 
     selectedIndexes(): number[]{
@@ -47,19 +54,19 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
 
     joinSelectedEntities = () => {
         let indexes = this.selectedIndexes();
-        this.pool.joinEntities(indexes);
+        pool.joinEntities(indexes);
         this.removeTableSelection();
     }
 
     splitSelectedEntities = () => {
         let indexes = this.selectedIndexes();
-        this.pool.splitEntities(indexes);
+        pool.splitEntities(indexes);
         this.removeTableSelection();
     }
 
     removeSelectedEntities = () => {
         let indexes = this.selectedIndexes();
-        this.pool.removeEntities(indexes);
+        pool.removeEntities(indexes);
         this.removeTableSelection();
     }
 
@@ -90,17 +97,17 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     }
 
     onPoolChange = (): void => {
-        this.props.file.ents = this.pool.entities;
+        this.props.file.ents = pool.entities;
         updateUserFile(this.props.file);
-        this.setState({ ents: [...this.pool.entities] })
+        this.setState({ ents: [...pool.entities] })
     }
 
     componentDidMount(): void {
-        this.pool.onChange( this.onPoolChange )
+        pool.onChange( this.onPoolChange )
     }
 
     componentWillUnmount(): void {
-        this.pool.offChange( this.onPoolChange )
+        pool.offChange( this.onPoolChange )
     }
 
     render(): React.ReactNode {
@@ -125,11 +132,11 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         </select>
                     </div>
                     <div>
-                        <RemoteNlpStatus pool={this.pool} disabled={this.state.anonimizeState != AnonimizeStateState.TAGGED}/>
+                        <RemoteNlpStatus pool={pool} disabled={this.state.anonimizeState != AnonimizeStateState.TAGGED}/>
                     </div>
                 </div>
                 <div className="bg-white p-4 m-2">
-                    <AnonimizeContent ref={this.contentRef} doc={this.doc} pool={this.pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState}/>
+                    <AnonimizeContent ref={this.contentRef} doc={this.doc} pool={pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState}/>
                 </div>
             </div>
             <div className="col-4">
@@ -139,6 +146,9 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         key="ent-table"
                         enableRowSelection
                         enableColumnOrdering
+                        enableEditing
+                        positionActionsColumn="last"
+                        editingMode="cell"
                         enableDensityToggle={false}
                         enableHiding={false}
                         enableStickyHeader
@@ -160,6 +170,12 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                                 rowSelection: typeof updaterOrValue === "function" ? updaterOrValue(state.rowSelection) : updaterOrValue
                             });
                         }}
+                        onEditingRowSave={({exitEditingMode, values, row}) => {
+                                row.original.type = values.type;
+                                row.original.overwriteAnonimization = values.overwriteAnonimization;
+                                pool.updateOrder();
+                                exitEditingMode();
+                        }}
                         initialState={{density: 'compact'}}
                         columns={columns} 
                         data={this.state.ents}
@@ -173,26 +189,53 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
 let columns: MRT_ColumnDef<Entity>[] = [{
     header: "#",
     accessorKey: "offsetsLength",
-    size: 5,
     enableColumnFilter: false,
     enableColumnDragging: false,
-    enableColumnActions: false
+    enableColumnActions: false,
+    enableEditing: false,
+    size: 40
 },
 {
     header: "Entidade", 
     accessorKey: "previewText",
-    maxSize: 20
+    enableEditing: false,
+    size: 40
 },
 {
     header: "Tipo",
     accessorKey: "type",
-    size:5
+    size: 40,
+    Cell: ({row}) => {
+        let t = getEntityType(row.original.type);
+        return <span className='badge text-body' style={{background: t.color}}>{t.name}</span>
+    },
+    muiTableBodyCellEditTextFieldProps: ({row}) => ({
+        select: true,
+        children: getEntityTypes().map( t => <option label={t.name} value={t.name}>{t.name}</option>),
+        SelectProps: {
+            native: true
+        },
+        onChange: (event) => {
+            let o = row.original.type;
+            row.original.type = event.target.value as TypeNames;
+            if( o != row.original.type ) pool.updateOrder();
+        }
+    })
+    
 },
 {
-    header: "Anonimização",
-    accessorKey: "anonimizeFunctionName",
-    maxSize: 20,
+    header: "Substituição",
+    accessorKey: "overwriteAnonimization",
     enableColumnFilter: false,
     enableColumnDragging: false,
-    enableColumnActions: false
+    enableColumnActions: false,
+    size: 40,
+    muiTableBodyCellEditTextFieldProps: ({row}) => ({
+        placeholder: row.original.anonimizingFunction()(row.original.previewText, row.original.type, row.original.index, row.original.typeIndex),
+        onBlur: (event) => {
+            let o = row.original.overwriteAnonimization;
+            row.original.overwriteAnonimization = event.target.value;
+            if( o != row.original.overwriteAnonimization ) pool.updateOrder();
+        }
+    })
 }]
