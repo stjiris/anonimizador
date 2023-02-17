@@ -285,57 +285,45 @@ class AnonimizeTooltip extends React.Component<AnonimizeTooltipProps>{
         let start = document.querySelector(`[data-offset="${sel.start}"]`);
         if(!start) return;
         let rects = start.getClientRects();
+        console.log(rects)
 
         let style: React.CSSProperties = {
             position: "fixed",
             display: "block",
-            top: rects[0].top + rects[0].height,
-            left: rects[0].right,
+            bottom: window.innerHeight - rects[0].top,
+            top: rects[0].top+rects[0].height,
+            left: rects[0].left,
             width: "fit-content"
         };
+
+        if( rects[0].top > window.innerHeight / 2 ){
+            delete style.top;
+        }
+        else{
+            delete style.bottom;
+        }
 
         switch(this.props.selectionWould){
             case AddEntityDryRun.CHANGE_ARRAY:
                 return <div style={style}>
-                    <div className='alert alert-info'>Criar nova uma entidade com o tipo?</div>
                     <div className="d-flex flex-column gap-1 bg-white p-1 border">
-                        {getEntityTypes().map( (type,i) => 
-                            <span key={i} role="button" style={{background: type.color}} onMouseDown={this.onClickType.bind(this, type, sel)}>{type.name}</span>
-                        )}
-                        <span role="button" className="bg-gray">Cancelar</span>
+                        {getEntityTypes().map( (t,i) => <span key={i} role="button" className='badge text-body' style={{background: t.color}} onMouseDown={this.onClickType.bind(this, t, sel)}>{t.name}</span>)}
                     </div>
                 </div>;
             case AddEntityDryRun.CHANGE_OFFSET:
                 return <div style={style}>
-                    <div className='alert alert-warning'>Existem {this.props.selectionAffects} entidade(s) parecidas. Dependendo do tipo a ação pode unir as entidades.</div>
                     <div className="d-flex flex-column gap-1 bg-white p-1 border">
-                        {getEntityTypes().map( (type,i) => 
-                            <span key={i} role="button" style={{background: type.color}} onMouseDown={this.onClickType.bind(this, type, sel)}>{type.name}</span>
-                        )}
-                        <span role="button" className="bg-gray">Cancelar</span>
+                        {getEntityTypes().map( (t,i) => <span key={i} role="button" className='badge text-body' style={{background: t.color}} onMouseDown={this.onClickType.bind(this, t, sel)}>{t.name}</span>)}
                     </div>
                 </div>;
             case AddEntityDryRun.CHANGE_TYPE:
                 return <div style={style}>
-                <div className='alert alert-warning'>Modificar {this.props.selectionAffects} entidade(s)</div>
-                <div className="d-flex flex-column gap-1 bg-white p-1 border">
-                    {getEntityTypes().map( (type,i) => 
-                        <span key={i} role="button" style={{background: type.color}} onMouseDown={this.onClickType.bind(this, type, sel)}>{type.name}</span>
-                    )}
-                    <span role="button" className="bg-danger" onMouseDown={this.onClickRemove.bind(this, sel)}>Remover</span>
-                    <span role="button" className="bg-gray">Cancelar</span>
-                </div>
-            </div>;
+                    <div className="d-flex flex-column gap-1 bg-white p-1 border">
+                        <span role="button" onMouseDown={this.onClickRemove.bind(this, sel)}><i className='bi bi-trash'></i> Remover</span>
+                        {getEntityTypes().map( (t,i) => <span key={i} role="button" className='badge text-body' style={{background: t.color}} onMouseDown={this.onClickType.bind(this, t, sel)}>{t.name}</span>)}
+                    </div>
+                </div>;
 
         }
-
-        return <div style={style}>
-            <div className="d-flex flex-column gap-1 bg-white p-1 border">
-                {getEntityTypes().map( (type,i) => 
-                    <span key={i} role="button" style={{background: type.color}} onMouseDown={this.onClickType.bind(this, type, sel)}>{type.name}</span>
-                )}
-                <span role="button" className="bg-gray">Cancelar</span>
-            </div>
-        </div>
     }
 }
