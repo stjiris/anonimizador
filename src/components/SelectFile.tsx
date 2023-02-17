@@ -3,6 +3,7 @@ import { createUserFile, deleteUserFile, readSavedUserFile, listUserFile } from 
 import { loadSavedUserFile, SavedUserFile, UserFile } from "../types/UserFile";
 import MaterialReactTable, { MRT_ColumnDef } from "material-react-table";
 import {MRT_Localization_PT} from "material-react-table/locales/pt";
+import { getEntityTypes } from "../types/EntityTypes";
 
 type SelectFileProps = {
     setUserFile: (file: UserFile) => void
@@ -28,9 +29,17 @@ export default class SelectFile extends React.Component<SelectFileProps,SelectFi
 
     render(): React.ReactNode {
         let cols: MRT_ColumnDef<SavedUserFile>[] = [
-            {header: "Ficheiros Locais", accessorKey: "name"},
+            {
+                header: "Ficheiros Locais",
+                Header: ({column}) => <><i className="bi bi-file-earmark-fill"></i> Ficheiros Locais</>,
+                accessorKey: "name",
+                Cell: ({row,renderedCellValue}) => <span role="button" onClick={() => this.props.setUserFile(loadSavedUserFile(row.original))}><i className="bi bi-file-earmark"></i> {renderedCellValue}</span>,
+            },
             {header: "Número de Caracteres", accessorKey: "size"},
-            {header: "Número de Entidades", accessorFn: (o) => o.ents.length},
+            {
+                header: "Número de Entidades",
+                Cell: ({row}) => <div className="d-flex">{getEntityTypes().map( (t,i) => <div className="mx-1 px-1">{row.original.ents.filter(e => e.type === t.name).length} <span key={i} className='badge text-body' style={{background: t.color}}>{t.name}</span></div>)}</div>
+            }
         ]
 
         return (<MaterialReactTable 
@@ -39,8 +48,8 @@ export default class SelectFile extends React.Component<SelectFileProps,SelectFi
             data={this.state.list}
             localization={MRT_Localization_PT}
             enableRowActions
-            renderRowActions={({row}) => <UserFileActions file={this.state.list[row.index]} setUserFile={this.props.setUserFile} />}
-            positionActionsColumn="last"
+            renderRowActions={({row}) => <UserFileActions file={row.original} setUserFile={this.props.setUserFile} />}
+            positionActionsColumn="first"
             enablePagination={false}
             enableDensityToggle={false}
             enableHiding={false}
@@ -116,8 +125,8 @@ export class AddUserFileAction extends React.Component<SelectFileProps>{
 export class UserFileActions extends React.Component<UserFileActionsProps>{
     render(): React.ReactNode {
         return (<>
-            <i className="bi bi-pencil-fill m-1 p-1 text-primary" role="button" onClick={() => this.props.setUserFile(loadSavedUserFile(this.props.file))}></i>
             <i className="bi bi-trash m-1 p-1 text-danger" role="button" onClick={() => deleteUserFile(this.props.file)}></i>
+            <i className="bi bi-pencil-fill m-1 p-1 text-primary" role="button" onClick={() => this.props.setUserFile(loadSavedUserFile(this.props.file))}></i>
         </>);
     }
 }

@@ -34,6 +34,9 @@ export function getEntityType(label: TypeNames): EntityTypeI{
     for( let t of types ){
         cache[t.name as TypeNames] = t;
     }
+
+    // TODO: if label doesn't exist create a stub type?
+
     return cache[label] as EntityTypeI
 }
 

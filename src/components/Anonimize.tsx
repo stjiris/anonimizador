@@ -31,6 +31,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
         super(props);
         pool.originalText = this.doc.textContent || ""
         pool.entities = this.props.file.ents;
+        pool.updateOrder();
         this.state ={
             anonimizeState: AnonimizeStateState.TAGGED,
             ents: [...pool.entities]
