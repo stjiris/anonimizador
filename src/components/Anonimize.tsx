@@ -174,8 +174,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         }}
                         positionToolbarAlertBanner="bottom"
                         initialState={{
-                            density: 'compact',
-                            columnVisibility: {overwriteAnonimization: false}
+                            density: 'compact'
                         }}
                         columns={columns} 
                         data={this.state.ents}
@@ -234,7 +233,7 @@ let columns: MRT_ColumnDef<Entity>[] = [{
     
 },
 {
-    header: "Substituição",
+    header: "Anonimização",
     accessorKey: "overwriteAnonimization",
     enableColumnFilter: false,
     enableColumnDragging: false,
