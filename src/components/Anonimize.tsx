@@ -113,7 +113,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     render(): React.ReactNode {
         return (<div className="row container-fluid bg-dark m-0">
             <div className="col-8">
-                <div className="bg-white py-3 px-4 m-2 d-flex">
+                <div className="position-sticky top-0 bg-white py-3 px-4 mt-2 d-flex" style={{borderBottom: "5px solid #161616"}}>
                     <div className="mx-2">
                         <button className="btn red-link fw-bold" onClick={() => this.props.setUserFile(undefined)}><i className="bi bi-x"></i> Fechar</button>
                     </div>
@@ -136,7 +136,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         <RemoteNlpStatus pool={pool} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}/>
                     </div>
                 </div>
-                <div className="bg-white p-4 m-2">
+                <div className="bg-white p-4">
                     <AnonimizeContent ref={this.contentRef} doc={this.doc} pool={pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState}/>
                 </div>
             </div>
