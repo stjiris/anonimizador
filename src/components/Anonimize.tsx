@@ -206,7 +206,7 @@ let columns: MRT_ColumnDef<Entity>[] = [{
             let off = row.original.offsets[0];
             let elm = document.querySelector(`[data-offset="${off.start}"]`);
             if( elm ){
-                elm.scrollIntoView();
+                elm.scrollIntoView({ block: "center" });
             }
         }
     })
