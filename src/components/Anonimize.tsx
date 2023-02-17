@@ -240,9 +240,9 @@ let columns: MRT_ColumnDef<Entity>[] = [{
     enableColumnDragging: false,
     enableColumnActions: false,
     size: 40,
-    Cell: ({row}) => row.original.overwriteAnonimization ? row.original.overwriteAnonimization : <span className="text-muted">{row.original.anonimizingFunction()(row.original.previewText, row.original.type, row.original.index, row.original.typeIndex)}</span>,
+    Cell: ({row}) => row.original.overwriteAnonimization ? row.original.overwriteAnonimization : <span className="text-muted">{row.original.anonimizingFunction()(row.original.previewText, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex)}</span>,
     muiTableBodyCellEditTextFieldProps: ({row}) => ({
-        placeholder: row.original.anonimizingFunction()(row.original.previewText, row.original.type, row.original.index, row.original.typeIndex),
+        placeholder: row.original.anonimizingFunction()(row.original.previewText, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex),
         onBlur: (event) => {
             let o = row.original.overwriteAnonimization;
             row.original.overwriteAnonimization = event.target.value;

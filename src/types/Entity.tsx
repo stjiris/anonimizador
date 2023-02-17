@@ -26,6 +26,7 @@ export class Entity implements EntityI {
     overwriteAnonimization?: string;
     index: number;
     typeIndex: number;
+    funcIndex: number;
     
     constructor(txt: string, label: string){
         this.id = normalizeEntityString(txt) + label
@@ -35,6 +36,7 @@ export class Entity implements EntityI {
         this.previewText = txt
         this.index = -1
         this.typeIndex = -1
+        this.funcIndex = -1
     }
 
     addOffset(offset: OffsetRange[]){
@@ -51,6 +53,16 @@ export class Entity implements EntityI {
         else{
             let type = getEntityType(this.type);
             return functions[type.functionName];
+        }
+    }
+
+    anonimizingFunctionName(): AnonimizeFunctionName{
+        if( this.overwriteAnonimization ){
+            return "Não anonimizar";
+        }
+        else{
+            let type = getEntityType(this.type);
+            return type.functionName;
         }
     }
 

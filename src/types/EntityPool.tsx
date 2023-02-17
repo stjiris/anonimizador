@@ -1,3 +1,4 @@
+import { AnonimizeFunctionName } from "../util/anonimizeFunctions";
 import { Entity, EntityI, normalizeEntityString, OffsetRange } from "./Entity";
 import { TypeNames } from "./EntityTypes";
 
@@ -76,14 +77,20 @@ export class EntityPool {
     }
 
     updateOrder(){
-        let counts: {[key in TypeNames]?: number } = {}
+        let typeCounts: {[key in TypeNames]?: number } = {}
+        let funcCounts: {[key in AnonimizeFunctionName]?: number } = {}
 
         this.entities.sort( (a,b) => a.offsets[0].start - b.offsets[0].start ).forEach( (e, i) => {
             e.index = i+1;
-            if( !counts[e.type] ){
-                counts[e.type] = 0;
+            if( !typeCounts[e.type] ){
+                typeCounts[e.type] = 0;
             }
-            e.typeIndex = ++counts[e.type]!;
+            e.typeIndex = ++typeCounts[e.type]!;
+            let name = e.anonimizingFunctionName();
+            if( !funcCounts[name] ){
+                funcCounts[name] = 0;
+            }
+            e.funcIndex = funcCounts[name]!++;
         });
         for( let l of this.listeners ){
             l();
