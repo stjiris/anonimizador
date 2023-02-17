@@ -13,15 +13,15 @@ export interface EntityTypeI {
 export type TypeNames = "PER" | "ORG" | "DAT" | "LOC" | "PRO" | "MAT" | "CEP" | "TEL" | "EMA";
 
 const EntityTypesDefaults: {[key in TypeNames] : EntityTypeI} = {
-    PER: {name: "PER", color: "#84d2ff", functionName: "Tipo incremental"},
+    PER: {name: "PER", color: "#84d2ff", functionName: "Letras incremental"},
     DAT: {name: "DAT", color: "#66fc03", functionName: "Ofuscação parcial"},
-    ORG: {name: "ORG", color: "#00ffa2", functionName: "Tipo incremental"},
-    LOC: {name: "LOC", color: "#fc03c2", functionName: "Ofuscação parcial"},
+    ORG: {name: "ORG", color: "#00ffa2", functionName: "Letras incremental"},
+    LOC: {name: "LOC", color: "#fc03c2", functionName: "Tipo incremental"},
     PRO: {name: "PRO", color: "#eb8634", functionName: "Ofuscação parcial"},
-    MAT: {name: "MAT", color: "#007eff", functionName: "Tipo incremental"},
+    MAT: {name: "MAT", color: "#007eff", functionName: "Ofuscação parcial"},
     CEP: {name: "CEP", color: "#eb3434", functionName: "Ofuscação parcial"},
-    TEL: {name: "TEL", color: "#ce42f5", functionName: "Ofuscação parcial"},
-    EMA: {name: "EMA", color: "#f5d142", functionName: "Ofuscação parcial"}
+    TEL: {name: "TEL", color: "#ce42f5", functionName: "Tipo incremental"},
+    EMA: {name: "EMA", color: "#f5d142", functionName: "Tipo incremental"}
 }
 
 const cache: {[key in TypeNames]?: EntityTypeI} = {}
