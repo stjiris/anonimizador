@@ -151,7 +151,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         positionActionsColumn="last"
                         editingMode="cell"
                         enableDensityToggle={false}
-                        enableHiding={false}
+                        enableHiding={true}
                         enableStickyHeader
                         enablePagination={false}
                         renderTopToolbarCustomActions={(_) => {
@@ -172,7 +172,10 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                             }
                         }}
                         positionToolbarAlertBanner="bottom"
-                        initialState={{density: 'compact'}}
+                        initialState={{
+                            density: 'compact',
+                            columnVisibility: {overwriteAnonimization: false}
+                        }}
                         columns={columns} 
                         data={this.state.ents}
                         localization={MRT_Localization_PT}/>
@@ -195,7 +198,7 @@ let columns: MRT_ColumnDef<Entity>[] = [{
     header: "Entidade", 
     accessorKey: "previewText",
     enableEditing: false,
-    size: 40,
+    size: 60,
     muiTableBodyCellProps: ({row}) => ({
         onClick: () => {
             if( row.original.offsets.length === 0 ) return;
@@ -236,6 +239,7 @@ let columns: MRT_ColumnDef<Entity>[] = [{
     enableColumnDragging: false,
     enableColumnActions: false,
     size: 40,
+    Cell: ({row}) => row.original.overwriteAnonimization ? row.original.overwriteAnonimization : <span className="text-muted">{row.original.anonimizingFunction()(row.original.previewText, row.original.type, row.original.index, row.original.typeIndex)}</span>,
     muiTableBodyCellEditTextFieldProps: ({row}) => ({
         placeholder: row.original.anonimizingFunction()(row.original.previewText, row.original.type, row.original.index, row.original.typeIndex),
         onBlur: (event) => {
