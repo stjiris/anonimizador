@@ -65,8 +65,9 @@ export default class App extends React.Component<{},AppState>{
 			]}/>
 			{this.state.userFile == null ? 
 				<>
-					<div className="alert alert-primary">
+					<div className="alert alert-primary alert-dismissible fade show m-4" role="alert">
 						<h4><i className='bi bi-brightness-high-fill'></i>Novidades!</h4>
+						<button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 						<ul>
 							<li>Ficheiros <code>.doc</code> podem ser submetidos.</li>
 							<li>Capacidade de exportar e importar o trabalho em progresso.</li>
