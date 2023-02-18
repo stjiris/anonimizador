@@ -7,7 +7,7 @@ import BootstrapModal from './util/BootstrapModal';
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table';
 import { MRT_Localization_PT } from 'material-react-table/locales/pt';
 import { EntityTypeI, getEntityTypes, restoreEntityTypes, TypeNames, updateEntityType } from './types/EntityTypes';
-import { functions } from './util/anonimizeFunctions';
+import { AnonimizeFunctionName, functions } from './util/anonimizeFunctions';
 
 interface AppState{
 	userFile: UserFile | undefined
@@ -26,6 +26,33 @@ export default class App extends React.Component<{},AppState>{
 	}
 
 	render(): React.ReactNode {
+		const typeTableColumns: MRT_ColumnDef<EntityTypeI>[] = [
+			{
+					header: "Tipo",
+					accessorKey: "color",
+					enableEditing: true,
+					muiTableBodyCellEditTextFieldProps: ({row}) => ({
+						type: "color",
+						name: "color",
+						onBlur: (evt) => this.setState({...this.state, entitieTypes: updateEntityType(row.original.name as TypeNames, evt.target.value, row.original.functionName)})
+					}),
+					Cell: ({row}) => <span className='badge text-body' style={{background: row.original.color}}>{row.original.name}</span>
+			},
+			{
+				header: "Anonimização",
+				accessorKey: "functionName",
+				enableEditing: true,
+				muiTableBodyCellEditTextFieldProps: ({row}) => ({
+					select: true,
+					children: Object.keys(functions).map( name => <option label={name} value={name}>{name}</option>),
+					SelectProps: {
+						native: true
+					},
+					onChange: (evt) => this.setState({...this.state, entitieTypes: updateEntityType(row.original.name as TypeNames, row.original.color, evt.target.value as AnonimizeFunctionName)})
+				})
+			}
+		]
+
 		return <div className="App">
 			<style>
 				{/* Generate type colors */}
@@ -33,7 +60,9 @@ export default class App extends React.Component<{},AppState>{
 			</style>
 			<Header actions={[
 				<span key="types" className="nav-link red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-types">Tipos de Entidades</span>,
-				<i key="space" className='bi bi-dot red-link fw-bold'></i>,
+				<i key="space-1" className='bi bi-dot red-link fw-bold'></i>,
+				<span key="filters" className="nav-link red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-filters">Filtros de Entidades</span>,
+				<i key="space-2" className='bi bi-dot red-link fw-bold'></i>,
 				<span key="about" className="nav-link fs-6 bg-transparent red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-about">Sobre</span>
 			]}/>
 			{this.state.userFile == null ? 
@@ -83,13 +112,7 @@ export default class App extends React.Component<{},AppState>{
 									enablePagination={false}
 									enableEditing={true}
 									positionActionsColumn="last"
-									editingMode="row"
-									onEditingRowSave={({exitEditingMode, values, row})=>{
-										this.setState({
-											entitieTypes: updateEntityType(row.original.name as TypeNames, values.color, values.functionName)
-										});
-										exitEditingMode();
-									}}
+									editingMode="cell"
 									columns={typeTableColumns} 
 									data={this.state.entitieTypes}
 									localization={MRT_Localization_PT}
@@ -103,33 +126,17 @@ export default class App extends React.Component<{},AppState>{
 					<button className="btn btn-secondary" type="button" data-bs-dismiss="modal">Fechar</button>
 				</div>
 			</BootstrapModal>
+			<BootstrapModal key="modal-filters" id="modal-filters">
+				<div className="modal-header">
+					<div><h5 className="modal-title" id="modal-filters-label">Filtros de entidades</h5></div>
+				</div>
+				<div className="modal-body p-0">
+				</div>
+				<div className="modal-footer">
+					<div className="flex-grow-1"></div>
+					<button className="btn btn-secondary" type="button" data-bs-dismiss="modal">Fechar</button>
+				</div>
+			</BootstrapModal>
 		</div>
 	}
 }
-
-
-const typeTableColumns: MRT_ColumnDef<EntityTypeI>[] = [
-	{
-			header: "Tipo",
-			accessorKey: "color",
-			enableEditing: true,
-			muiTableBodyCellEditTextFieldProps: {
-				type: "color",
-				name: "color"
-				
-			},
-			Cell: ({row}) => <span className='badge text-body' style={{background: row.original.color}}>{row.original.name}</span>
-	},
-	{
-		header: "Anonimização",
-		accessorKey: "functionName",
-		enableEditing: true,
-		muiTableBodyCellEditTextFieldProps: {
-			select: true,
-			children: Object.keys(functions).map( name => <option label={name} value={name}>{name}</option>),
-			SelectProps: {
-				native: true
-			}
-		}
-	}
-]
