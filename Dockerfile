@@ -3,6 +3,7 @@ FROM python:3.8
 WORKDIR /opt/app
 
 RUN apt-get update && apt-get install -y pandoc git-lfs
+RUN apt-get --no-install-recommends install libreoffice -y
 
 RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
 
@@ -22,6 +23,7 @@ ENV PYTHON_COMMAND=/opt/app/env/bin/python
 COPY package*.json ./
 
 RUN npm ci --omit=dev
+
 
 COPY . .
 

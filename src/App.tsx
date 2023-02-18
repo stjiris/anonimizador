@@ -36,7 +36,17 @@ export default class App extends React.Component<{},AppState>{
 				<i key="space" className='bi bi-dot red-link fw-bold'></i>,
 				<span key="about" className="nav-link fs-6 bg-transparent red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-about">Sobre</span>
 			]}/>
-			{this.state.userFile == null ? <SelectFile key="select" setUserFile={this.setUserFile} /> : <Anonimize key="anonimize" setUserFile={this.setUserFile} file={this.state.userFile} />}
+			{this.state.userFile == null ? 
+				<>
+					<div className="alert alert-primary">
+						<h4><i className='bi bi-brightness-high-fill'></i>Novidades!</h4>
+						<ul>
+							<li>Ficheiros <code>.doc</code> podem ser submetidos.</li>
+						</ul>
+					</div>
+					<SelectFile key="select" setUserFile={this.setUserFile} />
+				</> : 
+				<Anonimize key="anonimize" setUserFile={this.setUserFile} file={this.state.userFile} />}
 			<BootstrapModal key="modal-about" id="modal-about">
 				<div className="modal-header">
 					<div>

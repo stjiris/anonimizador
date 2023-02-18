@@ -31,7 +31,7 @@ export default class SelectFile extends React.Component<SelectFileProps,SelectFi
         let cols: MRT_ColumnDef<SavedUserFile>[] = [
             {
                 header: "Ficheiros Locais",
-                Header: ({column}) => <><i className="bi bi-file-earmark-fill"></i> Ficheiros Locais</>,
+                Header: <><i className="bi bi-file-earmark-fill"></i> Ficheiros Locais</>,
                 accessorKey: "name",
                 Cell: ({row,renderedCellValue}) => <span role="button" onClick={() => this.props.setUserFile(loadSavedUserFile(row.original))}><i className="bi bi-file-earmark"></i> {renderedCellValue}</span>,
             },
