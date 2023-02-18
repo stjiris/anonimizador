@@ -69,6 +69,11 @@ export default class App extends React.Component<{},AppState>{
 						<h4><i className='bi bi-brightness-high-fill'></i>Novidades!</h4>
 						<ul>
 							<li>Ficheiros <code>.doc</code> podem ser submetidos.</li>
+							<li>Capacidade de exportar e importar o trabalho em progresso.</li>
+							<ol>
+								<li>Download em <b>Edição</b> exporta o trabalho em progresso.</li>
+								<li>Ao <b>Adicionar Ficheiro</b> usar o guardado anteriormente.</li>
+							</ol>
 						</ul>
 					</div>
 					<SelectFile key="select" setUserFile={this.setUserFile} />

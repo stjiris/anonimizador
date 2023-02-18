@@ -72,6 +72,16 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     }
 
     downloadHtml = () => {
+        if( this.state.anonimizeState == AnonimizeStateState.TAGGED ){
+            let jsonBlob = new Blob([JSON.stringify(this.props.file)]);
+            let stubA = document.createElement("a");
+            stubA.href = URL.createObjectURL(jsonBlob);
+            stubA.target = "_blank";
+            stubA.download = `${this.state.anonimizeState}_${this.props.file.name}.json`
+            stubA.click();
+
+            return;
+        }
         let html = this.contentRef.current?.contentRef.current?.innerHTML;
         if( !html ) return;
 
@@ -123,7 +133,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                     </div>
                     <div className="flex-grow-1"></div>
                     <div>
-                        <button className="red-link fw-bold btn" onClick={this.downloadHtml} disabled={this.state.anonimizeState === AnonimizeStateState.TAGGED}><i className="bi bi-download"></i> Download</button>
+                        <button className="red-link fw-bold btn" onClick={this.downloadHtml}><i className="bi bi-download"></i> Download</button>
                     </div>
                     <div>
                         <select className="red-link fw-bold btn text-end" onChange={(ev) => this.setState({anonimizeState: ev.target.value as AnonimizeStateState}) } defaultValue={AnonimizeStateState.TAGGED}>

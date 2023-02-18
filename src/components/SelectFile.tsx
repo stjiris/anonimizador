@@ -1,6 +1,6 @@
 import React from "react";
 import { createUserFile, deleteUserFile, readSavedUserFile, listUserFile } from "../util/UserFileCRUDL";
-import { loadSavedUserFile, SavedUserFile, UserFile } from "../types/UserFile";
+import { isSavedUserFile, loadSavedUserFile, SavedUserFile, UserFile } from "../types/UserFile";
 import MaterialReactTable, { MRT_ColumnDef } from "material-react-table";
 import {MRT_Localization_PT} from "material-react-table/locales/pt";
 import { getEntityTypes } from "../types/EntityTypes";
@@ -63,14 +63,43 @@ type UserFileActionsProps = {
 }
 
 export class AddUserFileAction extends React.Component<SelectFileProps>{
-    onFile: React.ChangeEventHandler<HTMLInputElement> = (event) => {
+
+    onFile: React.ChangeEventHandler<HTMLInputElement> = async (event) => {
         let files = event.target.files;
         if( files == null) return;
 
         
         let file = files[0];
+
         let formData = new FormData();
         formData.append("file", file);
+
+        if( file.type == "application/json"){
+            let loadedUserFile = await file.text().then( txt => {
+                let obj = JSON.parse(txt);
+                if( isSavedUserFile(obj) )
+                    return obj
+                else
+                    return null
+            }).catch(e => {
+                console.log(e);
+                return null;
+            });
+            if( loadedUserFile ){
+                let savedUserFile = readSavedUserFile(loadedUserFile.name);
+                if( savedUserFile != null ){
+                    let usrConfirm = window.confirm("Existe um ficheiro guardado localmente com o mesmo nome. Confirma que quer apagar ficheiro antigo?");
+                    if( !usrConfirm ){
+                        event.target.value = "";
+                        return;
+                    }
+                    deleteUserFile(savedUserFile);
+                }
+                createUserFile(loadedUserFile);
+                this.props.setUserFile(loadSavedUserFile(loadedUserFile))
+                return;
+            }
+        }
         
         let savedUserFile = readSavedUserFile(file.name);
         if( savedUserFile != null ){
