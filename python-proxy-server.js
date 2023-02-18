@@ -20,13 +20,25 @@ const process = require('process');
 
 const PYTHON_COMMAND = process.env.PYTHON_COMMAND || path.join(__dirname, "env/bin/python");
 
-let out = createWriteStream(`logs/deploy-${Date.now()}.log`, {flags: "a+"})
+let requetsLogger = createWriteStream(`logs/requests-deploy-${Date.now()}.log`, {flags: "a+"})
+let processingLogger = createWriteStream(`logs/post-requests-info-deploy-${Date.now()}.log`, {flags: "a+"})
+let logProcess = (requestPath, startTime, endTime, fileSize, fileExt, exitCode) => {
+    processingLogger.write(JSON.stringify({
+        requestPath,
+        startTime,
+        endTime,
+        fileSize,
+        fileExt,
+        exitCode
+    }));
+    processingLogger.write("\n");
+}
 
 app.use((req, res, next) => {
     let start = new Date();
     res.on('close', () => {
         let end = new Date();
-        out.write(`[${start.toISOString()}|${end.toISOString()}] ${req.method} ${res.statusCode} ${req.url} ${end-start}ms\n`);
+        requetsLogger.write(`[${start.toISOString()}|${end.toISOString()}] ${req.method} ${res.statusCode} ${req.url} ${end-start}ms\n`);
     })
     next()
 })
@@ -44,6 +56,7 @@ app.get("*/types", (req, res) => {
 })
 
 app.post("*/html", upload.single('file'), (req, res) => {
+    let start = new Date();
     let subproc = spawn(PYTHON_COMMAND,["python-cli/pandoc.py", req.file.path], {...process.env, PYTHONIOENCODING: 'utf-8', PYTHONLEGACYWINDOWSSTDIO: 'utf-8' })
     let buffer = new PassThrough();
     subproc.stdout.pipe(buffer);
@@ -54,6 +67,7 @@ app.post("*/html", upload.single('file'), (req, res) => {
         process.stderr.write(`ERROR: spawn: ${subproc.spawnargs.join(' ')}: ${err.toString()}`)
     });
     subproc.on('close', (code) => {
+        let end = new Date();
         console.log("spawn: Exited with",code)
         if( code != 0 ){
             res.status(500).end();
@@ -62,10 +76,12 @@ app.post("*/html", upload.single('file'), (req, res) => {
             buffer.pipe(res);
         }
         rmSync(req.file.path);
+        logProcess("/html", start, end, req.file.size, req.file.mimetype, code);
     })
 })
 
 app.post("*/docx", upload.single('file'), (req, res) => {
+    let start = new Date();
     let out = path.join(os.tmpdir(), `${Date.now()}.docx`)
     let subproc = spawn(PYTHON_COMMAND,["python-cli/inverse-pandoc.py", req.file.path, out], {...process.env, PYTHONIOENCODING: 'utf-8', PYTHONLEGACYWINDOWSSTDIO: 'utf-8' })
     subproc.on("error", (err) => {
@@ -75,20 +91,24 @@ app.post("*/docx", upload.single('file'), (req, res) => {
         process.stderr.write(`ERROR: spawn: ${subproc.spawnargs.join(' ')}: ${err.toString()}`)
     });
     subproc.on('close', (code) => {
+        let end = new Date();
         console.log("spawn: Exited with",code)
         if( code != 0 ){
             res.status(500).end();
-            return;
         }
-        res.sendFile(out);
+        else{
+            res.sendFile(out);
+        }
+        rmSync(req.file.path);
+        logProcess("/docx", start, end, req.file.size, req.file.mimetype, code);
         setTimeout(() => {
             rmSync(out);
-            rmSync(req.file.path);
         }, 3000)
     })
 })
 
 app.post("*/from-text", upload.single('file'), (req, res) => {
+    let start = new Date();
     let subproc = spawn(PYTHON_COMMAND,["python-cli/anonimizador-text.py", "-i", req.file.path,"-f","json"], {...process.env, PYTHONIOENCODING: 'utf-8', PYTHONLEGACYWINDOWSSTDIO: 'utf-8' }) // envs might not be needed outside windows world
     subproc.on("error", (err) => {
         console.log(err);
@@ -100,14 +120,17 @@ app.post("*/from-text", upload.single('file'), (req, res) => {
         process.stderr.write(`[${new Date().toISOString()} STDERR python-cli/anonimizador-text] ${err.toString()}`)
     });
     subproc.on('close', (code) => {
+        let end = new Date();
 
         process.stderr.write(`[EXIT ${new Date().toISOString()} python-cli/anonimizador-text] CODE: ${code}`)
+        logProcess("/from-text", start, end, req.file.size, req.file.mimetype, code);
         rmSync(req.file.path);
     })
 })
 
 
 app.post("*/", upload.single('file'), (req, res) => {
+    let start = new Date();
     let subproc = spawn(PYTHON_COMMAND,["black-box-cli.py", req.file.path], {...process.env, PYTHONIOENCODING: 'utf-8', PYTHONLEGACYWINDOWSSTDIO: 'utf-8' }) // envs might not be needed outside windows world
     subproc.on("error", (err) => {
         console.log(err);
@@ -119,8 +142,9 @@ app.post("*/", upload.single('file'), (req, res) => {
         process.stderr.write(`[${new Date().toISOString()} STDERR black-box-cli.py .${req.file.path.split(".").at(-1)}] ${err.toString()}`)
     });
     subproc.on('close', (code) => {
-
+        let end = new Date();
         process.stderr.write(`[EXIT ${new Date().toISOString()} black-box-cli.py .${req.file.path.split(".").at(-1)}] CODE: ${code}`)
+        logProcess("/", start, end, req.file.size, req.file.mimetype, code);
         rmSync(req.file.path);
     })
 })
