@@ -87,7 +87,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                     let stubA = document.createElement("a");
                     stubA.href = file;
                     stubA.target = "_blank";
-                    stubA.download = `${this.state.anonimizeState}_${this.props.file.name}`
+                    stubA.download = `${this.state.anonimizeState}_${this.props.file.name}.docx`
                     stubA.click();
                 })
             }
@@ -114,7 +114,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     render(): React.ReactNode {
         return (<div className="row container-fluid bg-dark m-0">
             <div className="col-8">
-                <div className="position-sticky top-0 bg-white py-3 px-4 mt-2 d-flex" style={{borderBottom: "5px solid #161616"}}>
+                <div className="position-sticky top-0 bg-white py-3 px-4 mt-2 d-flex" style={{borderBottom: "5px solid #161616",zIndex:1}}>
                     <div className="mx-2">
                         <button className="btn red-link fw-bold" onClick={() => this.props.setUserFile(undefined)}><i className="bi bi-x"></i> Fechar</button>
                     </div>

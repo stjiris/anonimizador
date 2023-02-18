@@ -21,6 +21,10 @@
     cursor: pointer;
 }
 
+#content .footnote-ref, #content .footnote-back {
+  scroll-margin-top: 150px;
+}
+
 img{
   max-width: 100%;
 }
