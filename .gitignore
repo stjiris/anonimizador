@@ -25,3 +25,4 @@ yarn-error.log*
 env/
 model-best/
 __pycache__/
+logs/

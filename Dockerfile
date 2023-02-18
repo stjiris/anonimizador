@@ -24,7 +24,6 @@ COPY package*.json ./
 
 RUN npm ci --omit=dev
 
-
 COPY . .
 
 RUN mv iris-lfs-storage/model-best/ ./python-cli/

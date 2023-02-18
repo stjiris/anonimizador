@@ -14,11 +14,22 @@ const storage = multer.diskStorage({
     }
 })
 const upload = multer({storage: storage});
-const {readFileSync, rmSync} = require('fs');
+const {readFileSync, rmSync, createWriteStream} = require('fs');
 const { spawn } = require('child_process');
 const process = require('process');
 
 const PYTHON_COMMAND = process.env.PYTHON_COMMAND || path.join(__dirname, "env/bin/python");
+
+let out = createWriteStream(`logs/deploy-${Date.now()}.log`, {flags: "a+"})
+
+app.use((req, res, next) => {
+    let start = new Date();
+    res.on('close', () => {
+        let end = new Date();
+        out.write(`[${start.toISOString()}|${end.toISOString()}] ${req.method} ${res.statusCode} ${req.url} ${end-start}ms\n`);
+    })
+    next()
+})
 
 app.get("*/types", (req, res) => {
     let nerTypes = ["ORG", "LOC", "PER", "DAT"];
