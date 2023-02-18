@@ -29,7 +29,11 @@ RUN mv iris-lfs-storage/model-best/ ./python-cli/
 
 ENV PUBLIC_URL="."
 
-RUN npm run build
+ARG VERSION_DATE="01/01/1990"
+
+ARG VERSION_COMMIT="0000000"
+
+RUN REACT_APP_VERSION_DATE=${VERSION_DATE} REACT_APP_VERSION_COMMIT=${VERSION_COMMIT} npm run build
 
 EXPOSE 7998
 

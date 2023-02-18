@@ -13,6 +13,7 @@ export default class Header extends React.Component<HeaderProps>{
                   <h5 className="m-0 fancy-font">Anonimizador</h5>
               </div>
           </a>
+          <pre className="m-0">Versão: {process.env.REACT_APP_VERSION_COMMIT} ({process.env.REACT_APP_VERSION_DATE})</pre>
           <div className="flex-fill d-none d-lg-block"></div>
           <nav className="d-print-none">
               <ul className="container d-flex nav align-items-center justify-content-evenly flex-wrap">
