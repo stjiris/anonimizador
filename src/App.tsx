@@ -61,8 +61,6 @@ export default class App extends React.Component<{},AppState>{
 			<Header actions={[
 				<span key="types" className="nav-link red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-types">Tipos de Entidades</span>,
 				<i key="space-1" className='bi bi-dot red-link fw-bold'></i>,
-				<span key="filters" className="nav-link red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-filters">Filtros de Entidades</span>,
-				<i key="space-2" className='bi bi-dot red-link fw-bold'></i>,
 				<span key="about" className="nav-link fs-6 bg-transparent red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-about">Sobre</span>
 			]}/>
 			{this.state.userFile == null ? 
@@ -120,17 +118,6 @@ export default class App extends React.Component<{},AppState>{
 										<button key="reset" className="btn btn-warning" onClick={() => this.setState({entitieTypes: restoreEntityTypes()})}>Repor</button>
 									]}
 								/>
-				</div>
-				<div className="modal-footer">
-					<div className="flex-grow-1"></div>
-					<button className="btn btn-secondary" type="button" data-bs-dismiss="modal">Fechar</button>
-				</div>
-			</BootstrapModal>
-			<BootstrapModal key="modal-filters" id="modal-filters">
-				<div className="modal-header">
-					<div><h5 className="modal-title" id="modal-filters-label">Filtros de entidades</h5></div>
-				</div>
-				<div className="modal-body p-0">
 				</div>
 				<div className="modal-footer">
 					<div className="flex-grow-1"></div>
