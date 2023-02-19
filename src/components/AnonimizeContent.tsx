@@ -40,10 +40,26 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
             }
         }
         if( sel !== null ){
-            let startOffset = parseInt(sel.getRangeAt(0).startContainer.parentElement?.dataset.offset || "-1");
-            let endOffset = parseInt(sel.getRangeAt(0).endContainer.parentElement?.dataset.offset || "-1") + (sel.getRangeAt(0).endContainer.parentElement?.textContent?.length || 0);
+            let range = sel.getRangeAt(0);
+            let startOffset = parseInt(range.startContainer.parentElement?.dataset.offset || "-1");
+            let endOffset = parseInt(range.endContainer.parentElement?.dataset.offset || "-1") + (range.endContainer.parentElement?.textContent?.length || 0);
+            if( range.startContainer.textContent?.length == range.startOffset ){
+                startOffset+=range.startOffset;
+                console.log("FIXING OFF BY ONE ERROR (start)");
+            }
+            if( range.endOffset == 0 ){
+                console.log("FIXING OFF BY ONE ERROR (end)");
+                endOffset-=1;
+            }
             if( startOffset >= 0 && endOffset >= 0){
-                let text = Array.from(document.querySelectorAll(`[data-offset]`) as NodeListOf<HTMLElement>).filter((e: HTMLElement) => parseInt(e.dataset.offset || "-1") >= startOffset && parseInt(e.dataset.offset || "-1") < endOffset ).map(e => e.textContent).join("")
+                let nodes = Array.from(document.querySelectorAll(`[data-offset]`) as NodeListOf<HTMLElement>).filter((e: HTMLElement) => parseInt(e.dataset.offset || "-1") >= startOffset && parseInt(e.dataset.offset || "-1") < endOffset ); 
+                let sNode = nodes.at(0)?.firstChild;
+                let eNode = nodes.at(-1)?.lastChild;
+                if( sNode && eNode ){
+                    range.setStart(sNode,0);
+                    range.setEnd(eNode, eNode.textContent?.length || 0 );
+                }
+                let text = nodes.map(e => e.textContent).join("")
                 let r = this.props.pool.addEntityDryRun(startOffset, endOffset-1, text)
                 this.setState({
                     selection: {
@@ -285,7 +301,6 @@ class AnonimizeTooltip extends React.Component<AnonimizeTooltipProps>{
         let start = document.querySelector(`[data-offset="${sel.start}"]`);
         if(!start) return;
         let rects = start.getClientRects();
-        console.log(rects)
 
         let style: React.CSSProperties = {
             position: "fixed",
