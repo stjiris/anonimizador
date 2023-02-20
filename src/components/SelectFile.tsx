@@ -95,7 +95,12 @@ export class AddUserFileAction extends React.Component<SelectFileProps>{
                     }
                     deleteUserFile(savedUserFile);
                 }
-                createUserFile(loadedUserFile);
+                try{
+                    createUserFile(loadedUserFile);
+                }
+                catch(e){
+                    alert("Aviso! Ficheiro grande demais para ser guardado no browser. Poderá trabalhar nele à mesma.");
+                }
                 this.props.setUserFile(loadSavedUserFile(loadedUserFile))
                 return;
             }

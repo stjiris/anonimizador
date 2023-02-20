@@ -18,6 +18,7 @@ interface AnonimizeProps{
 interface AnonimizeState{
     anonimizeState: AnonimizeStateState
     ents: Entity[]
+    saved: boolean
 }
 
 let pool: EntityPool = new EntityPool("",[]);
@@ -34,8 +35,12 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
         pool.updateOrder();
         this.state ={
             anonimizeState: AnonimizeStateState.TAGGED,
-            ents: [...pool.entities]
+            ents: [...pool.entities],
+            saved: updateUserFile(props.file)
         };
+        if( !this.state.saved ){
+            alert("Atenção! O trabalho não será guardado automáticamente.")
+        }
     }
 
     selectedIndexes(): number[]{
@@ -109,16 +114,24 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
 
     onPoolChange = (): void => {
         this.props.file.ents = pool.entities;
-        updateUserFile(this.props.file);
-        this.setState({ ents: [...pool.entities] })
+        this.setState({ ents: [...pool.entities], saved: updateUserFile(this.props.file) })
+    }
+
+    confirmExit = (evt: BeforeUnloadEvent) => {
+        if( !this.state.saved ){
+            evt.preventDefault();
+            evt.returnValue = "Trabalho em progresso não guardado automaticamente. Confirma que pertende sair?"
+        }
     }
 
     componentDidMount(): void {
         pool.onChange( this.onPoolChange )
+        window.addEventListener("beforeunload", this.confirmExit)
     }
 
     componentWillUnmount(): void {
         pool.offChange( this.onPoolChange )
+        window.removeEventListener("beforeunload", this.confirmExit)
     }
 
     render(): React.ReactNode {
@@ -126,10 +139,11 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
             <div className="col-8">
                 <div className="position-sticky top-0 bg-white py-3 px-4 mt-2 d-flex" style={{borderBottom: "5px solid #161616",zIndex:1}}>
                     <div className="mx-2">
-                        <button className="btn red-link fw-bold" onClick={() => this.props.setUserFile(undefined)}><i className="bi bi-x"></i> Fechar</button>
+                        <button className="btn red-link fw-bold" onClick={() => (this.state.saved || window.confirm("Trabalho não será guardado no browser. Sair?")) ? this.props.setUserFile(undefined) : null}><i className="bi bi-x"></i> Fechar</button>
                     </div>
-                    <div className="mx-2">
+                    <div className="mx-2 d-flex align-items-baseline">
                         <span className="text-body btn"><i className="bi bi-file-earmark-fill"></i> {this.props.file.name}</span>
+                        {this.state.saved ? <span className="alert alert-success m-0 p-1"><i className="bi bi-check"></i> Guardado</span> : <span className="alert alert-danger m-0 p-1"><i className="bi bi-exclamation-triangle-fill"></i> Não guardado</span>}
                     </div>
                     <div className="flex-grow-1"></div>
                     <div>

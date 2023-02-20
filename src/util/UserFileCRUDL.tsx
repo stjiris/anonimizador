@@ -4,9 +4,16 @@ function alertUpdateListUserFile(){
     window.dispatchEvent(new CustomEvent("AlertUpdateListUserFile"));
 }
 
-export function createUserFile(userFile: UserFile | SavedUserFile): void{
-    localStorage.setItem(userFile.name, JSON.stringify(userFile));
-    alertUpdateListUserFile();
+export function createUserFile(userFile: UserFile | SavedUserFile): boolean{
+    try{
+        localStorage.setItem(userFile.name, JSON.stringify(userFile));
+        alertUpdateListUserFile();
+        return true;
+    }
+    catch(e){
+        console.error(e);
+        return false;
+    }
 }
 
 export function readSavedUserFile(name: string): SavedUserFile | null {
@@ -24,8 +31,15 @@ export function readSavedUserFile(name: string): SavedUserFile | null {
     }
 }
 
-export function updateUserFile(userFile: UserFile | SavedUserFile): void{
-    localStorage.setItem(userFile.name, JSON.stringify(userFile));
+export function updateUserFile(userFile: UserFile | SavedUserFile): boolean{
+    try{
+        localStorage.setItem(userFile.name, JSON.stringify(userFile));
+        return true;
+    }
+    catch(e){
+        console.error(e);
+        return false;
+    }
 }
 
 export function deleteUserFile(userFile: UserFile | SavedUserFile): void{

@@ -15,7 +15,7 @@ const storage = multer.diskStorage({
 })
 const upload = multer({storage: storage});
 const {readFileSync, rmSync, createWriteStream} = require('fs');
-const { spawn } = require('child_process');
+const { spawn, spawnSync } = require('child_process');
 const process = require('process');
 
 const PYTHON_COMMAND = process.env.PYTHON_COMMAND || path.join(__dirname, "env/bin/python");
@@ -57,33 +57,40 @@ app.get("*/types", (req, res) => {
 
 app.post("*/html", upload.single('file'), (req, res) => {
     let start = new Date();
-    let subproc = spawn(PYTHON_COMMAND,["python-cli/pandoc.py", req.file.path], {...process.env, PYTHONIOENCODING: 'utf-8', PYTHONLEGACYWINDOWSSTDIO: 'utf-8' })
-    let buffer = new PassThrough();
-    subproc.stdout.pipe(buffer);
-    subproc.on("error", (err) => {
-        console.log(err);  
-    })
-    subproc.stderr.on('data', (err) => {
-        process.stderr.write(`ERROR: spawn: ${subproc.spawnargs.join(' ')}: ${err.toString()}`)
-    });
-    subproc.on('close', (code) => {
-        let end = new Date();
-        console.log("spawn: Exited with",code)
-        if( code != 0 ){
-            res.status(500).end();
+    let out = path.join(os.tmpdir(), `${Date.now()}.html`)
+    let ext = path.extname(req.file.path);
+    let subproc;
+    if( ext == ".txt" ){
+        subproc = spawnSync("pandoc",[req.file.path, "-f", "markdown","-t","html","-o",out,"--self-contained","--wrap","none"]);
+    }
+    else if( ext == ".doc" ){
+        let name = path.basename(req.file.path, ".doc")
+        let tmp = path.join(os.tmpdir(), `${name}.docx`)
+        subproc = spawnSync("lowriter", ["--headless","--convert-to","docx",req.file.path,"--outdir",os.tmpdir()]);
+        if( subproc.status == 0 ){
+            subproc = spawnSync("pandoc",[tmp, "-t","html","-o",out,"--self-contained","--wrap","none"])
         }
-        else{
-            buffer.pipe(res);
-        }
-        rmSync(req.file.path);
-        logProcess("/html", start, end, req.file.size, req.file.mimetype, code);
-    })
-})
+        rmSync(tmp);
+    }
+    else{
+        subproc = spawnSync("pandoc",[req.file.path,"-t","html","-o",out,"--self-contained","--wrap","none"]);
+    }
+    console.error("spawn: Exited with",subproc.status);
+    console.error(subproc.stderr.toString())
+    
+    if( subproc.status !== 0 ){
+        res.status(500).send(subproc.error);
+    }
+    else{
+        res.sendFile(out, () => rmSync(out));
+    }
+    logProcess("/html", start, new Date(), req.file.size, req.file.mimetype, subproc.status);
+});
 
 app.post("*/docx", upload.single('file'), (req, res) => {
     let start = new Date();
     let out = path.join(os.tmpdir(), `${Date.now()}.docx`)
-    let subproc = spawn(PYTHON_COMMAND,["python-cli/inverse-pandoc.py", req.file.path, out], {...process.env, PYTHONIOENCODING: 'utf-8', PYTHONLEGACYWINDOWSSTDIO: 'utf-8' })
+    let subproc = spawn(PYTHON_COMMAND,["python-cli/inverse-pandoc.py", req.file.path, out])
     subproc.on("error", (err) => {
         console.log(err);  
     })
@@ -97,19 +104,18 @@ app.post("*/docx", upload.single('file'), (req, res) => {
             res.status(500).end();
         }
         else{
-            res.sendFile(out);
+            res.sendFile(out, () => {
+                rmSync(out);
+            });
         }
         rmSync(req.file.path);
         logProcess("/docx", start, end, req.file.size, req.file.mimetype, code);
-        setTimeout(() => {
-            rmSync(out);
-        }, 3000)
     })
 })
 
 app.post("*/from-text", upload.single('file'), (req, res) => {
     let start = new Date();
-    let subproc = spawn(PYTHON_COMMAND,["python-cli/anonimizador-text.py", "-i", req.file.path,"-f","json"], {...process.env, PYTHONIOENCODING: 'utf-8', PYTHONLEGACYWINDOWSSTDIO: 'utf-8' }) // envs might not be needed outside windows world
+    let subproc = spawn(PYTHON_COMMAND,["python-cli/anonimizador-text.py", "-i", req.file.path,"-f","json"])
     subproc.on("error", (err) => {
         console.log(err);
         res.status(500).write(err.toString());
@@ -128,27 +134,6 @@ app.post("*/from-text", upload.single('file'), (req, res) => {
     })
 })
 
-
-app.post("*/", upload.single('file'), (req, res) => {
-    let start = new Date();
-    let subproc = spawn(PYTHON_COMMAND,["black-box-cli.py", req.file.path], {...process.env, PYTHONIOENCODING: 'utf-8', PYTHONLEGACYWINDOWSSTDIO: 'utf-8' }) // envs might not be needed outside windows world
-    subproc.on("error", (err) => {
-        console.log(err);
-        res.status(500).write(err.toString());
-        res.end();
-    })
-    subproc.stdout.pipe(res);
-    subproc.stderr.on('data', (err) => {
-        process.stderr.write(`[${new Date().toISOString()} STDERR black-box-cli.py .${req.file.path.split(".").at(-1)}] ${err.toString()}`)
-    });
-    subproc.on('close', (code) => {
-        let end = new Date();
-        process.stderr.write(`[EXIT ${new Date().toISOString()} black-box-cli.py .${req.file.path.split(".").at(-1)}] CODE: ${code}`)
-        logProcess("/", start, end, req.file.size, req.file.mimetype, code);
-        rmSync(req.file.path);
-    })
-})
-
 app.use(express.static("build"))
 
 let pkjson = require('./package.json');
@@ -158,78 +143,4 @@ if( url ){
     port = new URL(url).port
 }
 
-let http = require("http");
-const { PassThrough } = require('stream');
-let server = http.createServer(app);
-let wss = new ws.WebSocketServer({ clientTracking: false, noServer: true });
-
-server.on('upgrade', (req, sock, head) => {
-    if( !req.url.endsWith('/runnlp') ) {
-        sock.write('HTTP/1.1 404 Not Found\r\n\r\n');
-        sock.destroy();
-        return;
-    }
-    wss.handleUpgrade(req, sock, head, (ws) => {
-        wss.emit('connection', ws, req)
-    })
-})
-
-wss.on('connection', (ws, req) => {
-    let startDate = new Date();
-    let dataIn = 0;
-    let dataOut = 0;
-    
-    process.stderr.write(`[${new Date().toISOString()} RUN python-cli/nlp-socket.py]\n`)
-    let subproc = spawn(PYTHON_COMMAND,["python-cli/nlp-socket.py"], {env: { PYTHONUNBUFFERED: '1', PYTHONIOENCODING: "utf-8:surrogateescape", ...process.env }}) // utf8 envs might not be needed outside windows world
-    
-    let send = (line) => {
-        dataOut += line.length
-        ws.send(line);
-    }
-
-    ws.on("close", () => {
-        subproc.stdin.end();
-    })
-    
-    ws.on("message", (d) => {
-        dataIn+=d.toString().length;
-        subproc.stdin.write(`${d}\n`);
-    });
-    
-    subproc.on("error", (err) => {
-        process.stderr.write(`[${new Date().toISOString()} ERROR python-cli/nlp-socket.py] ${err.toString()}\n`)
-    })
-
-    let buffer = "";
-    subproc.stdout.on("data", (data) => {
-        buffer += data.toString();
-        let ms = buffer.split("\n");
-        buffer = ms.at(-1);
-        for( let line of ms.slice(0,-1) ){
-            send(line);
-        }
-    })
-
-    subproc.stderr.on('data', (err) => {
-        process.stderr.write(`[${new Date().toISOString()} STDERR python-cli/nlp-socket.py] ${err.toString()}\n`)
-    });
-
-    subproc.on('close', (code) => {
-        for(let line of buffer.split("\n") ){
-            send(line) // Empty buffer
-        }
-        ws.close();
-        let endDate = new Date();
-
-        process.stderr.write(`[${new Date().toISOString()} EXIT python-cli/nlp-socket.py] `)
-        process.stderr.write(JSON.stringify({
-            time: endDate - startDate,
-            dataIn,
-            dataOut,
-            code
-        }))
-        process.stderr.write(`\n`)
-    })  
-})
-
-server.listen(port);
+app.listen(port);

@@ -140,7 +140,6 @@ interface AnonimizeBlockProps{
 }
 
 class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
-    blockRef: React.RefObject<any> = React.createRef();
     render(): React.ReactNode {
         let elmt = this.props.element;
 
@@ -186,8 +185,6 @@ class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
         if( Tag === 'a' && attrs['href'] && !attrs['href'].startsWith('#')){
             attrs['target'] = '_blank'; // prevent user to exit page
         }
-
-        attrs["ref"] = this.blockRef;
 
         if( r.length === 0 ){
             return React.createElement(Tag, attrs);
