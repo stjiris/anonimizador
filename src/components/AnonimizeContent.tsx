@@ -22,6 +22,7 @@ export interface AnonimizeContentState {
 
 export default class AnonimizeContent extends React.Component<AnonimizeContentProps,AnonimizeContentState>{
     contentRef: React.RefObject<HTMLDivElement> = React.createRef();
+    nodes: HTMLElement[] = []
     state: AnonimizeContentState = {
         selection: undefined,
         selectionWould: undefined,
@@ -52,14 +53,14 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
                 endOffset-=1;
             }
             if( startOffset >= 0 && endOffset >= 0){
-                let nodes = Array.from(document.querySelectorAll(`[data-offset]`) as NodeListOf<HTMLElement>).filter((e: HTMLElement) => parseInt(e.dataset.offset || "-1") >= startOffset && parseInt(e.dataset.offset || "-1") < endOffset ); 
-                let sNode = nodes.at(0)?.firstChild;
-                let eNode = nodes.at(-1)?.lastChild;
+                let cnodes = this.nodes.filter((e: HTMLElement) => parseInt(e.dataset.offset || "-1") >= startOffset && parseInt(e.dataset.offset || "-1") < endOffset )
+                let sNode = cnodes[0]?.firstChild;
+                let eNode = cnodes[cnodes.length-1]?.lastChild;
                 if( sNode && eNode ){
                     range.setStart(sNode,0);
                     range.setEnd(eNode, eNode.textContent?.length || 0 );
                 }
-                let text = nodes.map(e => e.textContent).join("")
+                let text = cnodes.map(e => e.textContent).join("")
                 let r = this.props.pool.addEntityDryRun(startOffset, endOffset-1, text)
                 this.setState({
                     selection: {
@@ -105,6 +106,7 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
 
     componentDidMount(): void {
         window.addEventListener("mouseup", this.updateSelection)
+        this.nodes = Array.from(this.contentRef.current?.querySelectorAll(`[data-offset]`) as NodeListOf<HTMLElement>)
     }
     componentWillUnmount(): void {
         window.removeEventListener("mouseup", this.updateSelection)
@@ -146,10 +148,11 @@ class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
             let elmtStr = elmt.nodeValue || ""; // should never be null tho...
             let tokensElems = [];
             let suboffset = 0;
-            let tokens = elmtStr.split(/(?=[^A-Za-zÀ-ÖØ-öø-ÿ0-9])|(?<=[^A-Za-zÀ-ÖØ-öø-ÿ0-9])/);
-            for( let token of tokens ){
-                tokensElems.push(<AnonimizeToken key={suboffset} string={token} selection={this.props.selection} offset={this.props.offset+suboffset} ents={this.props.ents} anonimizeState={this.props.anonimizeState} />);
-                suboffset+=token.length;
+            var reg = /([A-Za-zÀ-ÖØ-öø-ÿ0-9]+)|([^A-Za-zÀ-ÖØ-öø-ÿ0-9])/g;
+            var token;
+            while((token = reg.exec(elmtStr)) !== null) {
+                tokensElems.push(<AnonimizeToken key={suboffset} string={token[0]} selection={this.props.selection} offset={this.props.offset+suboffset} ents={this.props.ents} anonimizeState={this.props.anonimizeState} />);
+                suboffset+=token[0].length;
             }
             return tokensElems;
         }
@@ -218,6 +221,7 @@ class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
                     isPartAnonimize = ent;
                     break;
                 }
+                if( offset.start > this.props.offset ) break;
             }
             if( isPartAnonimize ){
                 break
