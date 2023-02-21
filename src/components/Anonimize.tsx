@@ -9,19 +9,21 @@ import { updateUserFile } from '../util/UserFileCRUDL';
 import { AnonimizeStateState } from "../types/AnonimizeState";
 import { EntityPool } from "../types/EntityPool";
 import { getEntityType, getEntityTypes, TypeNames } from "../types/EntityTypes";
+import { FiltersI } from "../types/EntityFilters";
 
 interface AnonimizeProps{
     file: UserFile
     setUserFile: (file: UserFile | undefined) => void,
+    filters: FiltersI[]
 }
 
 interface AnonimizeState{
     anonimizeState: AnonimizeStateState
-    ents: Entity[]
+    ents: Entity[],
     saved: boolean
 }
 
-let pool: EntityPool = new EntityPool("",[]);
+let pool: EntityPool = window.pool = new EntityPool("",[]);
 
 export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeState>{
     contentRef: React.RefObject<AnonimizeContent> = React.createRef();
@@ -158,7 +160,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         </select>
                     </div>
                     <div>
-                        <RemoteNlpStatus pool={pool} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}/>
+                        <RemoteNlpStatus pool={pool} filters={this.props.filters} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}/>
                     </div>
                 </div>
                 <div className="bg-white p-4">

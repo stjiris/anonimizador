@@ -1,5 +1,6 @@
 import React from "react";
 import { Entity, normalizeEntityString } from "../types/Entity";
+import { FiltersI } from "../types/EntityFilters";
 import { EntityPool } from "../types/EntityPool";
 
 interface RemoteEntity {
@@ -12,6 +13,7 @@ interface RemoteEntity {
 interface RemoteNlpStatusProps {
     pool: EntityPool
     disabled: boolean
+    filters: FiltersI[]
 }
 
 interface RemoteNlpStatusState {
@@ -53,11 +55,14 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
 
         let entities: {[key: string]: Entity} = {};
         for( let ent of resArray ){
+            if( this.props.filters.some( f => ent.text.toLowerCase().indexOf(f.text.toLowerCase()) >= 0 ) ){
+                continue;
+            } 
             let id = normalizeEntityString(ent.text) + ent.label_
             if( !(id in entities) ){
                 entities[id] = new Entity(ent.text, ent.label_);
             }
-            entities[id].addOffset([{start: ent.start_char, end: ent.end_char-1}]) // Spacy has an enchar outside of entity
+            entities[id].addOffset([{start: ent.start_char, end: ent.end_char-1}]) // Spacy has an endchar outside of entity
         }
 
         this.props.pool.entities = Object.values(entities).sort((a, b) => a.offsets[0].start-b.offsets[0].start)
