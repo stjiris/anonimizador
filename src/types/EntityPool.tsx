@@ -139,6 +139,9 @@ export class EntityPool {
                     r.push(curr);
                     break; // Next entity
                 }
+                if( off.end > startOffset ){
+                    break;
+                }
             }
         }
         return r;

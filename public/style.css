@@ -61,7 +61,7 @@ img{
 /* ===== Scrollbar CSS ===== */
 /* Firefox */
 * {
-  scrollbar-width: none;
+  scrollbar-width: 10px;
   scrollbar-color: var(--primary-gold) var(--secondary-gold);
 }
 
