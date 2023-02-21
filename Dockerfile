@@ -30,15 +30,9 @@ ARG VERSION_DATE="01/01/1990"
 
 ARG VERSION_COMMIT="0000000"
 
-COPY src/ .
-
-COPY public/ .
+COPY . .
 
 RUN REACT_APP_VERSION_DATE=${VERSION_DATE} REACT_APP_VERSION_COMMIT=${VERSION_COMMIT} npm run build
-
-COPY python-proxy-server.js .
-
-COPY python-cli/ .
 
 RUN mv iris-lfs-storage/model-best/ ./python-cli/
 
