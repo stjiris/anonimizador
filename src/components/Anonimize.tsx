@@ -23,7 +23,7 @@ interface AnonimizeState{
     saved: boolean
 }
 
-let pool: EntityPool = window.pool = new EntityPool("",[]);
+let pool: EntityPool = (window as any).pool = new EntityPool("",[]);
 
 export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeState>{
     contentRef: React.RefObject<AnonimizeContent> = React.createRef();
