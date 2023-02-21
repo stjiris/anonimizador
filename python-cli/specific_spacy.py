@@ -2,6 +2,7 @@ import spacy
 import re
 import sys
 import csv
+from spacy.language import Language
 
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
 PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A-Z0-9]*"
@@ -77,7 +78,17 @@ def remove_pattern(p, ents):
             new_list.append(e)
     return new_list
 
+@Language.component("new_line_segmenter")
+def new_line_segmenter(doc):
+    for i, token in enumerate(doc[:-1]):
+        # Check if the current token is a newline character
+        if token.text == "\n":
+            # If it is, treat the next token as the start of a new sentence
+            doc[i+1].is_sent_start = True
+    return doc
+
 def nlp(text, model):
+    model.add_pipe("new_line_segmenter", before="transformer")
     doc = model(text)
     ents = []
     for ent in excude_manual(doc.ents):
@@ -97,3 +108,23 @@ def nlp(text, model):
     ents = sorted(ents,key=lambda x: x.start_char)
     return FakeDoc(ents, doc.text)
 
+# def nlp_pipe(texts):
+#     snlp = spacy.load(spacy_model)
+#     for doc in snlp.pipe(texts):
+#         ents = []
+#         for ent in excude_manual(doc.ents):
+#             ents.append(ent)
+
+#         with open('patterns.csv', 'r') as csvfd:
+#             reader = csv.DictReader(csvfd, delimiter="\t")
+#             for r in reader:
+#                 add_ent_by_pattern(ents, text, r['Pattern'], r['Label'])
+        
+#         ents = correct_ent(ents)
+#         with open('exclude.csv', 'r') as csvfd:
+#             reader = csv.DictReader(csvfd, delimiter="\t")
+#             for r in reader:
+#                 p = re.compile(r['Pattern'])
+#                 ents = remove_pattern(p, ents)
+#         ents = sorted(ents,key=lambda x: x.start_char)
+#         yield FakeDoc(ents, doc.text)
