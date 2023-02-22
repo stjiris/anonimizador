@@ -28,9 +28,7 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
     }
     
     runRemoteNlp = async () => {
-        if( this.state.requested ) return;
-        let text = this.props.pool.originalText;
-        if( text == null ) return;
+        if( this.state.requested || this.props.pool.originalText == "") return;
         this.setState({
             requested: true,
             text: "Aguarde"
@@ -38,7 +36,7 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
 
 
         let fd = new FormData()
-        fd.append("file", new Blob([text]), "input.txt")
+        fd.append("file", new Blob([this.props.pool.originalText]), "input.txt")
 
         let resArray: RemoteEntity[] = await fetch("./from-text", {
             method: "POST",
