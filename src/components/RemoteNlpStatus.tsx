@@ -58,9 +58,9 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
             } 
             let id = normalizeEntityString(ent.text) + ent.label_
             if( !(id in entities) ){
-                entities[id] = new Entity(ent.text, ent.label_);
+                entities[id] = new Entity(ent.label_);
             }
-            entities[id].addOffset([{start: ent.start_char, end: ent.end_char-1}]) // Spacy has an endchar outside of entity
+            entities[id].addOffset([{start: ent.start_char, end: ent.end_char-1, preview: ent.text}]) // Spacy has an endchar outside of entity
         }
 
         this.props.pool.entities = Object.values(entities).sort((a, b) => a.offsets[0].start-b.offsets[0].start)

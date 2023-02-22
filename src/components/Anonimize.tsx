@@ -1,6 +1,6 @@
 import React from "react";
 import { UserFile } from "../types/UserFile";
-import MaterialReactTable, { MRT_ColumnDef, MRT_TableInstance } from "material-react-table";
+import MaterialReactTable, { MRT_ColumnDef, MRT_Row, MRT_TableInstance } from "material-react-table";
 import AnonimizeContent from "./AnonimizeContent";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { Entity } from "../types/Entity";
@@ -181,6 +181,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         enableHiding={true}
                         enableStickyHeader
                         enablePagination={false}
+                        renderDetailPanel={entityDetails}
                         renderTopToolbarCustomActions={(_) => {
                             let selectedeKeys = this.selectedIndexes().length
                             return <div className="d-flex w-100">
@@ -211,6 +212,16 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     }
 }
 
+let entityDetails: ((props: {
+    row: MRT_Row<Entity>;
+    table: MRT_TableInstance<Entity>;
+}) => React.ReactNode) = ({row}) => row.original.offsets.map((off,i) => <div key={i} className="d-flex align-items-center border-bottom">
+    <span role="button" onClick={() => document.querySelector(`[data-offset="${off.start}"]`)?.scrollIntoView({block: "center"})}>{off.preview}</span>
+    <span className="flex-grow-1"></span>
+    <span role="button" className="btn btn-warning m-1 p-1" onClick={() => pool.splitOffset(off.start, off.end)}><i className="bi bi-exclude"></i> Separar</span>
+    <span role="button" className="btn btn-danger m-1 p-1" onClick={() => pool.removeOffset(off.start, off.end)}><i className="bi bi-trash"></i> Remover</span>
+</div>)
+
 let columns: MRT_ColumnDef<Entity>[] = [{
     header: "#",
     accessorKey: "offsetsLength",
@@ -218,11 +229,11 @@ let columns: MRT_ColumnDef<Entity>[] = [{
     enableColumnDragging: false,
     enableColumnActions: false,
     enableEditing: false,
-    size: 40
+    size: 40,
 },
 {
     header: "Entidade", 
-    accessorKey: "previewText",
+    accessorFn: (ent) => ent.offsets[0].preview,
     enableEditing: false,
     size: 60,
     muiTableBodyCellProps: ({row}) => ({
@@ -265,9 +276,9 @@ let columns: MRT_ColumnDef<Entity>[] = [{
     enableColumnDragging: false,
     enableColumnActions: false,
     size: 40,
-    Cell: ({row}) => row.original.overwriteAnonimization ? row.original.overwriteAnonimization : <span className="text-muted">{row.original.anonimizingFunction()(row.original.previewText, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex)}</span>,
+    Cell: ({row}) => row.original.overwriteAnonimization ? row.original.overwriteAnonimization : <span className="text-muted">{row.original.anonimizingFunction()(row.original.offsets[0].preview, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex)}</span>,
     muiTableBodyCellEditTextFieldProps: ({row}) => ({
-        placeholder: row.original.anonimizingFunction()(row.original.previewText, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex),
+        placeholder: row.original.anonimizingFunction()(row.original.offsets[0].preview, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex),
         onBlur: (event) => {
             let o = row.original.overwriteAnonimization;
             row.original.overwriteAnonimization = event.target.value;

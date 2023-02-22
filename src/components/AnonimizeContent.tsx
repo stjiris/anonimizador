@@ -225,7 +225,7 @@ class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
         
         if( isPartAnonimize && isPartAnonimizeOffset ){
             let type: EntityTypeI = getEntityType(isPartAnonimize.type);
-            dataAttrs['data-anonimize-cod'] = isPartAnonimize.anonimizingFunction()(isPartAnonimize.previewText, isPartAnonimize.type, isPartAnonimize.index, isPartAnonimize.typeIndex, isPartAnonimize.funcIndex);
+            dataAttrs['data-anonimize-cod'] = isPartAnonimize.anonimizingFunction()(isPartAnonimize.offsets[0].preview, isPartAnonimize.type, isPartAnonimize.index, isPartAnonimize.typeIndex, isPartAnonimize.funcIndex);
             dataAttrs['data-anonimize-type'] = type.name;
             dataAttrs['data-anonimize-color'] = type.color;
             dataAttrs['data-anonimize-offset-start'] = isPartAnonimizeOffset.start.toString()
@@ -284,11 +284,11 @@ class AnonimizeTooltip extends React.Component<AnonimizeTooltipProps>{
     }
 
     onClickRemove = (selection: TokenSelection) => {
-        this.props.pool.removeEntity(selection.start, selection.end)
+        this.props.pool.removeOffset(selection.start, selection.end)
     }
 
     onClickCollapse = (selection: TokenSelection) => {
-        this.props.pool.expandCollapse(selection.start, selection.end);
+        this.props.pool.expandCollapse(selection.start, selection.end, selection.text);
     }
 
     render(): React.ReactNode {
