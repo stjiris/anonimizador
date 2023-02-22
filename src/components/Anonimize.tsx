@@ -216,10 +216,10 @@ let entityDetails: ((props: {
     row: MRT_Row<Entity>;
     table: MRT_TableInstance<Entity>;
 }) => React.ReactNode) = ({row}) => row.original.offsets.map((off,i) => <div key={i} className="d-flex align-items-center border-bottom">
-    <span role="button" onClick={() => document.querySelector(`[data-offset="${off.start}"]`)?.scrollIntoView({block: "center"})}>{off.preview}</span>
+    <span role="button" className="text-end flex-grow-1" onClick={() => document.querySelector(`[data-offset="${off.start}"]`)?.scrollIntoView({block: "center"})}>{off.preview}</span>
     <span className="flex-grow-1"></span>
-    <span role="button" className="btn btn-warning m-1 p-1" onClick={() => pool.splitOffset(off.start, off.end)}><i className="bi bi-exclude"></i> Separar</span>
-    <span role="button" className="btn btn-danger m-1 p-1" onClick={() => pool.removeOffset(off.start, off.end)}><i className="bi bi-trash"></i> Remover</span>
+    <button className="btn btn-warning m-1 p-1" disabled={row.original.offsets.length <= 1} onClick={() => pool.splitOffset(off.start, off.end)}><i className="bi bi-exclude"></i> Separar</button>
+    <button role="button" className="btn btn-danger m-1 p-1" onClick={() => pool.removeOffset(off.start, off.end)}><i className="bi bi-trash"></i> Remover</button>
 </div>)
 
 let columns: MRT_ColumnDef<Entity>[] = [{

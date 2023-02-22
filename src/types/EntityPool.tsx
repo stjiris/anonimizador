@@ -132,7 +132,9 @@ export class EntityPool {
                 splitted.push(...ent.offsets.splice(j,1));
                 ent.offsetsLength--;
             })
-            newEnt.push(ent);
+            if( ent.offsets.length > 0 ){
+                newEnt.push(ent);
+            }
             for( let sp of splitted ){
                 let nent = new Entity(ent.type);
                 nent.addOffset([sp]);
