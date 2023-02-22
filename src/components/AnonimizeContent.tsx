@@ -287,6 +287,10 @@ class AnonimizeTooltip extends React.Component<AnonimizeTooltipProps>{
         this.props.pool.removeEntity(selection.start, selection.end)
     }
 
+    onClickCollapse = (selection: TokenSelection) => {
+        this.props.pool.expandCollapse(selection.start, selection.end);
+    }
+
     render(): React.ReactNode {
         if( !this.props.selection ){
             return "";
@@ -329,6 +333,7 @@ class AnonimizeTooltip extends React.Component<AnonimizeTooltipProps>{
                 return <div style={style}>
                     <div className="d-flex flex-column gap-1 bg-white p-1 border">
                         <span role="button" onMouseDown={this.onClickRemove.bind(this, sel)}><i className='bi bi-trash'></i> Remover</span>
+                        {this.props.selectionAffects == 1 ? <span role="button" onMouseDown={this.onClickCollapse.bind(this, sel)}><i className='bi bi-arrows-fullscreen'></i> Expandir/Reduzir</span> : <></>}
                         {getEntityTypes().map( (t,i) => <span key={i} role="button" className='badge text-body' style={{background: t.color}} onMouseDown={this.onClickType.bind(this, t, sel)}>{t.name}</span>)}
                     </div>
                 </div>;

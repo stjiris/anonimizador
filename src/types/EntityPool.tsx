@@ -76,6 +76,12 @@ export class EntityPool {
         this.updateOrder();
     }
 
+    notify(){
+        for( let l of this.listeners ){
+            l();
+        }
+    }
+
     updateOrder(){
         let typeCounts: {[key in TypeNames]?: number } = {}
         let funcCounts: {[key in AnonimizeFunctionName]?: number } = {}
@@ -92,9 +98,21 @@ export class EntityPool {
             }
             e.funcIndex = funcCounts[name]!++;
         });
-        for( let l of this.listeners ){
-            l();
+        this.notify()
+    }
+
+    expandCollapse(startOffset: number, endOffset: number) {
+        let update = false;
+        for( let e of this.entities ){
+            let i = e.offsets.findIndex( off => (off.start >= startOffset && off.end < endOffset) || (off.start < endOffset && off.end >= startOffset) );
+            if( i >= 0 ){
+                e.offsets[i] = {start: startOffset, end: endOffset};
+                update = true;
+                break;
+            }
         }
+        console.log(update, startOffset, endOffset)
+        if( update ) this.notify()
     }
 
     removeEntity(startOffset: number, endOffset: number){
