@@ -34,10 +34,13 @@ export default class App extends React.Component<{},AppState>{
 		header: "Tipo",
 		accessorKey: "color",
 		enableEditing: true,
-		muiTableBodyCellEditTextFieldProps: ({row}) => ({
+		muiTableBodyCellEditTextFieldProps: ({row, table}) => ({
 			type: "color",
 			name: "color",
-			onBlur: (evt) => this.setState({entitieTypes: updateEntityType(row.original.name as TypeNames, evt.target.value, row.original.functionName)})
+			onBlur: (evt) => {
+				this.setState({entitieTypes: updateEntityType(row.original.name as TypeNames, evt.target.value, row.original.functionName)});
+				table.setEditingCell(null);
+			}
 		}),
 		Cell: ({row}) => <span className='badge text-body' style={{background: row.original.color}}>{row.original.name}</span>
 	}
@@ -46,7 +49,7 @@ export default class App extends React.Component<{},AppState>{
 		header: "Anonimização",
 		accessorKey: "functionName",
 		enableEditing: true,
-		muiTableBodyCellEditTextFieldProps: ({row}) => ({
+		muiTableBodyCellEditTextFieldProps: ({row,table}) => ({
 			select: true,
 			children: Object.keys(functions).map( name => <option label={name} value={name}>{name}</option>),
 			SelectProps: {
@@ -147,23 +150,37 @@ export default class App extends React.Component<{},AppState>{
 				<div className="modal-body p-0">
 					<MaterialReactTable
 									key="type-table"
-									enableColumnResizing={true}
+									enableColumnResizing={false}
 									enableRowSelection={false}
-									enableColumnOrdering
+									enableColumnOrdering={false}
 									enableDensityToggle={false}
 									enableHiding={false}
-									enableStickyHeader
+									enableStickyHeader={false}
 									enablePagination={false}
 									enableEditing={true}
-									positionActionsColumn="last"
+									enableRowActions={false}
+									enableColumnFilters={false}
+									enableSorting={false}
+									enableGlobalFilter={false}
+									enableFullScreenToggle={false}
+									enableColumnActions={false}
 									editingMode="cell"
 									columns={[this.typeColumn,this.anonimizeColumn]} 
 									data={this.state.entitieTypes}
 									localization={MRT_Localization_PT}
 									renderTopToolbarCustomActions={() => [
-										<button key="reset" className="btn btn-warning" onClick={() => this.setState({entitieTypes: restoreEntityTypes()})}>Repor</button>
+										<button key="reset" className="btn btn-warning" onClick={() => this.setState({entitieTypes: restoreEntityTypes()})}><i className='bi bi-arrow-clockwise'></i> Repor</button>
 									]}
+									muiTableBodyCellProps={({table, cell}) => ({
+										onClick: () => {table.setEditingCell(cell);}
+									})}
 								/>
+					<form className="d-flex m-2" onSubmit={(evt) => {evt.preventDefault()}}>
+						<input className="form-control" name="tipo" placeholder="Tipo..." required></input>
+						<input  className="form-control form-control-color" name="color" type="color"></input>
+						<select  className="form-select" name="anonimização">{Object.keys(functions).map( name => <option label={name} value={name}>{name}</option>)}</select>
+						<button className="form-control btn btn-primary">Adicionar</button>
+					</form>
 				</div>
 				<div className="modal-footer">
 					<div className="flex-grow-1"></div>
