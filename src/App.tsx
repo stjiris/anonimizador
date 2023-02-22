@@ -14,13 +14,15 @@ interface AppState{
 	userFile: UserFile | undefined
 	entitieTypes: EntityTypeI[]
 	filters: FiltersI[]
+	error: Error | undefined
 }
 
 export default class App extends React.Component<{},AppState>{
 	state: AppState = {
 		userFile: undefined,
 		entitieTypes: getEntityTypes(),
-		filters: getFilters()
+		filters: getFilters(),
+		error: undefined
 	}
 	setUserFile = (userFile: UserFile | undefined) => {
 		this.setState({
@@ -63,6 +65,15 @@ export default class App extends React.Component<{},AppState>{
 		})		
 	}
 
+	componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
+		this.setState({
+			userFile: undefined,
+			filters: getFilters(),
+			entitieTypes: getEntityTypes(),
+			error: error
+		})
+	}
+
 	render(): React.ReactNode {
 		return <div className="App">
 			<style>
@@ -78,6 +89,22 @@ export default class App extends React.Component<{},AppState>{
 			]}/>
 			{this.state.userFile == null ? 
 				<>
+					{this.state.error ? <div className="alert alert-danger alert-dismissible fade show m-4" role="alert">
+						<h4><i className='bi bi-exclamation-triangle-fill'></i>Erro Inesperado!</h4>
+						<button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+						<p>A aplicação voltou à página inicial após ter recebido um erro inesperado.</p>
+						<details>
+							<summary>Ver detalhes:</summary>
+							<pre><code>{this.state.error.message}</code></pre>
+						</details>
+					</div> : <></>}
+					<div className="alert alert-danger alert-dismissible fade show m-4" role="alert">
+						<h4><i className='bi bi-exclamation-triangle-fill'></i>Breaking Changes!</h4>
+						<button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+						<ul>
+							<li>Update à estrutura. Ficheiros antigos ou exportados não podem ser recarregados.</li>
+						</ul>
+					</div>
 					<div className="alert alert-primary alert-dismissible fade show m-4" role="alert">
 						<h4><i className='bi bi-brightness-high-fill'></i>Novidades!</h4>
 						<button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
