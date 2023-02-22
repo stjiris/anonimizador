@@ -32,7 +32,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     
     constructor(props: AnonimizeProps){
         super(props);
-        pool.originalText = this.doc.textContent || ""
+        pool.originalText = this.doc.innerText || ""
         pool.entities = this.props.file.ents;
         pool.updateOrder();
         this.state ={
