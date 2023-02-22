@@ -251,9 +251,9 @@ let columns: MRT_ColumnDef<Entity>[] = [{
     header: "Tipo",
     accessorKey: "type",
     size: 40,
-    Cell: ({row}) => {
+    Cell: ({row, cell, table}) => {
         let t = getEntityType(row.original.type);
-        return <span className='badge text-body' style={{background: t.color}}>{t.name}</span>
+        return <span className='badge text-body' onClick={() => table.setEditingCell(cell)} style={{background: t.color}}>{t.name}</span>
     },
     muiTableBodyCellEditTextFieldProps: ({row}) => ({
         select: true,
@@ -277,6 +277,9 @@ let columns: MRT_ColumnDef<Entity>[] = [{
     enableColumnActions: false,
     size: 40,
     Cell: ({row}) => row.original.overwriteAnonimization ? row.original.overwriteAnonimization : <span className="text-muted">{row.original.anonimizingFunction()(row.original.offsets[0].preview, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex)}</span>,
+    muiTableBodyCellProps: ({cell, table}) => ({
+        onClick: () => table.setEditingCell(cell)
+    }),
     muiTableBodyCellEditTextFieldProps: ({row}) => ({
         placeholder: row.original.anonimizingFunction()(row.original.offsets[0].preview, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex),
         onBlur: (event) => {
