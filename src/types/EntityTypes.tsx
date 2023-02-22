@@ -14,7 +14,7 @@ export type TypeNames = "PER" | "ORG" | "DAT" | "LOC" | "PRO" | "MAT" | "CEP" | 
 
 const EntityTypesDefaults: {[key in TypeNames] : EntityTypeI} = {
     PER: {name: "PER", color: "#84d2ff", functionName: "Letras incremental"},
-    DAT: {name: "DAT", color: "#66fc03", functionName: "Ofuscação parcial"},
+    DAT: {name: "DAT", color: "#66fc03", functionName: "Manter Ano"},
     ORG: {name: "ORG", color: "#00ffa2", functionName: "Letras incremental"},
     LOC: {name: "LOC", color: "#fc03c2", functionName: "Tipo incremental"},
     PRO: {name: "PRO", color: "#eb8634", functionName: "Ofuscação parcial"},
