@@ -45,7 +45,10 @@ export function updateFilter(prevText: string, newText: string, types: TypeNames
 }
 
 export function createFilter(text: string, types: TypeNames[]): FiltersI[]{
-    let filters = getFilters().concat({
+    let filters = getFilters();
+    if( filters.find( f => f.text == text ) ) return filters;
+    
+    filters = filters.concat({
         text,
         types
     })

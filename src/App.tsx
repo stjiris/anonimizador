@@ -8,7 +8,7 @@ import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table';
 import { MRT_Localization_PT } from 'material-react-table/locales/pt';
 import { addEntityType, EntityTypeI, getEntityTypes, restoreEntityTypes, TypeNames, updateEntityType } from './types/EntityTypes';
 import { AnonimizeFunctionName, functions } from './util/anonimizeFunctions';
-import { createFilter, FiltersI, getFilters, restoreFilters, updateFilter } from './types/EntityFilters';
+import { createFilter, deleteFilter, FiltersI, getFilters, restoreFilters, updateFilter } from './types/EntityFilters';
 import { updateSavedUserFiles } from './util/UserFileCRUDL';
 
 interface AppState{
@@ -201,11 +201,20 @@ export default class App extends React.Component<{},AppState>{
 									columns={[this.textColumn]} 
 									data={this.state.filters}
 									localization={MRT_Localization_PT}
+									enableRowActions={true}
+									renderRowActions={({row}) => <button className='btn btn-danger' onClick={() => this.setState({filters: deleteFilter(row.original.text)})}><i className='bi bi-trash'></i> Eliminar</button>}
 									renderTopToolbarCustomActions={() => [
-										<button key="reset" className="btn btn-warning" onClick={() => this.setState({filters: restoreFilters()})}>Repor</button>,
-										<input onBlur={(elm) => this.setState({filters: createFilter(elm.target.value, [])})}></input>
+										<button key="reset" className="btn btn-warning" onClick={() => this.setState({filters: restoreFilters()})}><i className='bi bi-arrow-clockwise'></i> Repor</button>
 									]}
 								/>
+					<form className="d-flex m-2" onSubmit={(evt) => {
+						evt.preventDefault(); 
+						let form = evt.target as HTMLFormElement;
+						let filtroInput = form.elements.namedItem("filtro") as HTMLInputElement;
+						this.setState({filters: createFilter(filtroInput.value, [])});}}>
+						<input className="form-control" name="filtro" placeholder="Filtro..." required></input>
+						<button className="form-control btn btn-primary">Adicionar</button>
+					</form>
 				</div>
 				<div className="modal-footer">
 					<div className="flex-grow-1"></div>
