@@ -207,7 +207,7 @@ export default class App extends React.Component<{},AppState>{
 									data={this.state.filters}
 									localization={MRT_Localization_PT}
 									enableRowActions={true}
-									renderRowActions={({row}) => <button className='btn btn-danger' onClick={() => this.setState({filters: deleteFilter(row.original.text)})}><i className='bi bi-trash'></i> Eliminar</button>}
+									renderRowActions={({row}) => <button className='btn btn-danger' onClick={() => this.setState({filters: deleteFilter(row.original.text)})}><i className='bi bi-trash'></i></button>}
 									renderTopToolbarCustomActions={() => [
 										<button key="reset" className="btn btn-warning" onClick={() => this.setState({filters: restoreFilters()})}><i className='bi bi-arrow-clockwise'></i> Repor</button>
 									]}
