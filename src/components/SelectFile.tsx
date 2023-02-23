@@ -1,6 +1,6 @@
 import React from "react";
-import { createUserFile, deleteUserFile, readSavedUserFile, listUserFile } from "../util/UserFileCRUDL";
-import { isSavedUserFile, loadSavedUserFile, SavedUserFile, UserFile } from "../types/UserFile";
+import { createUserFile, deleteUserFile, readSavedUserFile, listUserFile, updateOldSavedUserFile } from "../util/UserFileCRUDL";
+import { isOldSavedUserFile, isSavedUserFile, loadSavedUserFile, SavedUserFile, UserFile } from "../types/UserFile";
 import MaterialReactTable, { MRT_ColumnDef } from "material-react-table";
 import {MRT_Localization_PT} from "material-react-table/locales/pt";
 import { getEntityTypes } from "../types/EntityTypes";
@@ -28,6 +28,7 @@ export default class SelectFile extends React.Component<SelectFileProps,SelectFi
     }
 
     render(): React.ReactNode {
+        let intl = new Intl.DateTimeFormat(["pt","en"], {dateStyle: "medium", timeStyle: "medium"});
         let cols: MRT_ColumnDef<SavedUserFile>[] = [
             {
                 header: "Ficheiros Locais",
@@ -39,6 +40,12 @@ export default class SelectFile extends React.Component<SelectFileProps,SelectFi
             {
                 header: "Número de Entidades",
                 Cell: ({row}) => <div className="d-flex">{getEntityTypes().map( (t,i) => <div className="mx-1 px-1">{row.original.ents.filter(e => e.type === t.name).length} <span key={i} className='badge text-body' style={{background: t.color}}>{t.name}</span></div>)}</div>
+            },
+            {
+                header: "Importado", accessorKey: "imported", accessorFn: (row) => intl.format(new Date(row.imported))
+            },
+            {
+                header: "Modificado", accessorKey: "modified", accessorFn: (row) => intl.format(new Date(row.modified))
             }
         ]
 
@@ -47,12 +54,22 @@ export default class SelectFile extends React.Component<SelectFileProps,SelectFi
             columns={cols}
             data={this.state.list}
             localization={MRT_Localization_PT}
-            enableRowActions
+            enableRowActions={true}
             renderRowActions={({row}) => <UserFileActions file={row.original} setUserFile={this.props.setUserFile} />}
             positionActionsColumn="first"
             enablePagination={false}
             enableDensityToggle={false}
             enableHiding={false}
+            enableColumnResizing={false}
+            enableRowSelection={false}
+            enableColumnOrdering={false}
+            enableStickyHeader={false}
+            enableEditing={true}
+            enableColumnFilters={false}
+            enableSorting={false}
+            enableGlobalFilter={false}
+            enableFullScreenToggle={false}
+            enableColumnActions={false}
         />);
     }
 }
@@ -79,6 +96,9 @@ export class AddUserFileAction extends React.Component<SelectFileProps>{
                 let obj = JSON.parse(txt);
                 if( isSavedUserFile(obj) )
                     return obj
+                else if ( isOldSavedUserFile(obj) ){
+                    return updateOldSavedUserFile(obj);
+                }
                 else
                     return null
             }).catch(e => {
@@ -128,7 +148,9 @@ export class AddUserFileAction extends React.Component<SelectFileProps>{
                 html_contents: documentDom.body.innerHTML,
                 name: file.name,
                 size: documentDom.body.innerHTML.length,
-                ents: []
+                ents: [],
+                imported: new Date(),
+                modified: new Date()
             } as UserFile;
             
             event.target.value = "";
@@ -150,7 +172,7 @@ export class AddUserFileAction extends React.Component<SelectFileProps>{
 
     render(): React.ReactNode {
         return (<>
-            <label htmlFor="file" role="button"><i className="bi bi-plus-circle"></i> Adicionar Ficheiro</label>
+            <label htmlFor="file" role="button" className="btn btn-primary"><i className="bi bi-plus-circle"></i> Adicionar Ficheiro</label>
             <input hidden type="file" name="file" id="file" onInput={this.onFile}></input>
         </>);
     }

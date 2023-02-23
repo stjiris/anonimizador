@@ -6,6 +6,8 @@ export interface SavedUserFile {
     html_contents: string
     size: number
     ents: EntityI[]
+    imported: string
+    modified: string
 }
 
 export interface UserFile {
@@ -13,11 +15,22 @@ export interface UserFile {
     html_contents: string
     size: number
     ents: Entity[]
+    imported: Date
+    modified: Date
+}
+
+
+export function isOldSavedUserFile(obj: any): boolean {
+    return  "name" in obj && typeof obj.name === "string" &&
+            "html_contents" in obj && typeof obj.html_contents === "string" &&
+            !("imported" in obj) && !("modified" in obj);
 }
 
 export function isSavedUserFile(obj: any): obj is SavedUserFile {
     return  "name" in obj && typeof obj.name === "string" &&
-            "html_contents" in obj && typeof obj.html_contents === "string";
+            "html_contents" in obj && typeof obj.html_contents === "string" &&
+            "imported" in obj && typeof obj.imported === "string" &&
+            "modified" in obj && typeof obj.modified === "string";
 }
 
 export function isUserFile(obj: any): obj is UserFile{
@@ -29,6 +42,8 @@ export function loadSavedUserFile(obj: SavedUserFile): UserFile {
         name: obj.name,
         html_contents: obj.html_contents,
         size: obj.size,
-        ents: obj.ents.map( (e,i) => Entity.makeEntity(e,i+1))
+        ents: obj.ents.map( (e,i) => Entity.makeEntity(e,i+1)),
+        imported: new Date(obj.imported),
+        modified: new Date(obj.modified)
     }
 }

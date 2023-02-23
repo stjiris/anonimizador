@@ -9,6 +9,7 @@ import { MRT_Localization_PT } from 'material-react-table/locales/pt';
 import { EntityTypeI, getEntityTypes, restoreEntityTypes, TypeNames, updateEntityType } from './types/EntityTypes';
 import { AnonimizeFunctionName, functions } from './util/anonimizeFunctions';
 import { createFilter, FiltersI, getFilters, restoreFilters, updateFilter } from './types/EntityFilters';
+import { updateSavedUserFiles } from './util/UserFileCRUDL';
 
 interface AppState{
 	userFile: UserFile | undefined
@@ -101,25 +102,6 @@ export default class App extends React.Component<{},AppState>{
 							<pre><code>{this.state.error.message}</code></pre>
 						</details>
 					</div> : <></>}
-					<div className="alert alert-danger alert-dismissible fade show m-4" role="alert">
-						<h4><i className='bi bi-exclamation-triangle-fill'></i>Breaking Changes!</h4>
-						<button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-						<ul>
-							<li>Update à estrutura. Ficheiros antigos ou exportados não podem ser recarregados.</li>
-						</ul>
-					</div>
-					<div className="alert alert-primary alert-dismissible fade show m-4" role="alert">
-						<h4><i className='bi bi-brightness-high-fill'></i>Novidades!</h4>
-						<button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-						<ul>
-							<li>Ficheiros <code>.doc</code> podem ser submetidos.</li>
-							<li>Capacidade de exportar e importar o trabalho em progresso.</li>
-							<ol>
-								<li>Download em <b>Edição</b> exporta o trabalho em progresso.</li>
-								<li>Ao <b>Adicionar Ficheiro</b> usar o guardado anteriormente.</li>
-							</ol>
-						</ul>
-					</div>
 					<SelectFile key="select" setUserFile={this.setUserFile} />
 				</> : 
 				<Anonimize key="anonimize" setUserFile={this.setUserFile} file={this.state.userFile} filters={this.state.filters} />}
