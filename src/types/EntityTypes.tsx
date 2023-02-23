@@ -12,7 +12,7 @@ export interface EntityTypeI {
 
 export type TypeNames = "PER" | "ORG" | "DAT" | "LOC" | "PRO" | "MAT" | "CEP" | "TEL" | "EMA" | "IDP";
 
-const EntityTypesDefaults: {[key in TypeNames] : EntityTypeI} = {
+export const EntityTypesDefaults: {[key in TypeNames] : EntityTypeI} = {
     PER: {name: "PER", color: "#84d2ff", functionName: "Letras incremental"},
     DAT: {name: "DAT", color: "#66fc03", functionName: "Manter Ano"},
     ORG: {name: "ORG", color: "#00ffa2", functionName: "Letras incremental"},
@@ -91,6 +91,19 @@ export function updateEntityType(key: TypeNames, color: string, functionName: An
     
     EntityTypesStored[key].color = color
     EntityTypesStored[key].functionName = functionName
+    delete cache[key];
+
+    localStorage.setItem(EntityTypesVersion, JSON.stringify(EntityTypesStored));
+    return Object.values(EntityTypesStored);
+}
+
+export function deleteEntityType(key: TypeNames): EntityTypeI[]{
+    let EntityTypesStored = JSON.parse( localStorage.getItem(EntityTypesVersion) || "null" );
+    if( !EntityTypesStored ){
+        EntityTypesStored = JSON.parse(JSON.stringify(EntityTypesDefaults));
+    }
+    
+    delete EntityTypesStored[key];
     delete cache[key];
 
     localStorage.setItem(EntityTypesVersion, JSON.stringify(EntityTypesStored));

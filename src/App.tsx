@@ -6,7 +6,7 @@ import { UserFile } from './types/UserFile';
 import BootstrapModal from './util/BootstrapModal';
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table';
 import { MRT_Localization_PT } from 'material-react-table/locales/pt';
-import { addEntityType, EntityTypeI, getEntityTypes, restoreEntityTypes, TypeNames, updateEntityType } from './types/EntityTypes';
+import { addEntityType, deleteEntityType, EntityTypeI, EntityTypesDefaults, getEntityTypes, restoreEntityTypes, TypeNames, updateEntityType } from './types/EntityTypes';
 import { AnonimizeFunctionName, functions } from './util/anonimizeFunctions';
 import { createFilter, deleteFilter, FiltersI, getFilters, restoreFilters, updateFilter } from './types/EntityFilters';
 import { updateSavedUserFiles } from './util/UserFileCRUDL';
@@ -143,7 +143,6 @@ export default class App extends React.Component<{},AppState>{
 									enableStickyHeader={false}
 									enablePagination={false}
 									enableEditing={true}
-									enableRowActions={false}
 									enableColumnFilters={false}
 									enableSorting={false}
 									enableGlobalFilter={false}
@@ -159,6 +158,8 @@ export default class App extends React.Component<{},AppState>{
 									muiTableBodyCellProps={({table, cell}) => ({
 										onClick: () => {table.setEditingCell(cell);}
 									})}
+									enableRowActions={true}
+									renderRowActions={({row}) => EntityTypesDefaults[row.original.name as TypeNames] ? <></> : <button className="btn btn-danger" onClick={() => {deleteEntityType(row.original.name as TypeNames); this.setState({entitieTypes: getEntityTypes()})}}><i className='bi bi-trash'></i></button>}
 								/>
 					<form className="d-flex m-2" onSubmit={(evt) => {
 						evt.preventDefault(); 
@@ -166,7 +167,8 @@ export default class App extends React.Component<{},AppState>{
 						let tipoInput = form.elements.namedItem("tipo") as HTMLInputElement;
 						let colorInput = form.elements.namedItem("color") as HTMLInputElement;
 						let anonInput = form.elements.namedItem("anonimização") as HTMLSelectElement;
-						this.setState({entitieTypes: addEntityType(tipoInput.value, colorInput.value, anonInput.value as AnonimizeFunctionName)});
+						addEntityType(tipoInput.value, colorInput.value, anonInput.value as AnonimizeFunctionName);
+						this.setState({entitieTypes: getEntityTypes()});
 						tipoInput.value = "";
 						colorInput.value = "";
 						}}>
