@@ -166,10 +166,13 @@ export default class App extends React.Component<{},AppState>{
 						let tipoInput = form.elements.namedItem("tipo") as HTMLInputElement;
 						let colorInput = form.elements.namedItem("color") as HTMLInputElement;
 						let anonInput = form.elements.namedItem("anonimização") as HTMLSelectElement;
-						this.setState({entitieTypes: addEntityType(tipoInput.value, colorInput.value, anonInput.value as AnonimizeFunctionName)});}}>
+						this.setState({entitieTypes: addEntityType(tipoInput.value, colorInput.value, anonInput.value as AnonimizeFunctionName)});
+						tipoInput.value = "";
+						colorInput.value = "";
+						}}>
 						<input className="form-control" name="tipo" placeholder="Tipo..." required></input>
 						<input  className="form-control form-control-color" name="color" type="color"></input>
-						<select  className="form-select" name="anonimização">{Object.keys(functions).map( name => <option label={name} value={name}>{name}</option>)}</select>
+						<select  className="form-select" name="anonimização" required>{Object.keys(functions).map( name => <option label={name} value={name}>{name}</option>)}</select>
 						<button className="form-control btn btn-primary">Adicionar</button>
 					</form>
 				</div>
@@ -211,7 +214,8 @@ export default class App extends React.Component<{},AppState>{
 						evt.preventDefault(); 
 						let form = evt.target as HTMLFormElement;
 						let filtroInput = form.elements.namedItem("filtro") as HTMLInputElement;
-						this.setState({filters: createFilter(filtroInput.value, [])});}}>
+						this.setState({filters: createFilter(filtroInput.value, [])});
+						filtroInput.value = "";}}>
 						<input className="form-control" name="filtro" placeholder="Filtro..." required></input>
 						<button className="form-control btn btn-primary">Adicionar</button>
 					</form>
