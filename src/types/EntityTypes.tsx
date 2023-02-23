@@ -10,18 +10,19 @@ export interface EntityTypeI {
     functionName: AnonimizeFunctionName
 }
 
-export type TypeNames = "PER" | "ORG" | "DAT" | "LOC" | "PRO" | "MAT" | "CEP" | "TEL" | "EMA";
+export type TypeNames = "PER" | "ORG" | "DAT" | "LOC" | "PRO" | "MAT" | "CEP" | "TEL" | "EMA" | "IDP";
 
-const EntityTypesDefaults: {[key in TypeNames] : EntityTypeI} = {
+export const EntityTypesDefaults: {[key in TypeNames] : EntityTypeI} = {
     PER: {name: "PER", color: "#84d2ff", functionName: "Letras incremental"},
-    DAT: {name: "DAT", color: "#66fc03", functionName: "Ofuscação parcial"},
+    DAT: {name: "DAT", color: "#66fc03", functionName: "Manter Ano"},
     ORG: {name: "ORG", color: "#00ffa2", functionName: "Letras incremental"},
     LOC: {name: "LOC", color: "#fc03c2", functionName: "Tipo incremental"},
     PRO: {name: "PRO", color: "#eb8634", functionName: "Ofuscação parcial"},
     MAT: {name: "MAT", color: "#007eff", functionName: "Ofuscação parcial"},
     CEP: {name: "CEP", color: "#eb3434", functionName: "Ofuscação parcial"},
     TEL: {name: "TEL", color: "#ce42f5", functionName: "Tipo incremental"},
-    EMA: {name: "EMA", color: "#f5d142", functionName: "Tipo incremental"}
+    EMA: {name: "EMA", color: "#f5d142", functionName: "Tipo incremental"},
+    IDP: {name: "IDP", color: "#f5d142", functionName: "Ofuscação parcial"}
 }
 
 const cache: {[key in TypeNames]?: EntityTypeI} = {}
@@ -36,8 +37,9 @@ export function getEntityType(label: TypeNames): EntityTypeI{
     }
 
     // TODO: if label doesn't exist create a stub type?
+    if( cache[label] ) return cache[label]!;
 
-    return cache[label] as EntityTypeI
+    return {name: `ERRO (${label})`, color: `red`, functionName: "Não anonimizar"}
 }
 
 export function getEntityTypes(): EntityTypeI[]{
@@ -65,6 +67,22 @@ export function getEntityTypes(): EntityTypeI[]{
     return Object.values(EntityTypesStored);
 }
 
+export function addEntityType(key: string, color: string, functionName: AnonimizeFunctionName): EntityTypeI[]{
+    let EntityTypesStored = JSON.parse( localStorage.getItem(EntityTypesVersion) || "null" );
+    if( !EntityTypesStored ){
+        EntityTypesStored = JSON.parse(JSON.stringify(EntityTypesDefaults));
+    }
+    
+    EntityTypesStored[key] = {
+        name: key,
+        color: color,
+        functionName: functionName
+    }
+
+    localStorage.setItem(EntityTypesVersion, JSON.stringify(EntityTypesStored));
+    return Object.values(EntityTypesStored);   
+}
+
 export function updateEntityType(key: TypeNames, color: string, functionName: AnonimizeFunctionName): EntityTypeI[]{
     let EntityTypesStored = JSON.parse( localStorage.getItem(EntityTypesVersion) || "null" );
     if( !EntityTypesStored ){
@@ -73,6 +91,19 @@ export function updateEntityType(key: TypeNames, color: string, functionName: An
     
     EntityTypesStored[key].color = color
     EntityTypesStored[key].functionName = functionName
+    delete cache[key];
+
+    localStorage.setItem(EntityTypesVersion, JSON.stringify(EntityTypesStored));
+    return Object.values(EntityTypesStored);
+}
+
+export function deleteEntityType(key: TypeNames): EntityTypeI[]{
+    let EntityTypesStored = JSON.parse( localStorage.getItem(EntityTypesVersion) || "null" );
+    if( !EntityTypesStored ){
+        EntityTypesStored = JSON.parse(JSON.stringify(EntityTypesDefaults));
+    }
+    
+    delete EntityTypesStored[key];
     delete cache[key];
 
     localStorage.setItem(EntityTypesVersion, JSON.stringify(EntityTypesStored));

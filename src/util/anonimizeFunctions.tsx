@@ -18,13 +18,22 @@ export const leter: AnonimizeFunction = (_str, _type, _idx, _tidx, fidx) => {
     return s
 }
 
-export type AnonimizeFunctionName = "Não anonimizar" | "Tipo incremental" | "Ofuscação parcial" | "Letras incremental";
+export const year: AnonimizeFunction = (str: string) => {
+    let year = str.match(/\d{4}/);
+    let r = str.replace(/./g,'.');
+    if( !year ) return r;
+    return r.substring(0, year?.index) + year + r.substring(((year?.index||0)+year[0].length) || r.length)
+}
+    
+
+export type AnonimizeFunctionName = "Não anonimizar" | "Tipo incremental" | "Ofuscação parcial" | "Letras incremental" | "Manter Ano";
 
 export const functions: { [key in AnonimizeFunctionName]: AnonimizeFunction } = {
     "Não anonimizar": identity,
     "Tipo incremental": increment,
     "Letras incremental": leter,
-    "Ofuscação parcial": ofuscate
+    "Ofuscação parcial": ofuscate,
+    "Manter Ano": year
 }
 
 export function isAnonimizeFunctionName(str: string, defaultName: AnonimizeFunctionName): AnonimizeFunctionName {

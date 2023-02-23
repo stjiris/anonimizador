@@ -14,18 +14,17 @@ def docToDocx(filename: str):
 	
 @click.command()
 @click.argument('filename', type=click.Path(exists=True))
-def pandoc(filename):
-	html = ""
+@click.argument('output_file', type=click.Path(dir_okay=False, exists=False))
+def pandoc(filename, output_file):
 	file_extension = "."+filename.split(".")[-1]
 	if file_extension == ".txt":
-		html = pypandoc.convert_file(filename, "html", format="md", extra_args=["--self-contained","--wrap","none"])
+		pypandoc.convert_file(filename, "html", format="md", extra_args=["--self-contained","--wrap","none"], outputfile=output_file)
 	elif file_extension == ".doc":
 		out = docToDocx(filename)
-		html = pypandoc.convert_file(out, "html", extra_args=["--self-contained","--wrap","none"])
+		pypandoc.convert_file(out, "html", extra_args=["--self-contained","--wrap","none"], outputfile=output_file)
 		unlink(out)
 	else:
-		html = pypandoc.convert_file(filename, "html", extra_args=["--self-contained","--wrap","none"])
-	print(html)
+		pypandoc.convert_file(filename, "html", extra_args=["--self-contained","--wrap","none"], outputfile=output_file)
 
 
 if __name__ == "__main__":

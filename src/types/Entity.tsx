@@ -1,39 +1,34 @@
 import { EntityTypeI, getEntityType, TypeNames } from "./EntityTypes";
-import { AnonimizeFunction, AnonimizeFunctionName, functions } from "../util/anonimizeFunctions";
+import { AnonimizeFunction, AnonimizeFunctionName, functions, identity } from "../util/anonimizeFunctions";
 
 export const normalizeEntityString = (str: string): string => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]/g, "");
 
 export interface OffsetRange{
     start: number
     end: number
+    preview: string
 }
 
 export interface EntityI {
-    id: string, // internal use
     type: TypeNames
     offsets: OffsetRange[]
     offsetsLength: number // helper for Material-react-table
-    previewText: string
     overwriteAnonimization?: string // use this if exists else use type
 }
 
 export class Entity implements EntityI {
-    id: string;
     type: TypeNames;
     offsets: OffsetRange[];
     offsetsLength: number;
-    previewText: string;
     overwriteAnonimization?: string;
     index: number;
     typeIndex: number;
     funcIndex: number;
     
-    constructor(txt: string, label: string){
-        this.id = normalizeEntityString(txt) + label
+    constructor(label: string){
         this.type = label as TypeNames
         this.offsets = [];
         this.offsetsLength = 0;
-        this.previewText = txt
         this.index = -1
         this.typeIndex = -1
         this.funcIndex = -1
@@ -52,6 +47,7 @@ export class Entity implements EntityI {
         }
         else{
             let type = getEntityType(this.type);
+            if( !type ) return identity;
             return functions[type.functionName];
         }
     }
@@ -62,16 +58,15 @@ export class Entity implements EntityI {
         }
         else{
             let type = getEntityType(this.type);
+            if( !type ) return "Não anonimizar";
             return type.functionName;
         }
     }
 
     static makeEntity(obj: EntityI, index: number): Entity {
-        let e = new Entity(obj.previewText,obj.type);
-        e.id = obj.id
+        let e = new Entity(obj.type);
         e.offsets = obj.offsets
         e.offsetsLength = obj.offsets.length;
-        e.previewText = obj.previewText
         e.overwriteAnonimization = obj.overwriteAnonimization
         e.index = index
         return e;

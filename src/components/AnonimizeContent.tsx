@@ -22,6 +22,7 @@ export interface AnonimizeContentState {
 
 export default class AnonimizeContent extends React.Component<AnonimizeContentProps,AnonimizeContentState>{
     contentRef: React.RefObject<HTMLDivElement> = React.createRef();
+    nodes: HTMLElement[] = []
     state: AnonimizeContentState = {
         selection: undefined,
         selectionWould: undefined,
@@ -52,14 +53,14 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
                 endOffset-=1;
             }
             if( startOffset >= 0 && endOffset >= 0){
-                let nodes = Array.from(document.querySelectorAll(`[data-offset]`) as NodeListOf<HTMLElement>).filter((e: HTMLElement) => parseInt(e.dataset.offset || "-1") >= startOffset && parseInt(e.dataset.offset || "-1") < endOffset ); 
-                let sNode = nodes.at(0)?.firstChild;
-                let eNode = nodes.at(-1)?.lastChild;
+                let cnodes = this.nodes.filter((e: HTMLElement) => parseInt(e.dataset.offset || "-1") >= startOffset && parseInt(e.dataset.offset || "-1") < endOffset )
+                let sNode = cnodes[0]?.firstChild;
+                let eNode = cnodes[cnodes.length-1]?.lastChild;
                 if( sNode && eNode ){
                     range.setStart(sNode,0);
                     range.setEnd(eNode, eNode.textContent?.length || 0 );
                 }
-                let text = nodes.map(e => e.textContent).join("")
+                let text = cnodes.map(e => e.textContent).join("")
                 let r = this.props.pool.addEntityDryRun(startOffset, endOffset-1, text)
                 this.setState({
                     selection: {
@@ -69,14 +70,14 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
                     },
                     selectionWould: r[0],
                     selectionAffects: r[1]
-                })
+                });
+                return;
             }
             else{
                 sel = null;
             }
         }
-
-        if( this.state.selection !== undefined && sel === null ){
+        if( this.state.selection !== undefined ){
             this.setState({selection: undefined})
         }
         else{
@@ -105,6 +106,7 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
 
     componentDidMount(): void {
         window.addEventListener("mouseup", this.updateSelection)
+        this.nodes = Array.from(this.contentRef.current?.querySelectorAll(`[data-offset]`) as NodeListOf<HTMLElement>)
     }
     componentWillUnmount(): void {
         window.removeEventListener("mouseup", this.updateSelection)
@@ -114,7 +116,7 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
         let list = [];
         let offset = 0;
         for(let i=0; i < this.props.doc.childNodes.length; i++){
-            list.push(<AnonimizeBlock key={i} selection={this.state.selection} element={this.props.doc.childNodes[i]} offset={offset} ents={this.props.ents} anonimizeState={this.props.anonimizeState}/>)
+            list.push(<AnonimizeBlock key={i} element={this.props.doc.childNodes[i]} offset={offset} ents={this.props.ents} anonimizeState={this.props.anonimizeState}/>)
             offset += (this.props.doc.childNodes[i].textContent || "").length;
         }
         return <>
@@ -131,25 +133,22 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
 
 interface AnonimizeBlockProps{
     element: ChildNode
-    selection: TokenSelection | undefined
     offset: number
     ents: Entity[],
     anonimizeState: AnonimizeStateState
 }
 
 class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
-    blockRef: React.RefObject<any> = React.createRef();
     render(): React.ReactNode {
         let elmt = this.props.element;
 
         if( elmt.nodeType === Node.TEXT_NODE ){
             let elmtStr = elmt.nodeValue || ""; // should never be null tho...
             let tokensElems = [];
-            let suboffset = 0;
-            let tokens = elmtStr.split(/(?=[^A-Za-zÀ-ÖØ-öø-ÿ0-9])|(?<=[^A-Za-zÀ-ÖØ-öø-ÿ0-9])/);
-            for( let token of tokens ){
-                tokensElems.push(<AnonimizeToken key={suboffset} string={token} selection={this.props.selection} offset={this.props.offset+suboffset} ents={this.props.ents} anonimizeState={this.props.anonimizeState} />);
-                suboffset+=token.length;
+            var reg = /([A-Za-zÀ-ÖØ-öø-ÿ0-9]+)|([^A-Za-zÀ-ÖØ-öø-ÿ0-9])/g;
+            var token;
+            while((token = reg.exec(elmtStr)) !== null) {
+                tokensElems.push(<AnonimizeToken key={token.index} string={token[0]} offset={this.props.offset+token.index} ents={this.props.ents} anonimizeState={this.props.anonimizeState} />);
             }
             return tokensElems;
         }
@@ -160,7 +159,7 @@ class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
         let r = [];
         let suboffset = 0;
         for(let i = 0; i < elmt.childNodes.length; i++){
-            r.push(<AnonimizeBlock key={i} selection={this.props.selection} element={elmt.childNodes[i]} offset={this.props.offset + suboffset} ents={this.props.ents} anonimizeState={this.props.anonimizeState}/>)
+            r.push(<AnonimizeBlock key={i} element={elmt.childNodes[i]} offset={this.props.offset + suboffset} ents={this.props.ents} anonimizeState={this.props.anonimizeState}/>)
             suboffset += (elmt.childNodes[i].textContent || "").length
         }
         
@@ -184,8 +183,6 @@ class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
             attrs['target'] = '_blank'; // prevent user to exit page
         }
 
-        attrs["ref"] = this.blockRef;
-
         if( r.length === 0 ){
             return React.createElement(Tag, attrs);
         }
@@ -197,7 +194,6 @@ class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
 
 type AnonimizeTokenProps = {
     string: string
-    selection: TokenSelection | undefined
     offset: number
     ents: Entity[]
     anonimizeState: AnonimizeStateState
@@ -205,9 +201,6 @@ type AnonimizeTokenProps = {
 
 class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
     render(): React.ReactNode {
-        // User Selected
-        let selected = this.props.selection && this.props.offset >= this.props.selection.start && this.props.offset <= this.props.selection.end;
-
         // Token Anonimized
         let isPartAnonimize = null; 
         let isPartAnonimizeOffset = null;
@@ -218,6 +211,7 @@ class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
                     isPartAnonimize = ent;
                     break;
                 }
+                if( offset.start > this.props.offset ) break;
             }
             if( isPartAnonimize ){
                 break
@@ -231,7 +225,7 @@ class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
         
         if( isPartAnonimize && isPartAnonimizeOffset ){
             let type: EntityTypeI = getEntityType(isPartAnonimize.type);
-            dataAttrs['data-anonimize-cod'] = isPartAnonimize.anonimizingFunction()(isPartAnonimize.previewText, isPartAnonimize.type, isPartAnonimize.index, isPartAnonimize.typeIndex, isPartAnonimize.funcIndex);
+            dataAttrs['data-anonimize-cod'] = isPartAnonimize.anonimizingFunction()(isPartAnonimize.offsets[0].preview, isPartAnonimize.type, isPartAnonimize.index, isPartAnonimize.typeIndex, isPartAnonimize.funcIndex);
             dataAttrs['data-anonimize-type'] = type.name;
             dataAttrs['data-anonimize-color'] = type.color;
             dataAttrs['data-anonimize-offset-start'] = isPartAnonimizeOffset.start.toString()
@@ -268,7 +262,7 @@ class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
             case AnonimizeStateState.ORIGINAL:
                 return this.props.string;
             case AnonimizeStateState.TAGGED:
-                return <span className={selected ? 'selected' : ''} {...dataAttrs}>{this.props.string}</span>;
+                return <span {...dataAttrs}>{this.props.string}</span>;
             default:
                 return "";
         }
@@ -286,11 +280,12 @@ interface AnonimizeTooltipProps {
 class AnonimizeTooltip extends React.Component<AnonimizeTooltipProps>{
     
     onClickType = (type: EntityTypeI, selection: TokenSelection) => {
+        this.props.pool.removeOffset(selection.start, selection.end);
         this.props.pool.addEntity(selection.start, selection.end, selection.text, type.name);
     }
 
     onClickRemove = (selection: TokenSelection) => {
-        this.props.pool.removeEntity(selection.start, selection.end)
+        this.props.pool.removeOffset(selection.start, selection.end)
     }
 
     render(): React.ReactNode {

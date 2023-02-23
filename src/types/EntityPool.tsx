@@ -55,7 +55,7 @@ export class EntityPool {
 
             let otherOffs = ent.offsets.splice(1); // Changes current ent
             for( let off of otherOffs ){
-                let nent = new Entity(this.originalText.substring(off.start, off.end+1), ent.type);
+                let nent = new Entity(ent.type);
                 nent.addOffset([off]);
                 newEnt.push(nent);
             }
@@ -76,6 +76,13 @@ export class EntityPool {
         this.updateOrder();
     }
 
+
+    notify(){
+        for( let l of this.listeners ){
+            l();
+        }
+    }
+
     updateOrder(){
         let typeCounts: {[key in TypeNames]?: number } = {}
         let funcCounts: {[key in AnonimizeFunctionName]?: number } = {}
@@ -92,12 +99,53 @@ export class EntityPool {
             }
             e.funcIndex = funcCounts[name]!++;
         });
-        for( let l of this.listeners ){
-            l();
-        }
+        this.notify()
     }
 
-    removeEntity(startOffset: number, endOffset: number){
+    expandCollapse(startOffset: number, endOffset: number, text: string) {
+        let update = false;
+        for( let e of this.entities ){
+            let i = e.offsets.findIndex( off => (off.start >= startOffset && off.end < endOffset) || (off.start < endOffset && off.end >= startOffset) );
+            if( i >= 0 ){
+                e.offsets[i] = {start: startOffset, end: endOffset, preview: text};
+                update = true;
+                break;
+            }
+        }
+        if( update ) this.notify()
+    }
+
+    splitOffset(startOffset: number, endOffset: number) {
+        let newEnt: Entity[] = [];
+        this.entities.forEach( (ent) => {
+            let toSplit = []
+            let i = 0;
+            console.log(ent);
+            for( let off of ent.offsets ){
+                if( (off.start >= startOffset && off.end < endOffset) || (off.start < endOffset && off.end >= startOffset) ){
+                    toSplit.push(i);
+                }
+                i++;
+            }
+            let splitted: OffsetRange[] = [];
+            toSplit.reverse().forEach(j => {
+                splitted.push(...ent.offsets.splice(j,1));
+                ent.offsetsLength--;
+            })
+            if( ent.offsets.length > 0 ){
+                newEnt.push(ent);
+            }
+            for( let sp of splitted ){
+                let nent = new Entity(ent.type);
+                nent.addOffset([sp]);
+                newEnt.push(nent);
+            }
+        });
+        this.entities = newEnt;
+        this.updateOrder();
+    }
+
+    removeOffset(startOffset: number, endOffset: number){
         let deleted = 0;
         let entsToDel = [];
         let j=0;
@@ -139,6 +187,9 @@ export class EntityPool {
                     r.push(curr);
                     break; // Next entity
                 }
+                if( off.end > startOffset ){
+                    break;
+                }
             }
         }
         return r;
@@ -150,9 +201,10 @@ export class EntityPool {
             return [AddEntityDryRun.CHANGE_TYPE, affected]
         }
 
+        let normed = normalizeEntityString(text)
         // Loop to check similarities
         for( let curr of this.entities ){
-            if( normalizeEntityString(curr.previewText) === normalizeEntityString(text) ){
+            if( curr.offsets.some( off => normalizeEntityString(off.preview) === normalizeEntityString(text) ) ){
                 affected++;
             }
         }
@@ -171,21 +223,21 @@ export class EntityPool {
             used = true;
         }
 
-        if( used ) return this.updateOrder();
+        if( used ) return this.notify();
 
+        let normed = normalizeEntityString(text)+label
         // Loop to check similarities
         for( let curr of this.entities ){
-            if( curr.id === (normalizeEntityString(text) + label) ){
-                curr.addOffset([{start: startOffset, end: endOffset}])
+            if( curr.offsets.some( off => normalizeEntityString(off.preview)+curr.type === normed ) ){
+                curr.addOffset([{start: startOffset, end: endOffset, preview: text}])
                 used = true
-                break;
             }
         }
 
         // Add entity to end
         if( !used ){
-            let ent = new Entity(text, label);
-            ent.addOffset([{start: startOffset, end: endOffset}])
+            let ent = new Entity(label);
+            ent.addOffset([{start: startOffset, end: endOffset, preview: text}])
             this.entities.push(ent)
         }
 

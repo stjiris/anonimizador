@@ -1,6 +1,6 @@
 import React from "react";
 import { UserFile } from "../types/UserFile";
-import MaterialReactTable, { MRT_ColumnDef, MRT_TableInstance } from "material-react-table";
+import MaterialReactTable, { MRT_ColumnDef, MRT_Row, MRT_TableInstance } from "material-react-table";
 import AnonimizeContent from "./AnonimizeContent";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { Entity } from "../types/Entity";
@@ -9,18 +9,21 @@ import { updateUserFile } from '../util/UserFileCRUDL';
 import { AnonimizeStateState } from "../types/AnonimizeState";
 import { EntityPool } from "../types/EntityPool";
 import { getEntityType, getEntityTypes, TypeNames } from "../types/EntityTypes";
+import { FiltersI } from "../types/EntityFilters";
 
 interface AnonimizeProps{
     file: UserFile
     setUserFile: (file: UserFile | undefined) => void,
+    filters: FiltersI[]
 }
 
 interface AnonimizeState{
     anonimizeState: AnonimizeStateState
-    ents: Entity[]
+    ents: Entity[],
+    saved: boolean
 }
 
-let pool: EntityPool = new EntityPool("",[]);
+let pool: EntityPool = (window as any).pool = new EntityPool("",[]);
 
 export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeState>{
     contentRef: React.RefObject<AnonimizeContent> = React.createRef();
@@ -34,8 +37,12 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
         pool.updateOrder();
         this.state ={
             anonimizeState: AnonimizeStateState.TAGGED,
-            ents: [...pool.entities]
+            ents: [...pool.entities],
+            saved: updateUserFile(props.file)
         };
+        if( !this.state.saved ){
+            alert("Atenção! O trabalho não será guardado automáticamente.")
+        }
     }
 
     selectedIndexes(): number[]{
@@ -109,16 +116,24 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
 
     onPoolChange = (): void => {
         this.props.file.ents = pool.entities;
-        updateUserFile(this.props.file);
-        this.setState({ ents: [...pool.entities] })
+        this.setState({ ents: [...pool.entities], saved: updateUserFile(this.props.file) })
+    }
+
+    confirmExit = (evt: BeforeUnloadEvent) => {
+        if( !this.state.saved ){
+            evt.preventDefault();
+            evt.returnValue = "Trabalho em progresso não guardado automaticamente. Confirma que pertende sair?"
+        }
     }
 
     componentDidMount(): void {
         pool.onChange( this.onPoolChange )
+        window.addEventListener("beforeunload", this.confirmExit)
     }
 
     componentWillUnmount(): void {
         pool.offChange( this.onPoolChange )
+        window.removeEventListener("beforeunload", this.confirmExit)
     }
 
     render(): React.ReactNode {
@@ -126,10 +141,11 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
             <div className="col-8">
                 <div className="position-sticky top-0 bg-white py-3 px-4 mt-2 d-flex" style={{borderBottom: "5px solid #161616",zIndex:1}}>
                     <div className="mx-2">
-                        <button className="btn red-link fw-bold" onClick={() => this.props.setUserFile(undefined)}><i className="bi bi-x"></i> Fechar</button>
+                        <button className="btn red-link fw-bold" onClick={() => (this.state.saved || window.confirm("Trabalho não será guardado no browser. Sair?")) ? this.props.setUserFile(undefined) : null}><i className="bi bi-x"></i> Fechar</button>
                     </div>
-                    <div className="mx-2">
+                    <div className="mx-2 d-flex align-items-baseline">
                         <span className="text-body btn"><i className="bi bi-file-earmark-fill"></i> {this.props.file.name}</span>
+                        {this.state.saved ? <span className="alert alert-success m-0 p-1"><i className="bi bi-check"></i> Guardado</span> : <span className="alert alert-danger m-0 p-1"><i className="bi bi-exclamation-triangle-fill"></i> Não guardado</span>}
                     </div>
                     <div className="flex-grow-1"></div>
                     <div>
@@ -144,7 +160,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         </select>
                     </div>
                     <div>
-                        <RemoteNlpStatus pool={pool} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}/>
+                        <RemoteNlpStatus pool={pool} filters={this.props.filters} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}/>
                     </div>
                 </div>
                 <div className="bg-white p-4">
@@ -165,6 +181,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         enableHiding={true}
                         enableStickyHeader
                         enablePagination={false}
+                        renderDetailPanel={entityDetails}
                         renderTopToolbarCustomActions={(_) => {
                             let selectedeKeys = this.selectedIndexes().length
                             return <div className="d-flex w-100">
@@ -195,6 +212,16 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     }
 }
 
+let entityDetails: ((props: {
+    row: MRT_Row<Entity>;
+    table: MRT_TableInstance<Entity>;
+}) => React.ReactNode) = ({row}) => row.original.offsets.map((off,i) => <div key={i} className="d-flex align-items-center border-bottom">
+    <span role="button" className="text-end flex-grow-1" onClick={() => document.querySelector(`[data-offset="${off.start}"]`)?.scrollIntoView({block: "center"})}>{off.preview}</span>
+    <span className="flex-grow-1"></span>
+    <button className="btn btn-warning m-1 p-1" disabled={row.original.offsets.length <= 1} onClick={() => pool.splitOffset(off.start, off.end)}><i className="bi bi-exclude"></i> Separar</button>
+    <button role="button" className="btn btn-danger m-1 p-1" onClick={() => pool.removeOffset(off.start, off.end)}><i className="bi bi-trash"></i> Remover</button>
+</div>)
+
 let columns: MRT_ColumnDef<Entity>[] = [{
     header: "#",
     accessorKey: "offsetsLength",
@@ -202,11 +229,11 @@ let columns: MRT_ColumnDef<Entity>[] = [{
     enableColumnDragging: false,
     enableColumnActions: false,
     enableEditing: false,
-    size: 40
+    size: 40,
 },
 {
     header: "Entidade", 
-    accessorKey: "previewText",
+    accessorFn: (ent) => ent.offsets[0].preview,
     enableEditing: false,
     size: 60,
     muiTableBodyCellProps: ({row}) => ({
@@ -224,9 +251,9 @@ let columns: MRT_ColumnDef<Entity>[] = [{
     header: "Tipo",
     accessorKey: "type",
     size: 40,
-    Cell: ({row}) => {
+    Cell: ({row, cell, table}) => {
         let t = getEntityType(row.original.type);
-        return <span className='badge text-body' style={{background: t.color}}>{t.name}</span>
+        return <span className='badge text-body' onClick={() => table.setEditingCell(cell)} style={{background: t.color}}>{t.name}</span>
     },
     muiTableBodyCellEditTextFieldProps: ({row}) => ({
         select: true,
@@ -249,9 +276,12 @@ let columns: MRT_ColumnDef<Entity>[] = [{
     enableColumnDragging: false,
     enableColumnActions: false,
     size: 40,
-    Cell: ({row}) => row.original.overwriteAnonimization ? row.original.overwriteAnonimization : <span className="text-muted">{row.original.anonimizingFunction()(row.original.previewText, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex)}</span>,
+    Cell: ({row}) => row.original.overwriteAnonimization ? row.original.overwriteAnonimization : <span className="text-muted">{row.original.anonimizingFunction()(row.original.offsets[0].preview, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex)}</span>,
+    muiTableBodyCellProps: ({cell, table}) => ({
+        onClick: () => table.setEditingCell(cell)
+    }),
     muiTableBodyCellEditTextFieldProps: ({row}) => ({
-        placeholder: row.original.anonimizingFunction()(row.original.previewText, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex),
+        placeholder: row.original.anonimizingFunction()(row.original.offsets[0].preview, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex),
         onBlur: (event) => {
             let o = row.original.overwriteAnonimization;
             row.original.overwriteAnonimization = event.target.value;

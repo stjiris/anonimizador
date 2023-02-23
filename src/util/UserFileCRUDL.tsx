@@ -1,12 +1,21 @@
-import { isSavedUserFile, SavedUserFile, UserFile } from "../types/UserFile"
+import { EntityI } from "../types/Entity";
+import { isOldSavedUserFile, isSavedUserFile, SavedUserFile, UserFile } from "../types/UserFile"
 
 function alertUpdateListUserFile(){
     window.dispatchEvent(new CustomEvent("AlertUpdateListUserFile"));
 }
 
-export function createUserFile(userFile: UserFile | SavedUserFile): void{
-    localStorage.setItem(userFile.name, JSON.stringify(userFile));
-    alertUpdateListUserFile();
+export function createUserFile(userFile: UserFile | SavedUserFile): boolean{
+    try{
+        userFile.imported = userFile.modified = new Date()
+        localStorage.setItem(userFile.name, JSON.stringify(userFile));
+        alertUpdateListUserFile();
+        return true;
+    }
+    catch(e){
+        console.error(e);
+        return false;
+    }
 }
 
 export function readSavedUserFile(name: string): SavedUserFile | null {
@@ -24,8 +33,16 @@ export function readSavedUserFile(name: string): SavedUserFile | null {
     }
 }
 
-export function updateUserFile(userFile: UserFile | SavedUserFile): void{
-    localStorage.setItem(userFile.name, JSON.stringify(userFile));
+export function updateUserFile(userFile: UserFile | SavedUserFile): boolean{
+    try{
+        userFile.modified = new Date();
+        localStorage.setItem(userFile.name, JSON.stringify(userFile));
+        return true;
+    }
+    catch(e){
+        console.error(e);
+        return false;
+    }
 }
 
 export function deleteUserFile(userFile: UserFile | SavedUserFile): void{
@@ -45,4 +62,47 @@ export function listUserFile(): SavedUserFile[]{
         }
     }
     return userFileList;
+}
+
+export function updateSavedUserFiles(): void{
+    for (let i = 0; i < localStorage.length; i++) {
+        const name = localStorage.key(i);
+        if( name != null ){
+            let maybeFile = localStorage.getItem(name);
+            if( maybeFile !== null ){
+                try{
+                    let maybeOldFile = JSON.parse(maybeFile);
+                    let file = updateOldSavedUserFile(maybeOldFile);
+                    if( file ){
+                        localStorage.setItem(name, JSON.stringify(file))
+                    }
+                }
+                catch(e){
+                    console.log(e);
+                }
+            }
+        }
+    }
+    alertUpdateListUserFile();
+}
+
+updateSavedUserFiles();
+
+export function updateOldSavedUserFile(obj: any): SavedUserFile | null{
+    if( !isOldSavedUserFile(obj) ) return null;
+
+    let text = new DOMParser().parseFromString(obj.html_contents, "text/html").body.textContent || "";
+    return {
+        name: obj.name,
+        html_contents: obj.html_contents,
+        size: obj.html_contents.length,
+        ents: obj.ents.map( (e: EntityI) => ({
+            type: e.type,
+            offsets: e.offsets.map(off => ({start: off.start, end: off.end, preview: text.substring(off.start, off.end+1)})),
+            offsetsLength: e.offsets.length,
+            overwriteAnonimization: e.overwriteAnonimization
+        })),
+        imported: new Date().toString(),
+        modified: new Date().toString()
+    }
 }
