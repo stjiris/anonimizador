@@ -6,7 +6,7 @@ import { UserFile } from './types/UserFile';
 import BootstrapModal from './util/BootstrapModal';
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table';
 import { MRT_Localization_PT } from 'material-react-table/locales/pt';
-import { EntityTypeI, getEntityTypes, restoreEntityTypes, TypeNames, updateEntityType } from './types/EntityTypes';
+import { addEntityType, EntityTypeI, getEntityTypes, restoreEntityTypes, TypeNames, updateEntityType } from './types/EntityTypes';
 import { AnonimizeFunctionName, functions } from './util/anonimizeFunctions';
 import { createFilter, FiltersI, getFilters, restoreFilters, updateFilter } from './types/EntityFilters';
 import { updateSavedUserFiles } from './util/UserFileCRUDL';
@@ -157,7 +157,13 @@ export default class App extends React.Component<{},AppState>{
 										onClick: () => {table.setEditingCell(cell);}
 									})}
 								/>
-					<form className="d-flex m-2" onSubmit={(evt) => {evt.preventDefault()}}>
+					<form className="d-flex m-2" onSubmit={(evt) => {
+						evt.preventDefault(); 
+						let form = evt.target as HTMLFormElement;
+						let tipoInput = form.elements.namedItem("tipo") as HTMLInputElement;
+						let colorInput = form.elements.namedItem("color") as HTMLInputElement;
+						let anonInput = form.elements.namedItem("anonimização") as HTMLSelectElement;
+						this.setState({entitieTypes: addEntityType(tipoInput.value, colorInput.value, anonInput.value as AnonimizeFunctionName)});}}>
 						<input className="form-control" name="tipo" placeholder="Tipo..." required></input>
 						<input  className="form-control form-control-color" name="color" type="color"></input>
 						<select  className="form-select" name="anonimização">{Object.keys(functions).map( name => <option label={name} value={name}>{name}</option>)}</select>

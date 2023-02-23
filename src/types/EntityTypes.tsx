@@ -66,6 +66,22 @@ export function getEntityTypes(): EntityTypeI[]{
     return Object.values(EntityTypesStored);
 }
 
+export function addEntityType(key: string, color: string, functionName: AnonimizeFunctionName): EntityTypeI[]{
+    let EntityTypesStored = JSON.parse( localStorage.getItem(EntityTypesVersion) || "null" );
+    if( !EntityTypesStored ){
+        EntityTypesStored = JSON.parse(JSON.stringify(EntityTypesDefaults));
+    }
+    
+    EntityTypesStored[key] = {
+        name: key,
+        color: color,
+        functionName: functionName
+    }
+
+    localStorage.setItem(EntityTypesVersion, JSON.stringify(EntityTypesStored));
+    return Object.values(EntityTypesStored);   
+}
+
 export function updateEntityType(key: TypeNames, color: string, functionName: AnonimizeFunctionName): EntityTypeI[]{
     let EntityTypesStored = JSON.parse( localStorage.getItem(EntityTypesVersion) || "null" );
     if( !EntityTypesStored ){
