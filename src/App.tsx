@@ -82,6 +82,9 @@ export default class App extends React.Component<{},AppState>{
 		return <div className="App">
 			<style>
 				{/* Generate type colors */}
+				{`[data-anonimize-type^="ERRO"]{
+					background: red;
+				}`}
 				{this.state.entitieTypes.map( ({name, color}) => `[data-anonimize-type="${name}"]{background:${color}}`)}
 			</style>
 			<Header actions={[

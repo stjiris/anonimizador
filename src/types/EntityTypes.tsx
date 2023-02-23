@@ -37,8 +37,9 @@ export function getEntityType(label: TypeNames): EntityTypeI{
     }
 
     // TODO: if label doesn't exist create a stub type?
+    if( cache[label] ) return cache[label]!;
 
-    return cache[label] as EntityTypeI
+    return {name: `ERRO (${label})`, color: `red`, functionName: "Não anonimizar"}
 }
 
 export function getEntityTypes(): EntityTypeI[]{
