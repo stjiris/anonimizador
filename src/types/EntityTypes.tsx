@@ -10,7 +10,7 @@ export interface EntityTypeI {
     functionName: AnonimizeFunctionName
 }
 
-export type TypeNames = "PER" | "ORG" | "DAT" | "LOC" | "PRO" | "MAT" | "CEP" | "TEL" | "EMA" | "E-MAIL" | "IDP";
+export type TypeNames = "PER" | "ORG" | "DAT" | "LOC" | "PRO" | "MAT" | "CEP" | "TEL" | "EMA" | "E-MAIL" | "IDP" | "INST";
 
 export const EntityTypesDefaults: {[key in TypeNames] : EntityTypeI} = {
     PER: {name: "PER", color: "#84d2ff", functionName: "Letras incremental"},
@@ -23,7 +23,8 @@ export const EntityTypesDefaults: {[key in TypeNames] : EntityTypeI} = {
     TEL: {name: "TEL", color: "#ce42f5", functionName: "Ofuscação tel"},
     ["E-MAIL"]: {name: "E-MAIL", color: "#f5d142", functionName: "Ofuscação total"},
     EMA: {name: "EMA", color: "#f5d142", functionName: "Ofuscação total"},
-    IDP: {name: "IDP", color: "#f5d142", functionName: "Ofuscação tel"}
+    IDP: {name: "IDP", color: "#f5d142", functionName: "Ofuscação tel"},
+    INST: {name: "INST", color: "#f5d142", functionName: "Ofuscação com primeira palavra"}
 }
 
 const cache: {[key in TypeNames]?: EntityTypeI} = {}
