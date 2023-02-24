@@ -247,20 +247,33 @@ export class EntityPool {
     }
 
     applyFilters(filters: FiltersI[]): number{
-        let removed = 0;
-        this.entities.reverse().forEach( (ent, i) => {
+        let occurs = 0
+        let removed: number[] = [];
+        this.entities.forEach( (ent, i) => {
             let cfil = filters.filter( f => f.types.length == 0 || f.types.some( t => t == ent.type) );
             if( cfil.length > 0 ){
-                if( filters.some( f => ent.offsets.some( off => normalizeEntityString(off.preview).indexOf(normalizeEntityString(f.text)) >= 0 ) ) ){
-                    this.entities.splice(i, 1);
-                    removed++;
+                let r: number[] = [];
+                ent.offsets.forEach( (off, j) => {
+                    if( filters.some( f => normalizeEntityString(off.preview).indexOf(normalizeEntityString(f.text)) >= 0 ) ){
+                        r.push(j);
+                        occurs++;
+                    }
+                });
+                if( r.length === ent.offsets.length ){
+                    removed.push(i);
+                }
+                else{
+                    for( let j of r ){
+                        ent.offsets.splice(j, 1);
+                    }
                 }
             }
         })
-        if( removed ){
-            this.updateOrder();
-        }
-        return removed;
+        removed.reverse().forEach(i => {
+            this.entities.splice(i, 1);
+        })
+        this.updateOrder();
+        return occurs;
     }
 
 }

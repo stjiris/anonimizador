@@ -167,7 +167,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                     <div>
                         {pool.entities.length <= 0 ? 
                             <RemoteNlpStatus pool={pool} filters={this.props.filters} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}/> :
-                            <button className="red-link fw-bold btn" onClick={() => window.alert( `Filtradas ${pool.applyFilters(this.props.filters)} entidade(s)` )}><Bicon n="funnel"/> Filtrar</button>
+                            <button className="red-link fw-bold btn" onClick={() => window.alert( `Filtradas ${pool.applyFilters(this.props.filters)} ocurrencia(s)` )}><Bicon n="funnel"/> Filtrar</button>
                         }
                     </div>
                 </div>
