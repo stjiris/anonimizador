@@ -10,6 +10,7 @@ import { AnonimizeStateState } from "../types/AnonimizeState";
 import { EntityPool } from "../types/EntityPool";
 import { getEntityType, getEntityTypes, TypeNames } from "../types/EntityTypes";
 import { FiltersI } from "../types/EntityFilters";
+import { Bicon } from "../util/BootstrapIcons";
 
 interface AnonimizeProps{
     file: UserFile
@@ -20,7 +21,8 @@ interface AnonimizeProps{
 interface AnonimizeState{
     anonimizeState: AnonimizeStateState
     ents: Entity[],
-    saved: boolean
+    saved: boolean,
+    showTypes: boolean
 }
 
 let pool: EntityPool = (window as any).pool = new EntityPool("",[]);
@@ -38,7 +40,8 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
         this.state ={
             anonimizeState: AnonimizeStateState.TAGGED,
             ents: [...pool.entities],
-            saved: updateUserFile(props.file)
+            saved: updateUserFile(props.file),
+            showTypes: true
         };
         if( !this.state.saved ){
             alert("Atenção! O trabalho não será guardado automáticamente.")
@@ -152,10 +155,12 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         <button className="red-link fw-bold btn" onClick={this.downloadHtml}><i className="bi bi-download"></i> Download</button>
                     </div>
                     <div>
+                        <button className="red-link fw-bold btn" onClick={() => this.setState({showTypes: !this.state.showTypes})} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}><Bicon n="eye"/> {this.state.showTypes ? "Substituições" : "Tipos"}</button>
+                    </div>
+                    <div>
                         <select className="red-link fw-bold btn text-end" onChange={(ev) => this.setState({anonimizeState: ev.target.value as AnonimizeStateState}) } defaultValue={AnonimizeStateState.TAGGED}>
                             <option value={AnonimizeStateState.ORIGINAL}>{AnonimizeStateState.ORIGINAL}</option>
                             <option value={AnonimizeStateState.TAGGED}>{AnonimizeStateState.TAGGED}</option>
-                            <option value={AnonimizeStateState.TAGGED_ANONIMIZED}>{AnonimizeStateState.TAGGED_ANONIMIZED}</option>
                             <option value={AnonimizeStateState.ANONIMIZED}>{AnonimizeStateState.ANONIMIZED}</option>
                         </select>
                     </div>
@@ -164,7 +169,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                     </div>
                 </div>
                 <div className="bg-white p-4">
-                    <AnonimizeContent ref={this.contentRef} doc={this.doc} pool={pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState}/>
+                    <AnonimizeContent ref={this.contentRef} showTypes={this.state.showTypes} doc={this.doc} pool={pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState}/>
                 </div>
             </div>
             <div className="col-4">

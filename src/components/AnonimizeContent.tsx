@@ -12,6 +12,7 @@ export interface AnonimizeContentProps {
     pool: EntityPool
     ents: Entity[]
     anonimizeState: AnonimizeStateState
+    showTypes: boolean
 }
 
 export interface AnonimizeContentState {
@@ -120,7 +121,7 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
             offset += (this.props.doc.childNodes[i].textContent || "").length;
         }
         return <>
-            <div id="content" ref={this.contentRef}>{list}</div>
+            <div id="content" className={this.props.showTypes ? 'show-type' : 'show-cod'} ref={this.contentRef}>{list}</div>
             <AnonimizeTooltip 
                 pool={this.props.pool}
                 selection={this.state.selection}
@@ -239,16 +240,6 @@ class AnonimizeToken extends React.Component<AnonimizeTokenProps>{
         }
 
         switch(this.props.anonimizeState){
-            case AnonimizeStateState.TAGGED_ANONIMIZED:
-                if( isPartAnonimize && 'data-anonimize-first' in dataAttrs ){
-                    return <span data-anonimize-type={dataAttrs['data-anonimize-type']}>{dataAttrs['data-anonimize-cod']}</span>;
-                }
-                else if( isPartAnonimize ){
-                    return ""
-                }
-                else{
-                    return this.props.string
-                }
             case AnonimizeStateState.ANONIMIZED:
                 if( isPartAnonimize && 'data-anonimize-first' in dataAttrs ){
                     return dataAttrs['data-anonimize-cod'];
