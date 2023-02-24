@@ -60,6 +60,12 @@ export default class App extends React.Component<{},AppState>{
 		})
 	}
 
+	anonimizeExample: MRT_ColumnDef<EntityTypeI> = {
+		header: "Descrição Anonimização",
+		accessorFn: (row) => functionsWithDescription[row.functionName].description,
+		enableEditing: false
+	}
+
 	textColumn: MRT_ColumnDef<FiltersI> = {
 		header: "Texto",
 		accessorKey: "text",
@@ -149,7 +155,7 @@ export default class App extends React.Component<{},AppState>{
 									enableFullScreenToggle={false}
 									enableColumnActions={false}
 									editingMode="cell"
-									columns={[this.typeColumn,this.anonimizeColumn]} 
+									columns={[this.typeColumn,this.anonimizeColumn,this.anonimizeExample]} 
 									data={this.state.entitieTypes}
 									localization={MRT_Localization_PT}
 									renderTopToolbarCustomActions={() => [

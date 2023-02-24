@@ -52,23 +52,23 @@ export function isAnonimizeFunctionName(str: string, defaultName: AnonimizeFunct
 export const functionsWithDescription: { [key: string]: {fun: AnonimizeFunction, description: string}} = {
     "Não anonimizar": {
         fun: identity,
-        description: ""
+        description: "Miguel"
     },
     "Tipo incremental": {
         fun: increment,
-        description: "(<tipo>0001, <tipo>0002, ...)"
+        description: "TIPO0001"
     },
     "Letras incremental": {
         fun: leter,
-        description: "(AA, BB, CC, ...)"
+        description: "AA"
     },
     "Ofuscação parcial": {
         fun: ofuscate,
-        description: "Manter 1.ª Letra e substuir restantes por ."
+        description: "M....."
     },
     "Manter Ano": {
         fun: year,
-        description: "(../../2023, ..-..-2023, .. de ... de 2023)"
+        description: "../../2023"
     },
     "Ofuscação total": {
         fun: reticiencias,
@@ -76,10 +76,10 @@ export const functionsWithDescription: { [key: string]: {fun: AnonimizeFunction,
     },
     "Ofuscação processo": {
         fun: processo,
-        description: "(134/3.6...)"
+        description: "134/3.6..."
     },
     "Ofuscação tel": {
         fun: tel,
-        description: "(...9)"
+        description: "...9"
     }
 }
