@@ -38,7 +38,6 @@ export function getEntityType(label: TypeNames): EntityTypeI{
         cache[t.name as TypeNames] = t;
     }
 
-    // TODO: if label doesn't exist create a stub type?
     if( cache[label] ) return cache[label]!;
 
     return {name: `ERRO (${label})`, color: `red`, functionName: "Não anonimizar"}
