@@ -1,5 +1,5 @@
 import { EntityTypeI, getEntityType, TypeNames } from "./EntityTypes";
-import { AnonimizeFunction, AnonimizeFunctionName, functions, identity } from "../util/anonimizeFunctions";
+import { AnonimizeFunction, AnonimizeFunctionName, functionsWithDescription, identity } from "../util/anonimizeFunctions";
 
 export const normalizeEntityString = (str: string): string => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]/g, "");
 
@@ -48,7 +48,7 @@ export class Entity implements EntityI {
         else{
             let type = getEntityType(this.type);
             if( !type ) return identity;
-            return functions[type.functionName];
+            return functionsWithDescription[type.functionName].fun;
         }
     }
 

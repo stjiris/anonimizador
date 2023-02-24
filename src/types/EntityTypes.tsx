@@ -1,7 +1,7 @@
 import { AnonimizeFunctionName, isAnonimizeFunctionName } from "../util/anonimizeFunctions";
 
 // If changes on interface change this string
-const EntityTypesVersion = "EntityTypesStored.v0.0";
+const EntityTypesVersion = "EntityTypesStored.v1.0";
 
 export interface EntityTypeI {
     name: string,
@@ -10,19 +10,20 @@ export interface EntityTypeI {
     functionName: AnonimizeFunctionName
 }
 
-export type TypeNames = "PER" | "ORG" | "DAT" | "LOC" | "PRO" | "MAT" | "CEP" | "TEL" | "EMA" | "IDP";
+export type TypeNames = "PER" | "ORG" | "DAT" | "LOC" | "PRO" | "MAT" | "CEP" | "TEL" | "EMA" | "E-MAIL" | "IDP";
 
 export const EntityTypesDefaults: {[key in TypeNames] : EntityTypeI} = {
     PER: {name: "PER", color: "#84d2ff", functionName: "Letras incremental"},
     DAT: {name: "DAT", color: "#66fc03", functionName: "Manter Ano"},
-    ORG: {name: "ORG", color: "#00ffa2", functionName: "Letras incremental"},
-    LOC: {name: "LOC", color: "#fc03c2", functionName: "Tipo incremental"},
-    PRO: {name: "PRO", color: "#eb8634", functionName: "Ofuscação parcial"},
-    MAT: {name: "MAT", color: "#007eff", functionName: "Ofuscação parcial"},
-    CEP: {name: "CEP", color: "#eb3434", functionName: "Ofuscação parcial"},
-    TEL: {name: "TEL", color: "#ce42f5", functionName: "Tipo incremental"},
-    EMA: {name: "EMA", color: "#f5d142", functionName: "Tipo incremental"},
-    IDP: {name: "IDP", color: "#f5d142", functionName: "Ofuscação parcial"}
+    ORG: {name: "ORG", color: "#00ffa2", functionName: "Ofuscação total"},
+    LOC: {name: "LOC", color: "#fc03c2", functionName: "Ofuscação total"},
+    PRO: {name: "PRO", color: "#eb8634", functionName: "Ofuscação processo"},
+    MAT: {name: "MAT", color: "#007eff", functionName: "Ofuscação total"},
+    CEP: {name: "CEP", color: "#eb3434", functionName: "Ofuscação total"},
+    TEL: {name: "TEL", color: "#ce42f5", functionName: "Ofuscação tel"},
+    ["E-MAIL"]: {name: "E-MAIL", color: "#f5d142", functionName: "Ofuscação total"},
+    EMA: {name: "EMA", color: "#f5d142", functionName: "Ofuscação total"},
+    IDP: {name: "IDP", color: "#f5d142", functionName: "Ofuscação tel"}
 }
 
 const cache: {[key in TypeNames]?: EntityTypeI} = {}

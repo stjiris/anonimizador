@@ -7,7 +7,7 @@ import BootstrapModal from './util/BootstrapModal';
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table';
 import { MRT_Localization_PT } from 'material-react-table/locales/pt';
 import { addEntityType, deleteEntityType, EntityTypeI, EntityTypesDefaults, getEntityTypes, restoreEntityTypes, TypeNames, updateEntityType } from './types/EntityTypes';
-import { AnonimizeFunctionName, functions } from './util/anonimizeFunctions';
+import { AnonimizeFunctionName, functionsWithDescription } from './util/anonimizeFunctions';
 import { createFilter, deleteFilter, FiltersI, getFilters, restoreFilters, updateFilter } from './types/EntityFilters';
 import { updateSavedUserFiles } from './util/UserFileCRUDL';
 
@@ -52,11 +52,11 @@ export default class App extends React.Component<{},AppState>{
 		enableEditing: true,
 		muiTableBodyCellEditTextFieldProps: ({row,table}) => ({
 			select: true,
-			children: Object.keys(functions).map( name => <option label={name} value={name}>{name}</option>),
+			children: Object.keys(functionsWithDescription).map( name => <option label={name} value={name}>{name}</option>),
 			SelectProps: {
 				native: true
 			},
-			onChange: (evt) => this.setState({entitieTypes: updateEntityType(row.original.name as TypeNames, row.original.color, evt.target.value as AnonimizeFunctionName)})
+			onChange: (evt) => this.setState({entitieTypes: updateEntityType(row.original.name as TypeNames, row.original.color, evt.target.value)})
 		})
 	}
 
@@ -174,7 +174,7 @@ export default class App extends React.Component<{},AppState>{
 						}}>
 						<input className="form-control" name="tipo" placeholder="Tipo..." required></input>
 						<input  className="form-control form-control-color" name="color" type="color"></input>
-						<select  className="form-select" name="anonimização" required>{Object.keys(functions).map( name => <option label={name} value={name}>{name}</option>)}</select>
+						<select  className="form-select" name="anonimização" required>{Object.keys(functionsWithDescription).map( name => <option label={name} value={name}>{name}</option>)}</select>
 						<button className="form-control btn btn-primary">Adicionar</button>
 					</form>
 				</div>
