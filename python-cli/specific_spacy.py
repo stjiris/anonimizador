@@ -82,7 +82,8 @@ def remove_pattern(p, ents):
 def new_line_segmenter(doc):
     for i, token in enumerate(doc[:-1]):
         # Check if the current token is a newline character
-        if token.text == "\n":
+        print(token.text, file=sys.stderr)
+        if token.text == "\n" or token.text.endswith("."):
             # If it is, treat the next token as the start of a new sentence
             doc[i+1].is_sent_start = True
     return doc
