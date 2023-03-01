@@ -44,6 +44,8 @@ export const tel: AnonimizeFunction = (str) => str.replace(/.*(\d)$/,"...$1")
 
 export const firstWord: AnonimizeFunction = (str) => str.replace(/([A-Za-zÀ-ÖØ-öø-ÿ0-9]+( de)?).*/, "$1 ...")
 
+export const matricula: AnonimizeFunction = (str) => str.replace(/[A-Z]/g, '.');
+
 export type AnonimizeFunctionName = string;
 
 export function isAnonimizeFunctionName(str: string, defaultName: AnonimizeFunctionName): AnonimizeFunctionName {
@@ -87,5 +89,9 @@ export const functionsWithDescription: { [key: string]: {fun: AnonimizeFunction,
     "Ofuscação com primeira palavra": {
         fun: firstWord,
         description: "Tribunal ..., Universidade ..."
+    },
+    "Ofuscação de letras": {
+        fun: matricula,
+        description: "..-TB-.."
     }
 }
