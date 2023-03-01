@@ -89,7 +89,7 @@ def new_line_segmenter(doc):
 
 def nlp(text, model):
     model.add_pipe("new_line_segmenter", before="ner")
-    doc = model(text)
+    doc = model("\n".join(text.split(".")))
     ents = []
     for ent in excude_manual(doc.ents):
         ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
