@@ -232,6 +232,7 @@ export class EntityPool {
             if( curr.offsets.some( off => normalizeEntityString(off.preview)+curr.type === normed ) ){
                 curr.addOffset([{start: startOffset, end: endOffset, preview: text}])
                 used = true
+                break
             }
         }
 
