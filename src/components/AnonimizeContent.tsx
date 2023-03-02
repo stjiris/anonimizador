@@ -118,7 +118,7 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
         let offset = 0;
         for(let i=0; i < this.props.doc.childNodes.length; i++){
             list.push(<AnonimizeBlock key={i} element={this.props.doc.childNodes[i]} offset={offset} ents={this.props.ents} anonimizeState={this.props.anonimizeState}/>)
-            offset += (this.props.doc.childNodes[i].textContent || "").length;
+            offset += (this.props.doc.childNodes[i].textContent?.normalize("NFKC") || "").length;
         }
         return <>
             <div id="content" className={this.props.showTypes ? 'show-type' : 'show-cod'} ref={this.contentRef}>{list}</div>
@@ -144,9 +144,9 @@ class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
         let elmt = this.props.element;
 
         if( elmt.nodeType === Node.TEXT_NODE ){
-            let elmtStr = elmt.nodeValue || ""; // should never be null tho...
+            let elmtStr = elmt.nodeValue?.normalize("NFKC") || ""; // should never be null tho...
             let tokensElems = [];
-            var reg = /([A-Za-zÀ-ÖØ-öø-ÿ0-9]+)|([^A-Za-zÀ-ÖØ-öø-ÿ0-9])/g;
+            var reg = /([0-9]+)|([A-Za-zÀ-ÖØ-öø-ÿ]+)|([^A-Za-zÀ-ÖØ-öø-ÿ0-9])/g;
             var token;
             while((token = reg.exec(elmtStr)) !== null) {
                 tokensElems.push(<AnonimizeToken key={token.index} string={token[0]} offset={this.props.offset+token.index} ents={this.props.ents} anonimizeState={this.props.anonimizeState} />);
@@ -161,7 +161,7 @@ class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
         let suboffset = 0;
         for(let i = 0; i < elmt.childNodes.length; i++){
             r.push(<AnonimizeBlock key={i} element={elmt.childNodes[i]} offset={this.props.offset + suboffset} ents={this.props.ents} anonimizeState={this.props.anonimizeState}/>)
-            suboffset += (elmt.childNodes[i].textContent || "").length
+            suboffset += (elmt.childNodes[i].textContent?.normalize("NFKC") || "").length
         }
         
         let attrs: any  = {};

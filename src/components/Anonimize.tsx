@@ -34,7 +34,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     
     constructor(props: AnonimizeProps){
         super(props);
-        pool.originalText = this.doc.textContent || ""
+        pool.originalText = this.doc.textContent?.normalize("NFKC") || ""
         pool.entities = this.props.file.ents;
         pool.updateOrder();
         this.state ={
@@ -166,7 +166,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                     </div>
                     <div>
                         {pool.entities.length <= 0 ? 
-                            <RemoteNlpStatus pool={pool} filters={this.props.filters} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}/> :
+                            <RemoteNlpStatus pool={pool} doc={this.doc} filters={this.props.filters} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}/> :
                             <button className="red-link fw-bold btn" onClick={() => window.alert( `Filtradas ${pool.applyFilters(this.props.filters)} entidade(s)` )}><Bicon n="funnel"/> Filtrar</button>
                         }
                     </div>
