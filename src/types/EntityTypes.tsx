@@ -18,7 +18,7 @@ export const EntityTypesDefaults: {[key in TypeNames] : EntityTypeI} = {
     ORG: {name: "ORG", color: "#00ffa2", functionName: "Ofuscação total"},
     LOC: {name: "LOC", color: "#fc03c2", functionName: "Ofuscação total"},
     PRO: {name: "PRO", color: "#eb8634", functionName: "Ofuscação processo"},
-    MAT: {name: "MAT", color: "#007eff", functionName: "Ofuscação total"},
+    MAT: {name: "MAT", color: "#007eff", functionName: "Ofuscação matricula"},
     CEP: {name: "CEP", color: "#eb3434", functionName: "Ofuscação total"},
     TEL: {name: "TEL", color: "#ce42f5", functionName: "Ofuscação tel"},
     ["E-MAIL"]: {name: "E-MAIL", color: "#f5d142", functionName: "Ofuscação total"},
