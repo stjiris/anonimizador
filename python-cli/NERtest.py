@@ -4,6 +4,7 @@ import sys
 import csv
 spacy_model = "./model-best"
 from spacy.language import Language
+from spacy.matcher import PhraseMatcher
 
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
 PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A-Z0-9]*"
@@ -107,13 +108,38 @@ def new_line_segmenter(doc):
 def nlp(text):
     snlp = spacy.load(spacy_model)
     snlp.add_pipe("new_line_segmenter", before="ner")
+    #snlp.add_pipe("label_professions", after="ner")
     #snlp.add_pipe("remove_entities_with_excluded_words", last=True)
     print(snlp.pipe_names)
-    doc = snlp(text)
+    
+    #Create matcher
+    matcher = PhraseMatcher(snlp.vocab, attr="LOWER")
+    #Open professions file to create a list with professions
+    with open("profissoes.txt", "r") as f:
+        professions = []
+        for line in f:
+            professions.append(line.strip())
+    
+    #Make each profession a pattern        
+    patterns=[snlp.make_doc(text) for text in professions]
+    #Add patterns to the matcher
+    matcher.add("PROFESSIONS",patterns)
+    
+    #Creates entity list
     ents = []
+    #Runs the model 
+    doc = snlp("\n".join(text.split(".")))
+    
+    #Run matcher on document and saves it on matches
+    matches = matcher(doc)
+    #Finds where match is on document and adds it to entity list
+    for match_id, start, end in matches:
+        span = doc[start:end]
+        ents.append(FakeEntity("PROF", start, end, span.text))
+    
     for ent in excude_manual(doc.ents):
         ents.append(ent)
-
+ 
     with open('../patterns.csv', 'r') as csvfd:
         reader = csv.DictReader(csvfd, delimiter="\t")
         for r in reader:
