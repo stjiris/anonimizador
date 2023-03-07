@@ -1,5 +1,6 @@
 import { EntityI } from "../types/Entity";
 import { isOldSavedUserFile, isSavedUserFile, SavedUserFile, UserFile } from "../types/UserFile"
+import { getEntityTypes } from "../types/EntityTypes";
 
 function alertUpdateListUserFile(){
     window.dispatchEvent(new CustomEvent("AlertUpdateListUserFile"));
@@ -46,6 +47,20 @@ export function updateUserFile(userFile: UserFile | SavedUserFile): boolean{
 }
 
 export function deleteUserFile(userFile: UserFile | SavedUserFile): void{
+    let deletedItems: any = JSON.parse( localStorage.getItem("DELETED_FILES") || "{}" );
+    let entCount: any = {}
+    for (let e of getEntityTypes()) {
+        entCount[e.name] = userFile.ents.filter(t => t.type === e.name).length
+    }
+    deletedItems[userFile.name] = {
+        name: userFile.name,
+        imported: userFile.imported,
+        modified: userFile.modified,
+        size: userFile.size,
+        entCount: entCount
+    }
+    localStorage.setItem("DELETED_FILES", JSON.stringify(deletedItems))
+
     localStorage.removeItem(userFile.name);
     alertUpdateListUserFile();
 }

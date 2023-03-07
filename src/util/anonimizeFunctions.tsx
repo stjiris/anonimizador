@@ -36,15 +36,22 @@ export const year: AnonimizeFunction = (str: string,...args) => {
     return ofuscate(str,...args);
 }
 
-export const reticiencias = () => "..."
+export const reticiencias: AnonimizeFunction = () => "..."
 
-export const processo: AnonimizeFunction = (str) => str.replace(/(.*)(\/\w)(.*)/, "$1$2...")
+export const processo: AnonimizeFunction = (str, ...args) => {
+    if( str.match(/([^\/]*\/[^.]*)\.(.).*/) ){
+        return str.replace(/([^\/]*\/[^.]*)\.(.).*/, "$1.$2...")
+    }
+    return ofuscate(str, ...args)
+}
 
 export const tel: AnonimizeFunction = (str) => str.replace(/.*(\d)$/,"...$1")
 
+export const nib: AnonimizeFunction = (str) => str.replace(/.*(\d\d)$/,"...$1")
+
 export const firstWord: AnonimizeFunction = (str) => str.replace(/([A-Za-zÀ-ÖØ-öø-ÿ0-9]+( de)?).*/, "$1 ...")
 
-export const matricula: AnonimizeFunction = (str) => str.replace(/[A-Z]/g, '.');
+export const matricula: AnonimizeFunction = (str) => str.replace(/[0-9]/g, '.');
 
 export type AnonimizeFunctionName = string;
 
@@ -93,5 +100,13 @@ export const functionsWithDescription: { [key: string]: {fun: AnonimizeFunction,
     "Ofuscação de letras": {
         fun: matricula,
         description: "..-TB-.."
+    },
+    "Ofuscação NIB": {
+        fun: nib,
+        description: "...99"
+    },
+    "Ofuscação matricula": {
+        fun: matricula,
+        description: "..-OO-.."
     }
 }
