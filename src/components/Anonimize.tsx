@@ -16,6 +16,10 @@ interface AnonimizeProps{
     file: UserFile
     setUserFile: (file: UserFile | undefined) => void,
     filters: FiltersI[]
+    saveSateCallback: Function
+    undoRedoCallback: Function
+    stateIndex: any
+    maxStateIndex: any
 }
 
 interface AnonimizeState{
@@ -46,6 +50,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
         if( !this.state.saved ){
             alert("Atenção! O trabalho não será guardado automáticamente.")
         }
+        this.props.saveSateCallback([...pool.entities], true)
     }
 
     selectedIndexes(): number[]{
@@ -119,6 +124,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
 
     onPoolChange = (): void => {
         this.props.file.ents = pool.entities;
+        this.props.saveSateCallback([...pool.entities], false)
         this.setState({ ents: [...pool.entities], saved: updateUserFile(this.props.file) })
     }
 
@@ -137,6 +143,20 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     componentWillUnmount(): void {
         pool.offChange( this.onPoolChange )
         window.removeEventListener("beforeunload", this.confirmExit)
+    }
+
+    onUndo = (): void => {
+        let newEnts = this.props.undoRedoCallback(this.props.stateIndex.current-1)
+        this.props.file.ents = newEnts
+        pool.overwriteEntities(newEnts)
+        this.setState({ents: newEnts, saved: updateUserFile(this.props.file)})
+    }
+
+    onRedo = (): void => {
+        let newEnts = this.props.undoRedoCallback(this.props.stateIndex.current+1)
+        this.props.file.ents = newEnts
+        pool.overwriteEntities(newEnts)
+        this.setState({ents: newEnts, saved: updateUserFile(this.props.file)})
     }
 
     render(): React.ReactNode {
@@ -169,6 +189,10 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                             <RemoteNlpStatus pool={pool} doc={this.doc} filters={this.props.filters} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}/> :
                             <button className="red-link fw-bold btn" onClick={() => window.alert( `Filtradas ${pool.applyFilters(this.props.filters)} entidade(s)` )}><Bicon n="funnel"/> Filtrar</button>
                         }
+                    </div>
+                    <div>
+                        <button id="undoButton" onClick={this.onUndo} disabled={this.props.stateIndex.current==0 ? true : false}>Undo</button>
+                        <button id="redoButton" onClick={this.onRedo} disabled={this.props.stateIndex.current==this.props.maxStateIndex.current ? true : false}>Redo</button>
                     </div>
                 </div>
                 <div className="bg-white p-4">

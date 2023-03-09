@@ -21,6 +21,10 @@ export class EntityPool {
         this.updateOrder()
     }
 
+    overwriteEntities(entities: EntityI[]){
+        this.entities = entities.map( (e, i) => Entity.makeEntity(e, i) );
+    }
+
     onChange(cb: () => void){
         this.listeners.push(cb);
     }
