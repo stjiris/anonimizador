@@ -191,8 +191,8 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         }
                     </div>
                     <div>
-                        <button id="undoButton" onClick={this.onUndo} disabled={this.props.stateIndex.current==0 ? true : false}>Undo</button>
-                        <button id="redoButton" onClick={this.onRedo} disabled={this.props.stateIndex.current==this.props.maxStateIndex.current ? true : false}>Redo</button>
+                        <button id="undoButton" className="red-link fw-bold btn" onClick={this.onUndo} disabled={this.props.stateIndex.current==0 ? true : false}><i className="bi bi-arrow-counterclockwise"></i></button>
+                        <button id="redoButton" className="red-link fw-bold btn" onClick={this.onRedo} disabled={this.props.stateIndex.current==this.props.maxStateIndex.current ? true : false}><i className="bi bi-arrow-clockwise"></i></button>
                     </div>
                 </div>
                 <div className="bg-white p-4">
