@@ -5,6 +5,7 @@ import csv
 spacy_model = "./model-best"
 from spacy.language import Language
 from spacy.matcher import PhraseMatcher
+from spacy.matcher import Matcher
 
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
 PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A-Z0-9]*"
@@ -113,22 +114,35 @@ def nlp(text):
     print(snlp.pipe_names)
     
     #Create matcher
-    matcher = PhraseMatcher(snlp.vocab, attr="LOWER")
+    matcher = Matcher(snlp.vocab)
+    
     #Open professions file to create a list with professions
     with open("profissoes.txt", "r") as f:
-        professions = []
-        for line in f:
-            professions.append(line.strip())
+        professions = [line.strip().lower() for line in f]
+    
+    new_professions = []
+    for profession in professions:
+        if profession.endswith("o"):
+            new_profession = profession[:-1] + "a"
+            new_professions.append(profession)
+            new_professions.append(new_profession)
+        elif profession.endswith("a"):
+            new_profession = profession[:-1] + "o"
+            new_professions.append(profession)
+            new_professions.append(new_profession)
+        else:
+            new_professions.append(profession)
     
     #Make each profession a pattern        
-    patterns=[snlp.make_doc(text) for text in professions]
+    pattern=[{"LOWER": {"IN": new_professions}}]#, {"TEXT": {"REGEX": r"\b(\w+)(a|o|as|os)?\b"}}]
     #Add patterns to the matcher
-    matcher.add("PROFESSIONS",patterns)
+    matcher.add("PROFESSIONS",[pattern])
     
     #Creates entity list
     ents = []
     #Runs the model 
-    doc = snlp("\n".join(text.split(".")))
+    #doc = snlp("\n".join(text.split(".")))
+    doc = snlp(text)
     
     #Run matcher on document and saves it on matches
     matches = matcher(doc)
