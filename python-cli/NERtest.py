@@ -87,11 +87,13 @@ def remove_pattern(p, ents):
 def remove_entities_with_excluded_words(doc):
     excluded_words = ["john richard", "frigocar"]
     entities = []
+    n=0
     for ent in doc.ents:
         if not any(word in ent.text.lower() for word in excluded_words):
             entities.append(ent)
         else:
-            print("OLAaaaaaaa")
+            n+=1
+    print("Excluded Entities:",n)
     doc.ents = entities
     return doc
 
@@ -106,50 +108,78 @@ def new_line_segmenter(doc):
         
     return doc
 
-def nlp(text):
-    snlp = spacy.load(spacy_model)
-    snlp.add_pipe("new_line_segmenter", before="ner")
-    #snlp.add_pipe("label_professions", after="ner")
-    #snlp.add_pipe("remove_entities_with_excluded_words", last=True)
-    print(snlp.pipe_names)
+@Language.component("label_professions")
+def label_professions(doc):
     
     #Create matcher
-    matcher = Matcher(snlp.vocab)
+    matcher = Matcher(doc.vocab)
+    
+    #Create entity list
+    entities = []
     
     #Open professions file to create a list with professions
     with open("profissoes.txt", "r") as f:
         professions = [line.strip().lower() for line in f]
     
-    new_professions = []
-    for profession in professions:
-        if profession.endswith("o"):
-            new_profession = profession[:-1] + "a"
-            new_professions.append(profession)
-            new_professions.append(new_profession)
-        elif profession.endswith("a"):
-            new_profession = profession[:-1] + "o"
-            new_professions.append(profession)
-            new_professions.append(new_profession)
-        else:
-            new_professions.append(profession)
+    #Create new professions list with both genders
+    new_professions = get_both_genders(professions)
     
     #Make each profession a pattern        
     pattern=[{"LOWER": {"IN": new_professions}}]#, {"TEXT": {"REGEX": r"\b(\w+)(a|o|as|os)?\b"}}]
     #Add patterns to the matcher
     matcher.add("PROFESSIONS",[pattern])
     
-    #Creates entity list
-    ents = []
-    #Runs the model 
-    #doc = snlp("\n".join(text.split(".")))
-    doc = snlp(text)
-    
     #Run matcher on document and saves it on matches
     matches = matcher(doc)
+    
+    #Copy entities from doc to the new entity list
+    for ent in doc.ents:
+        entities.append(ent)
+        
     #Finds where match is on document and adds it to entity list
     for match_id, start, end in matches:
         span = doc[start:end]
-        ents.append(FakeEntity("PROF", start, end, span.text))
+        entities.append(FakeEntity("PROF", start, end, span.text))
+        
+    #Sort entity list by their position in the doc
+    entities = sorted(entities,key=lambda x: x.start_char)
+    
+    #Return doc with new entities
+    return FakeDoc(entities, doc.text)
+
+def get_both_genders(words):
+    new_words=[]
+    for word in words:
+        if word.endswith("o"):
+            new_word = word[:-1] + "a"
+            new_words.append(word)
+            new_words.append(new_word)
+        elif word.endswith("a"):
+            new_word = word[:-1] + "o"
+            new_words.append(word)
+            new_words.append(new_word)
+        elif word.endswith("r"):
+            new_word = word + "a"
+            new_words.append(word)
+            new_words.append(new_word)
+        else:
+            new_words.append(word)
+        
+    return new_words
+    
+def nlp(text):
+    snlp = spacy.load(spacy_model)
+    snlp.add_pipe("new_line_segmenter", before="ner")
+    snlp.add_pipe("label_professions", after="ner")
+    snlp.add_pipe("remove_entities_with_excluded_words", last=True)
+    print(snlp.pipe_names)
+    
+    #Create entity list
+    ents = []
+
+    #Run the model 
+    #doc = snlp("\n".join(text.split(".")))
+    doc = snlp(text)
     
     for ent in excude_manual(doc.ents):
         ents.append(ent)
