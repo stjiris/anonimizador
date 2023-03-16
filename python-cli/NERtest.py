@@ -118,7 +118,7 @@ def label_professions(doc):
     entities = []
     
     #Open professions file to create a list with professions
-    with open("profissoes.txt", "r") as f:
+    with open("../profissoes.txt", "r") as f:
         professions = [line.strip().lower() for line in f]
     
     #Create new professions list with both genders

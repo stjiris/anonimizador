@@ -89,7 +89,7 @@ def new_line_segmenter(doc):
 
 def nlp(text, model):
     model.add_pipe("new_line_segmenter", before="ner")
-    doc = model("\n".join(text.split(".")))
+    doc = model("\n".join(text.split("."))) #fixes some problems but creates others with words separated by dots ex: 12.12.23
     ents = []
     for ent in excude_manual(doc.ents):
         ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
