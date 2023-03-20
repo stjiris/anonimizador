@@ -1,10 +1,12 @@
 import React from 'react'
+import ReactDOM from 'react-dom';
 import { AnonimizeStateState } from '../types/AnonimizeState'
 import { Entity } from '../types/Entity'
 import { AddEntityDryRun, EntityPool } from '../types/EntityPool'
 import { EntityTypeI, getEntityType, getEntityTypes } from '../types/EntityTypes'
 import { TokenSelection } from '../types/Selection'
-
+import { VariableSizeList } from 'react-window';
+import AutoSizer from 'react-virtualized-auto-sizer';
 
 
 export interface AnonimizeContentProps {
@@ -13,12 +15,14 @@ export interface AnonimizeContentProps {
     ents: Entity[]
     anonimizeState: AnonimizeStateState
     showTypes: boolean
+    listSize: number[]
 }
 
 export interface AnonimizeContentState {
     selection: TokenSelection | undefined
     selectionWould: AddEntityDryRun | undefined
-    selectionAffects: number
+    selectionAffects: number,
+    sizer: boolean
 }
 
 export default class AnonimizeContent extends React.Component<AnonimizeContentProps,AnonimizeContentState>{
@@ -27,7 +31,8 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
     state: AnonimizeContentState = {
         selection: undefined,
         selectionWould: undefined,
-        selectionAffects: 0
+        selectionAffects: 0,
+        sizer: true
     }
 
     updateSelection = (ev: MouseEvent) => {
@@ -108,20 +113,66 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
     componentDidMount(): void {
         window.addEventListener("mouseup", this.updateSelection)
         this.nodes = Array.from(this.contentRef.current?.querySelectorAll(`[data-offset]`) as NodeListOf<HTMLElement>)
+
+        setTimeout(function() : void {
+        }.bind(this), 1000)
+        
+        if (this.state.sizer == true) this.setState({sizer:false})
     }
     componentWillUnmount(): void {
         window.removeEventListener("mouseup", this.updateSelection)
     }
 
     render(): React.ReactNode {
-        let list = [];
+        let listItems: JSX.Element[] = [];
         let offset = 0;
+
         for(let i=0; i < this.props.doc.childNodes.length; i++){
-            list.push(<AnonimizeBlock key={i} element={this.props.doc.childNodes[i]} offset={offset} ents={this.props.ents} anonimizeState={this.props.anonimizeState}/>)
+            listItems.push(<AnonimizeBlock key={i} listIdx={i} sizer={this.state.sizer} element={this.props.doc.childNodes[i]} offset={offset} ents={this.props.ents} anonimizeState={this.props.anonimizeState} listSize={this.props.listSize}/>)
             offset += (this.props.doc.childNodes[i].textContent?.normalize("NFKC") || "").length;
         }
-        return <>
-            <div id="content" className={this.props.showTypes ? 'show-type' : 'show-cod'} ref={this.contentRef}>{list}</div>
+
+        const getSize =  (index: number): number => {
+            return this.props.listSize[index] || 20;
+        }
+        
+        const list = ({ height }: { height: number }) => (
+            <AutoSizer disableHeight>
+                {({ width }) => (
+                    <VariableSizeList 
+                    height={height}
+                    width={width}
+                    itemCount={listItems.length}
+                    itemSize={getSize}
+                    >
+                    {({ index, style }) => (
+                        <div style={{...style}} id={"List Block Number: " + index}>
+                            {listItems[index]}
+                        </div>
+                    )}
+                    </VariableSizeList >
+                )}
+            </AutoSizer>
+        );
+     
+        if (this.state.sizer == true) {
+            return <>
+                <div id="content" className={this.props.showTypes ? 'show-type' : 'show-cod'} ref={this.contentRef}>
+                    {listItems}
+                </div>
+                <AnonimizeTooltip 
+                    pool={this.props.pool}
+                    selection={this.state.selection}
+                    selectionWould={this.state.selectionWould}
+                    selectionAffects={this.state.selectionAffects}
+                />
+            </>
+        }
+        else {
+            return <>
+            <div id="content" className={this.props.showTypes ? 'show-type' : 'show-cod'} ref={this.contentRef}>
+                {list({ height: window.innerHeight})}
+            </div>
             <AnonimizeTooltip 
                 pool={this.props.pool}
                 selection={this.state.selection}
@@ -129,6 +180,7 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
                 selectionAffects={this.state.selectionAffects}
             />
         </>
+        }
     }
 }
 
@@ -137,9 +189,24 @@ interface AnonimizeBlockProps{
     offset: number
     ents: Entity[],
     anonimizeState: AnonimizeStateState
+    listSize: number[]
+    listIdx: number
+    sizer: boolean
 }
 
 class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
+    blockRef: React.RefObject<HTMLDivElement> = React.createRef();
+
+    componentDidMount() {
+        if (this.props.listIdx == -1) return
+        if (this.props.sizer == true) {
+            const height = this.blockRef.current?.offsetHeight || 0
+            let extra = height * 0.2
+            if (extra > 50) extra = 50
+            this.props.listSize[this.props.listIdx] = height + extra
+        }
+    }
+
     render(): React.ReactNode {
         let elmt = this.props.element;
 
@@ -151,7 +218,9 @@ class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
             while((token = reg.exec(elmtStr)) !== null) {
                 tokensElems.push(<AnonimizeToken key={token.index} string={token[0]} offset={this.props.offset+token.index} ents={this.props.ents} anonimizeState={this.props.anonimizeState} />);
             }
-            return tokensElems;
+            return (
+                tokensElems
+            )
         }
 
         let Tag = elmt.nodeName.toLowerCase();
@@ -160,11 +229,12 @@ class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
         let r = [];
         let suboffset = 0;
         for(let i = 0; i < elmt.childNodes.length; i++){
-            r.push(<AnonimizeBlock key={i} element={elmt.childNodes[i]} offset={this.props.offset + suboffset} ents={this.props.ents} anonimizeState={this.props.anonimizeState}/>)
+            r.push(<AnonimizeBlock key={i} sizer={this.props.sizer} listIdx={-1} element={elmt.childNodes[i]} offset={this.props.offset + suboffset} ents={this.props.ents} anonimizeState={this.props.anonimizeState} listSize={this.props.listSize} />)
             suboffset += (elmt.childNodes[i].textContent?.normalize("NFKC") || "").length
         }
         
         let attrs: any  = {};
+        attrs['ref'] = this.blockRef;
         for(let attr of elmtElmt.getAttributeNames()){
             attrs[attr] = elmtElmt.getAttribute(attr);
         }

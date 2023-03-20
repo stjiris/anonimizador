@@ -18,7 +18,7 @@ interface AppState{
 	error: Error | undefined
 }
 
-export default class App extends React.Component<{saveSateCallback: Function, undoRedoCallback: Function, stateIndex: any, maxStateIndex: any},AppState>{
+export default class App extends React.Component<{saveSateCallback: Function, undoRedoCallback: Function, stateIndex: any, maxStateIndex: any, listSize: number[]},AppState>{
 	state: AppState = {
 		userFile: undefined,
 		entitieTypes: getEntityTypes(),
@@ -113,7 +113,7 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 					</div> : <></>}
 					<SelectFile key="select" setUserFile={this.setUserFile} />
 				</> : 
-				<Anonimize key="anonimize" setUserFile={this.setUserFile} file={this.state.userFile} filters={this.state.filters} saveSateCallback={this.props.saveSateCallback} undoRedoCallback={this.props.undoRedoCallback} stateIndex={this.props.stateIndex} maxStateIndex={this.props.maxStateIndex}/>}
+				<Anonimize key="anonimize" setUserFile={this.setUserFile} file={this.state.userFile} filters={this.state.filters} saveSateCallback={this.props.saveSateCallback} undoRedoCallback={this.props.undoRedoCallback} stateIndex={this.props.stateIndex} maxStateIndex={this.props.maxStateIndex} listSize={this.props.listSize} />}
 			<BootstrapModal key="modal-about" id="modal-about">
 				<div className="modal-header">
 					<div>

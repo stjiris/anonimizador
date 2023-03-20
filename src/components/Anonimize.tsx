@@ -20,6 +20,7 @@ interface AnonimizeProps{
     undoRedoCallback: Function
     stateIndex: any
     maxStateIndex: any
+    listSize: number[]
 }
 
 interface AnonimizeState{
@@ -196,7 +197,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                     </div>
                 </div>
                 <div className="bg-white p-4">
-                    <AnonimizeContent ref={this.contentRef} showTypes={this.state.showTypes} doc={this.doc} pool={pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState}/>
+                    <AnonimizeContent ref={this.contentRef} showTypes={this.state.showTypes} doc={this.doc} pool={pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState} listSize={this.props.listSize}/>
                 </div>
             </div>
             <div className="col-4">

@@ -7,6 +7,7 @@ export default function HigherOrder () {
   const savedStates = useRef<any>([[]]);
   const stateIndex = useRef<number>(0);
   const maxStateIndex = useRef<number>(0);
+  const listSize = useRef<number[]>([]);
 
   useEffect(() => {
     function handleUndoKeyDown(event: any) {
@@ -30,7 +31,6 @@ export default function HigherOrder () {
   }, []);
 
   const saveSateCallback = (state: any, first: boolean) => {
-    console.log("saveSateCallback");
 
     if (first) {
       savedStates.current = [cloneDeep(state)];
@@ -50,12 +50,10 @@ export default function HigherOrder () {
       let newState = cloneDeep(state);
   
       savedStates.current.push(newState)
-      console.log(savedStates.current)
     }
   }
 
   const undoRedoCallback = (index: number) => {
-    console.log("undoRedoCallback", index);
     let i = Math.max(index,0)
     i = Math.min(i, maxStateIndex.current)
     stateIndex.current = i;
@@ -64,6 +62,6 @@ export default function HigherOrder () {
 
 
   return (
-    <App saveSateCallback={saveSateCallback} undoRedoCallback={undoRedoCallback} stateIndex={stateIndex} maxStateIndex={maxStateIndex}/>
+    <App saveSateCallback={saveSateCallback} undoRedoCallback={undoRedoCallback} stateIndex={stateIndex} maxStateIndex={maxStateIndex} listSize={listSize.current}/>
   )
 }
