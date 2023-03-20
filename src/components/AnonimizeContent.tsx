@@ -155,7 +155,7 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
             </AutoSizer>
         );
      
-        if (this.state.sizer == true) {
+        if (this.state.sizer == true || this.props.anonimizeState != AnonimizeStateState.TAGGED) {
             return <>
                 <div id="content" className={this.props.showTypes ? 'show-type' : 'show-cod'} ref={this.contentRef}>
                     {listItems}
@@ -170,14 +170,14 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
         }
         else {
             return <>
-            <div id="content" className={this.props.showTypes ? 'show-type' : 'show-cod'} ref={this.contentRef}>
-                {list({ height: window.innerHeight})}
-            </div>
-            <AnonimizeTooltip 
-                pool={this.props.pool}
-                selection={this.state.selection}
-                selectionWould={this.state.selectionWould}
-                selectionAffects={this.state.selectionAffects}
+                <div id="content" className={this.props.showTypes ? 'show-type' : 'show-cod'} ref={this.contentRef}>
+                    {list({ height: window.innerHeight})}
+                </div>
+                <AnonimizeTooltip 
+                    pool={this.props.pool}
+                    selection={this.state.selection}
+                    selectionWould={this.state.selectionWould}
+                    selectionAffects={this.state.selectionAffects}
             />
         </>
         }
