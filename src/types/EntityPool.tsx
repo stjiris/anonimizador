@@ -1,5 +1,4 @@
 import { Entity, EntityI, normalizeEntityString, OffsetRange } from "./Entity";
-import { FiltersI } from "./EntityFilters";
 
 export enum AddEntityDryRun {
     CHANGE_TYPE,
@@ -247,22 +246,4 @@ export class EntityPool {
         // sort by start offset
         this.updateOrder();
     }
-
-    applyFilters(filters: FiltersI[]): number{
-        let removed = 0;
-        this.entities.reverse().forEach( (ent, i) => {
-            let cfil = filters.filter( f => f.types.length == 0 || f.types.some( t => t == ent.type) );
-            if( cfil.length > 0 ){
-                if( filters.some( f => ent.offsets.some( off => normalizeEntityString(off.preview).indexOf(normalizeEntityString(f.text)) >= 0 ) ) ){
-                    this.entities.splice(i, 1);
-                    removed++;
-                }
-            }
-        })
-        if( removed ){
-            this.updateOrder();
-        }
-        return removed;
-    }
-
 }

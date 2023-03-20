@@ -9,13 +9,11 @@ import { updateUserFile } from '../util/UserFileCRUDL';
 import { AnonimizeStateState } from "../types/AnonimizeState";
 import { EntityPool } from "../types/EntityPool";
 import { getEntityType, getEntityTypes } from "../types/EntityTypes";
-import { FiltersI } from "../types/EntityFilters";
 import { Bicon } from "../util/BootstrapIcons";
 
 interface AnonimizeProps{
     file: UserFile
-    setUserFile: (file: UserFile | undefined) => void,
-    filters: FiltersI[]
+    setUserFile: (file: UserFile | undefined) => void
     saveSateCallback: Function
     undoRedoCallback: Function
     stateIndex: any
@@ -187,8 +185,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                     </div>
                     <div>
                         {pool.entities.length <= 0 ? 
-                            <RemoteNlpStatus pool={pool} doc={this.doc} filters={this.props.filters} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}/> :
-                            <button className="red-link fw-bold btn" onClick={() => window.alert( `Filtradas ${pool.applyFilters(this.props.filters)} entidade(s)` )}><Bicon n="funnel"/> Filtrar</button>
+                            <RemoteNlpStatus pool={pool} doc={this.doc} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}/> : "Sugerido"
                         }
                     </div>
                     <div>

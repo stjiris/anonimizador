@@ -7,13 +7,11 @@ import BootstrapModal from './util/BootstrapModal';
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table';
 import { MRT_Localization_PT } from 'material-react-table/locales/pt';
 import { addEntityType, deleteEntityType, EntityTypeI, EntityTypesDefaults, getEntityTypes, restoreEntityTypes, updateEntityType } from './types/EntityTypes';
-import { createFilter, deleteFilter, FiltersI, getFilters, restoreFilters, updateFilter } from './types/EntityFilters';
 import { functionsWithDescriptionArray } from './util/anonimizeFunctions';
 
 interface AppState{
 	userFile: UserFile | undefined
 	entitieTypes: EntityTypeI[]
-	filters: FiltersI[]
 	error: Error | undefined
 }
 
@@ -21,7 +19,6 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 	state: AppState = {
 		userFile: undefined,
 		entitieTypes: getEntityTypes(),
-		filters: getFilters(),
 		error: undefined
 	}
 	setUserFile = (userFile: UserFile | undefined) => {
@@ -65,19 +62,9 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 		enableEditing: false
 	}
 
-	textColumn: MRT_ColumnDef<FiltersI> = {
-		header: "Texto",
-		accessorKey: "text",
-		enableEditing: true,
-		muiTableBodyCellEditTextFieldProps: ({row}) => ({
-			onChange: (evt) => this.setState({filters: updateFilter(row.original.text, evt.target.value, row.original.types)})
-		})		
-	}
-
 	componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
 		this.setState({
 			userFile: undefined,
-			filters: getFilters(),
 			entitieTypes: getEntityTypes(),
 			error: error
 		})
@@ -95,8 +82,6 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 			<Header actions={[
 				<span key="types" className="nav-link red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-types">Tipos de Entidades</span>,
 				<i key="space-1" className='bi bi-dot red-link fw-bold'></i>,
-				<span key="filters" className="nav-link red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-filters">Filtragem</span>,
-				<i key="space-2" className='bi bi-dot red-link fw-bold'></i>,
 				<span key="about" className="nav-link fs-6 bg-transparent red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-about">Sobre</span>
 			]}/>
 			{this.state.userFile == null ? 
@@ -112,7 +97,7 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 					</div> : <></>}
 					<SelectFile key="select" setUserFile={this.setUserFile} />
 				</> : 
-				<Anonimize key="anonimize" setUserFile={this.setUserFile} file={this.state.userFile} filters={this.state.filters} saveSateCallback={this.props.saveSateCallback} undoRedoCallback={this.props.undoRedoCallback} stateIndex={this.props.stateIndex} maxStateIndex={this.props.maxStateIndex} listSize={this.props.listSize} />}
+				<Anonimize key="anonimize" setUserFile={this.setUserFile} file={this.state.userFile} saveSateCallback={this.props.saveSateCallback} undoRedoCallback={this.props.undoRedoCallback} stateIndex={this.props.stateIndex} maxStateIndex={this.props.maxStateIndex} listSize={this.props.listSize} />}
 			<BootstrapModal key="modal-about" id="modal-about">
 				<div className="modal-header">
 					<div>
@@ -180,50 +165,6 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 						<input className="form-control" name="tipo" placeholder="Tipo..." required></input>
 						<input  className="form-control form-control-color" name="color" type="color"></input>
 						<select  className="form-select" name="anonimização" required>{functionsWithDescriptionArray.map( (desc,i ) => <option label={desc.name} value={i}>{desc.name}</option>)}</select>
-						<button className="form-control btn btn-primary">Adicionar</button>
-					</form>
-				</div>
-				<div className="modal-footer">
-					<div className="flex-grow-1"></div>
-					<button className="btn btn-secondary" type="button" data-bs-dismiss="modal">Fechar</button>
-				</div>
-			</BootstrapModal>
-			<BootstrapModal key="modal-filters" id="modal-filters">
-				<div className="modal-header">
-					<div>
-						<h5 className="modal-title" id="modal-filters-label">Filtragem</h5>
-						<p>Filtros automáticamente aplicados após receber as sugestões do NER.</p>
-					</div>
-				</div>
-				<div className="modal-body p-0">
-					<MaterialReactTable
-									key="type-table"
-									enableColumnResizing={true}
-									enableRowSelection={false}
-									enableColumnOrdering
-									enableDensityToggle={false}
-									enableHiding={false}
-									enableStickyHeader
-									enablePagination={false}
-									enableEditing={true}
-									positionActionsColumn="last"
-									editingMode="cell"
-									columns={[this.textColumn]} 
-									data={this.state.filters}
-									localization={MRT_Localization_PT}
-									enableRowActions={true}
-									renderRowActions={({row}) => <button className='btn btn-danger' onClick={() => this.setState({filters: deleteFilter(row.original.text)})}><i className='bi bi-trash'></i></button>}
-									renderTopToolbarCustomActions={() => [
-										<button key="reset" className="btn btn-warning" onClick={() => this.setState({filters: restoreFilters()})}><i className='bi bi-arrow-clockwise'></i> Repor</button>
-									]}
-								/>
-					<form className="d-flex m-2" onSubmit={(evt) => {
-						evt.preventDefault(); 
-						let form = evt.target as HTMLFormElement;
-						let filtroInput = form.elements.namedItem("filtro") as HTMLInputElement;
-						this.setState({filters: createFilter(filtroInput.value, [])});
-						filtroInput.value = "";}}>
-						<input className="form-control" name="filtro" placeholder="Filtro..." required></input>
 						<button className="form-control btn btn-primary">Adicionar</button>
 					</form>
 				</div>

@@ -1,6 +1,5 @@
 import React from "react";
 import { Entity, normalizeEntityString } from "../types/Entity";
-import { FiltersI } from "../types/EntityFilters";
 import { EntityPool } from "../types/EntityPool";
 
 interface RemoteEntity {
@@ -14,7 +13,6 @@ interface RemoteNlpStatusProps {
     doc: HTMLElement
     pool: EntityPool
     disabled: boolean
-    filters: FiltersI[]
 }
 
 interface RemoteNlpStatusState {
@@ -54,9 +52,6 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
         let errorOffset = 0;
         let entities: {[key: string]: Entity} = {};
         for( let ent of resArray ){
-            if( this.props.filters.some( f => ent.text.toLowerCase().indexOf(f.text.toLowerCase()) >= 0 ) ){
-                continue;
-            } 
             let id = normalizeEntityString(ent.text) + ent.label_
             if( !(id in entities) ){
                 entities[id] = new Entity(ent.label_);
