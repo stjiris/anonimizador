@@ -79,13 +79,9 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 				}`}
 				{this.state.entitieTypes.map( ({name, color}) => `[data-anonimize-type="${name}"]{background:${color}}`)}
 			</style>
-			<Header actions={[
-				<span key="types" className="nav-link red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-types">Tipos de Entidades</span>,
-				<i key="space-1" className='bi bi-dot red-link fw-bold'></i>,
-				<span key="about" className="nav-link fs-6 bg-transparent red-link fw-bold" role="button" data-bs-toggle="modal" data-bs-target="#modal-about">Sobre</span>
-			]}/>
 			{this.state.userFile == null ? 
 				<>
+					<Header />
 					{this.state.error ? <div className="alert alert-danger alert-dismissible fade show m-4" role="alert">
 						<h4><i className='bi bi-exclamation-triangle-fill'></i>Erro Inesperado!</h4>
 						<button type="button" className="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -98,26 +94,6 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 					<SelectFile key="select" setUserFile={this.setUserFile} />
 				</> : 
 				<Anonimize key="anonimize" setUserFile={this.setUserFile} file={this.state.userFile} saveSateCallback={this.props.saveSateCallback} undoRedoCallback={this.props.undoRedoCallback} stateIndex={this.props.stateIndex} maxStateIndex={this.props.maxStateIndex} listSize={this.props.listSize} />}
-			<BootstrapModal key="modal-about" id="modal-about">
-				<div className="modal-header">
-					<div>
-						<h5 className="modal-title" id="modal-about-label">Sobre o Anonimizador</h5>
-						<p className="m-0">Ferramenta para apoio à anonimização de acórdãos desenvolvida para utilização da biblioteca do STJ.</p>
-					</div>
-				</div>
-          		<div className="modal-body">
-              		<h6>Prespectiva geral</h6>
-          		</div>
-          		<div className="modal-footer">
-              		<div className="flex-grow-1">
-						<div>
-							<small>Documentos Google Drive:&nbsp;<a href="https://docs.google.com/document/d/1yfMYeehjUpf7xJiSYZAVUpdCd5UlQDswt7bOUONwi3E/edit?usp=sharing" className="red-link text-decoration-none" target="_blank" rel="noreferrer">Anonimização - Ajuda</a></small>
-						</div>
-						<div><small>Código disponível em: <a href="https://github.com/stjiris/anonimizador" target="_blank" className="red-link text-decoration-none" rel="noreferrer"><i className="bi bi-github"></i>stjiris/sumarizador</a></small></div>
-              		</div>
-            	  	<button className="btn btn-secondary" type="button" data-bs-dismiss="modal">Fechar</button>
-          		</div>
-			</BootstrapModal>
 			<BootstrapModal key="modal-types" id="modal-types">
 				<div className="modal-header">
 					<div><h5 className="modal-title" id="modal-types-label">Tipos de entidades</h5></div>
