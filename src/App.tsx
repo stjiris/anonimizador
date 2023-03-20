@@ -6,10 +6,9 @@ import { UserFile } from './types/UserFile';
 import BootstrapModal from './util/BootstrapModal';
 import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table';
 import { MRT_Localization_PT } from 'material-react-table/locales/pt';
-import { addEntityType, deleteEntityType, EntityTypeI, EntityTypesDefaults, getEntityTypes, restoreEntityTypes, TypeNames, updateEntityType } from './types/EntityTypes';
-import { AnonimizeFunctionName, functionsWithDescription } from './util/anonimizeFunctions';
+import { addEntityType, deleteEntityType, EntityTypeI, EntityTypesDefaults, getEntityTypes, restoreEntityTypes, updateEntityType } from './types/EntityTypes';
 import { createFilter, deleteFilter, FiltersI, getFilters, restoreFilters, updateFilter } from './types/EntityFilters';
-import { updateSavedUserFiles } from './util/UserFileCRUDL';
+import { functionsWithDescriptionArray } from './util/anonimizeFunctions';
 
 interface AppState{
 	userFile: UserFile | undefined
@@ -39,7 +38,7 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 			type: "color",
 			name: "color",
 			onBlur: (evt) => {
-				this.setState({entitieTypes: updateEntityType(row.original.name as TypeNames, evt.target.value, row.original.functionName)});
+				this.setState({entitieTypes: updateEntityType(row.original.name, evt.target.value, row.original.functionIndex)});
 				table.setEditingCell(null);
 			}
 		}),
@@ -48,21 +47,21 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 
 	anonimizeColumn: MRT_ColumnDef<EntityTypeI> = {
 		header: "Anonimização",
-		accessorKey: "functionName",
+		accessorFn: (ent) => functionsWithDescriptionArray[ent.functionIndex].name,
 		enableEditing: true,
 		muiTableBodyCellEditTextFieldProps: ({row,table}) => ({
 			select: true,
-			children: Object.keys(functionsWithDescription).map( name => <option label={name} value={name}>{name}</option>),
+			children: functionsWithDescriptionArray.map( (desc,i ) => <option label={desc.name} value={i}>{desc.name}</option>),
 			SelectProps: {
 				native: true
 			},
-			onChange: (evt) => this.setState({entitieTypes: updateEntityType(row.original.name as TypeNames, row.original.color, evt.target.value)})
+			onChange: (evt) => this.setState({entitieTypes: updateEntityType(row.original.name, row.original.color, parseInt(evt.target.value))})
 		})
 	}
 
 	anonimizeExample: MRT_ColumnDef<EntityTypeI> = {
 		header: "Descrição Anonimização",
-		accessorFn: (row) => functionsWithDescription[row.functionName].description,
+		accessorFn: (row) => functionsWithDescriptionArray[row.functionIndex].description,
 		enableEditing: false
 	}
 
@@ -165,7 +164,7 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 										onClick: () => {table.setEditingCell(cell);}
 									})}
 									enableRowActions={true}
-									renderRowActions={({row}) => EntityTypesDefaults[row.original.name as TypeNames] ? <></> : <button className="btn btn-danger" onClick={() => {deleteEntityType(row.original.name as TypeNames); this.setState({entitieTypes: getEntityTypes()})}}><i className='bi bi-trash'></i></button>}
+									renderRowActions={({row}) => EntityTypesDefaults[row.original.name] ? <></> : <button className="btn btn-danger" onClick={() => {deleteEntityType(row.original.name); this.setState({entitieTypes: getEntityTypes()})}}><i className='bi bi-trash'></i></button>}
 								/>
 					<form className="d-flex m-2" onSubmit={(evt) => {
 						evt.preventDefault(); 
@@ -173,14 +172,14 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 						let tipoInput = form.elements.namedItem("tipo") as HTMLInputElement;
 						let colorInput = form.elements.namedItem("color") as HTMLInputElement;
 						let anonInput = form.elements.namedItem("anonimização") as HTMLSelectElement;
-						addEntityType(tipoInput.value, colorInput.value, anonInput.value as AnonimizeFunctionName);
+						addEntityType(tipoInput.value, colorInput.value, parseInt(anonInput.value));
 						this.setState({entitieTypes: getEntityTypes()});
 						tipoInput.value = "";
 						colorInput.value = "";
 						}}>
 						<input className="form-control" name="tipo" placeholder="Tipo..." required></input>
 						<input  className="form-control form-control-color" name="color" type="color"></input>
-						<select  className="form-select" name="anonimização" required>{Object.keys(functionsWithDescription).map( name => <option label={name} value={name}>{name}</option>)}</select>
+						<select  className="form-select" name="anonimização" required>{functionsWithDescriptionArray.map( (desc,i ) => <option label={desc.name} value={i}>{desc.name}</option>)}</select>
 						<button className="form-control btn btn-primary">Adicionar</button>
 					</form>
 				</div>

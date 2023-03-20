@@ -1,11 +1,9 @@
-import { TypeNames } from "./EntityTypes";
-
 // If changes on interface change this string
 const FiltersVersion = "FiltersStored.v0.0";
 
 export interface FiltersI {
     text: string,
-    types: TypeNames[]
+    types: string[]
 }
 
 
@@ -31,7 +29,7 @@ export function getFilters(): FiltersI[]{
     return [];
 }
 
-export function updateFilter(prevText: string, newText: string, types: TypeNames[]): FiltersI[]{
+export function updateFilter(prevText: string, newText: string, types: string[]): FiltersI[]{
     let filters = getFilters();
     filters.forEach( f => {
         if( f.text == prevText ){
@@ -44,7 +42,7 @@ export function updateFilter(prevText: string, newText: string, types: TypeNames
     return filters;
 }
 
-export function createFilter(text: string, types: TypeNames[]): FiltersI[]{
+export function createFilter(text: string, types: string[]): FiltersI[]{
     let filters = getFilters();
     if( filters.find( f => f.text == text ) ) return filters;
     

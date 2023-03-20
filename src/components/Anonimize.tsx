@@ -8,7 +8,7 @@ import RemoteNlpStatus from "./RemoteNlpStatus";
 import { updateUserFile } from '../util/UserFileCRUDL';
 import { AnonimizeStateState } from "../types/AnonimizeState";
 import { EntityPool } from "../types/EntityPool";
-import { getEntityType, getEntityTypes, TypeNames } from "../types/EntityTypes";
+import { getEntityType, getEntityTypes } from "../types/EntityTypes";
 import { FiltersI } from "../types/EntityFilters";
 import { Bicon } from "../util/BootstrapIcons";
 
@@ -296,7 +296,7 @@ let columns: MRT_ColumnDef<Entity>[] = [{
         },
         onChange: (event) => {
             let o = row.original.type;
-            row.original.type = event.target.value as TypeNames;
+            row.original.type = event.target.value;
             if( o !== row.original.type ) pool.updateOrder();
         }
     })

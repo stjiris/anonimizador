@@ -1,7 +1,5 @@
-import { AnonimizeFunctionName } from "../util/anonimizeFunctions";
 import { Entity, EntityI, normalizeEntityString, OffsetRange } from "./Entity";
 import { FiltersI } from "./EntityFilters";
-import { TypeNames } from "./EntityTypes";
 
 export enum AddEntityDryRun {
     CHANGE_TYPE,
@@ -89,8 +87,8 @@ export class EntityPool {
     }
 
     updateOrder(){
-        let typeCounts: {[key in TypeNames]?: number } = {}
-        let funcCounts: {[key in AnonimizeFunctionName]?: number } = {}
+        let typeCounts: {[key: string]: number } = {}
+        let funcCounts: {[key: number]: number } = {}
 
         this.entities.sort( (a,b) => a.offsets[0].start - b.offsets[0].start ).forEach( (e, i) => {
             e.index = i+1;
@@ -98,11 +96,10 @@ export class EntityPool {
                 typeCounts[e.type] = 0;
             }
             e.typeIndex = ++typeCounts[e.type]!;
-            let name = e.anonimizingFunctionName();
-            if( !funcCounts[name] ){
-                funcCounts[name] = 0;
+            if( !funcCounts[e.funcIndex] ){
+                funcCounts[e.funcIndex] = 0;
             }
-            e.funcIndex = funcCounts[name]!++;
+            e.funcIndex = funcCounts[e.funcIndex]!++;
         });
         this.notify()
     }
@@ -224,7 +221,7 @@ export class EntityPool {
         let used = false;
         // Loop to remove "colisions"
         for(let ent of this.entitiesAt(startOffset, endOffset)){
-            ent.type = label as TypeNames;
+            ent.type = label;
             used = true;
         }
 
