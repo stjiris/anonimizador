@@ -4,7 +4,7 @@ import MaterialReactTable, { MRT_ColumnDef, MRT_Row, MRT_TableInstance } from "m
 import AnonimizeContent from "./AnonimizeContent";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { Entity } from "../types/Entity";
-import RemoteNlpStatus from "./RemoteNlpStatus";
+import { runRemoteNlp } from "../util/runRemoteNlp";
 import { updateUserFile } from '../util/UserFileCRUDL';
 import { AnonimizeStateState, AnonimizeVisualState } from "../types/AnonimizeState";
 import { EntityPool } from "../types/EntityPool";
@@ -26,6 +26,7 @@ interface AnonimizeState{
     showTypes: boolean
     ents: Entity[]
     saved: boolean
+    requesting: boolean
 }
 
 let pool: EntityPool = (window as any).pool = new EntityPool("",[]);
@@ -44,7 +45,8 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
             anonimizeState: AnonimizeStateState.TAGGED,
             ents: [...pool.entities],
             saved: updateUserFile(props.file),
-            showTypes: true
+            showTypes: true,
+            requesting: false
         };
         if( !this.state.saved ){
             alert("Atenção! O trabalho não será guardado automáticamente.")
@@ -196,13 +198,17 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         <option value={AnonimizeVisualState.TYPES}>{AnonimizeVisualState.TYPES}</option>
                         <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
                     </select>
-                    <RemoteNlpStatus pool={pool} doc={this.doc} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}/>
+                    <Button className="red-link fw-bold btn" onClick={() => {this.setState({requesting: true}); runRemoteNlp(this.doc, pool).finally(() => this.setState({requesting: false}))}} disabled={pool.entities.length > 0 || this.state.requesting || this.state.anonimizeState !== AnonimizeStateState.TAGGED} i="file-earmark-break" title="Sugerir" />
                     <div className="flex-grow-1"></div>
                     <Button id="undoButton" className="red-link fw-bold btn" onClick={this.onUndo} disabled={this.props.stateIndex.current==0} title="Desfazer" i="arrow-counterclockwise"/>
                     <Button id="undoButton" className="red-link fw-bold btn" onClick={this.onRedo} disabled={this.props.stateIndex.current==this.props.maxStateIndex.current} title="Refazer" i="arrow-clockwise"/>
                 </div>
                 <div className="bg-white p-4">
-                    <AnonimizeContent ref={this.contentRef} showTypes={this.state.showTypes} doc={this.doc} pool={pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState} listSize={this.props.listSize}/>
+                    {this.state.requesting && this.state.anonimizeState === AnonimizeStateState.TAGGED ?
+                        <div className="alert alert-info">A processar o documento, esta operação pode demorar alguns uns minutos</div>
+                    :
+                        <AnonimizeContent ref={this.contentRef} showTypes={this.state.showTypes} doc={this.doc} pool={pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState} listSize={this.props.listSize}/>
+                    }
                 </div>
             </div>
             <div className="col-4">
@@ -219,6 +225,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         enableHiding={true}
                         enableStickyHeader
                         enablePagination={false}
+                        enableFullScreenToggle={false}
                         renderDetailPanel={entityDetails}
                         renderTopToolbarCustomActions={(_) => {
                             let selectedeKeys = this.selectedIndexes().length
@@ -243,7 +250,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         }}
                         columns={columns} 
                         data={this.state.ents}
-                        localization={MRT_Localization_PT}/>
+                        localization={{...MRT_Localization_PT, noRecordsToDisplay: "Sem ocurrências de entidades"}}/>
                 </div>
             </div>
         </div>);
