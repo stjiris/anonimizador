@@ -11,6 +11,7 @@ import { EntityPool } from "../types/EntityPool";
 import { getEntityType, getEntityTypes, TypeNames } from "../types/EntityTypes";
 import { FiltersI } from "../types/EntityFilters";
 import { Bicon } from "../util/BootstrapIcons";
+import { VariableSizeList } from 'react-window';
 
 interface AnonimizeProps{
     file: UserFile
@@ -21,6 +22,7 @@ interface AnonimizeProps{
     stateIndex: any
     maxStateIndex: any
     listSize: number[]
+    offsetIndex: {[key: number]: number}
 }
 
 interface AnonimizeState{
@@ -31,12 +33,13 @@ interface AnonimizeState{
 }
 
 let pool: EntityPool = (window as any).pool = new EntityPool("",[]);
+let listRef: React.RefObject<VariableSizeList> = React.createRef();
+let offsetGlobal: {[key: number]: number} = {}
 
 export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeState>{
     contentRef: React.RefObject<AnonimizeContent> = React.createRef();
     tableRef: React.RefObject<MRT_TableInstance<Entity>> = React.createRef();
     doc: HTMLElement = new DOMParser().parseFromString(this.props.file.html_contents, "text/html").body;
-    
     
     constructor(props: AnonimizeProps){
         super(props);
@@ -162,6 +165,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     }
 
     render(): React.ReactNode {
+        offsetGlobal = this.props.offsetIndex
         return (<div className="row container-fluid bg-dark m-0">
             <div className="col-8">
                 <div className="position-sticky top-0 bg-white py-3 px-4 mt-2 d-flex" style={{borderBottom: "5px solid #161616",zIndex:1}}>
@@ -198,7 +202,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                     </div>
                 </div>
                 <div className="bg-white p-4">
-                    <AnonimizeContent ref={this.contentRef} showTypes={this.state.showTypes} doc={this.doc} pool={pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState} listSize={this.props.listSize}/>
+                    <AnonimizeContent listRef={listRef} ref={this.contentRef} showTypes={this.state.showTypes} doc={this.doc} pool={pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState} listSize={this.props.listSize} offsetIndex={this.props.offsetIndex} />
                 </div>
             </div>
             <div className="col-4">
@@ -274,10 +278,24 @@ let columns: MRT_ColumnDef<Entity>[] = [{
         onClick: () => {
             if( row.original.offsets.length === 0 ) return;
             let off = row.original.offsets[0];
-            let elm = document.querySelector(`[data-offset="${off.start}"]`);
-            if( elm ){
-                elm.scrollIntoView({ block: "center" });
+
+            let index = 0
+            for (let o in offsetGlobal) {
+                if (parseInt(o) == off.start) {
+                    break;
+                }
+                if (parseInt(o) > off.start){
+                    index--;
+                    break;
+                };
+                index++;
             }
+            // Technically, this does not scroll to the offset, but to the block the offset is in, but should have the same effect for the user in most cases
+            listRef.current?.scrollToItem(index, "center")
+            // let elm = document.querySelector(`[data-offset="${off.start}"]`);
+            // if( elm ){
+            //     elm.scrollIntoView({ block: "center" });
+            // }
         }
     })
 },

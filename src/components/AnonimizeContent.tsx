@@ -16,6 +16,8 @@ export interface AnonimizeContentProps {
     anonimizeState: AnonimizeStateState
     showTypes: boolean
     listSize: number[]
+    listRef: React.RefObject<VariableSizeList>
+    offsetIndex: {[key: number]: number}
 }
 
 export interface AnonimizeContentState {
@@ -129,6 +131,7 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
 
         for(let i=0; i < this.props.doc.childNodes.length; i++){
             listItems.push(<AnonimizeBlock key={i} listIdx={i} sizer={this.state.sizer} element={this.props.doc.childNodes[i]} offset={offset} ents={this.props.ents} anonimizeState={this.props.anonimizeState} listSize={this.props.listSize}/>)
+            this.props.offsetIndex[offset] = i;
             offset += (this.props.doc.childNodes[i].textContent?.normalize("NFKC") || "").length;
         }
 
@@ -144,6 +147,7 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
                     width={width}
                     itemCount={listItems.length}
                     itemSize={getSize}
+                    ref={this.props.listRef}
                     >
                     {({ index, style }) => (
                         <div style={{...style}} id={"List Block Number: " + index}>
@@ -216,6 +220,7 @@ class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
             var reg = /([0-9]+)|([A-Za-zÀ-ÖØ-öø-ÿ]+)|([^A-Za-zÀ-ÖØ-öø-ÿ0-9])/g;
             var token;
             while((token = reg.exec(elmtStr)) !== null) {
+                
                 tokensElems.push(<AnonimizeToken key={token.index} string={token[0]} offset={this.props.offset+token.index} ents={this.props.ents} anonimizeState={this.props.anonimizeState} />);
             }
             return (

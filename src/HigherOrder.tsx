@@ -8,6 +8,7 @@ export default function HigherOrder () {
   const stateIndex = useRef<number>(0);
   const maxStateIndex = useRef<number>(0);
   const listSize = useRef<number[]>([]);
+  const offsetIndex = useRef<{[key: number]: number}>({});
 
   useEffect(() => {
     function handleUndoKeyDown(event: any) {
@@ -62,6 +63,6 @@ export default function HigherOrder () {
 
 
   return (
-    <App saveSateCallback={saveSateCallback} undoRedoCallback={undoRedoCallback} stateIndex={stateIndex} maxStateIndex={maxStateIndex} listSize={listSize.current}/>
+    <App saveSateCallback={saveSateCallback} undoRedoCallback={undoRedoCallback} stateIndex={stateIndex} maxStateIndex={maxStateIndex} listSize={listSize.current} offsetIndex={offsetIndex.current}/>
   )
 }
