@@ -1,5 +1,6 @@
 import { EntityI } from "../types/Entity";
 import { isOldSavedUserFile, isSavedUserFile, SavedUserFile, UserFile } from "../types/UserFile"
+import { getEntityTypes } from "../types/EntityTypes";
 
 function alertUpdateListUserFile(){
     window.dispatchEvent(new CustomEvent("AlertUpdateListUserFile"));
@@ -46,6 +47,19 @@ export function updateUserFile(userFile: UserFile | SavedUserFile): boolean{
 }
 
 export function deleteUserFile(userFile: UserFile | SavedUserFile): void{
+    let deletedItems: any = JSON.parse( localStorage.getItem("DELETED_FILES") || "{}" );
+    let entCount: any = {}
+    for (let e of getEntityTypes()) {
+        entCount[e.name] = userFile.ents.filter(t => t.type === e.name).length
+    }
+    deletedItems[userFile.name] = {
+        name: userFile.name,
+        imported: userFile.imported,
+        modified: userFile.modified,
+        entCount: entCount
+    }
+    localStorage.setItem("DELETED_FILES", JSON.stringify(deletedItems))
+
     localStorage.removeItem(userFile.name);
     alertUpdateListUserFile();
 }
@@ -95,7 +109,6 @@ export function updateOldSavedUserFile(obj: any): SavedUserFile | null{
     return {
         name: obj.name,
         html_contents: obj.html_contents,
-        size: obj.html_contents.length,
         ents: obj.ents.map( (e: EntityI) => ({
             type: e.type,
             offsets: e.offsets.map(off => ({start: off.start, end: off.end, preview: text.substring(off.start, off.end+1)})),

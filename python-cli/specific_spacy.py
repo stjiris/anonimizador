@@ -82,14 +82,14 @@ def remove_pattern(p, ents):
 def new_line_segmenter(doc):
     for i, token in enumerate(doc[:-1]):
         # Check if the current token is a newline character
-        if token.text == "\n":
+        if token.text == "\n" or token.text =="\n\n" or token.text.endswith("."):
             # If it is, treat the next token as the start of a new sentence
             doc[i+1].is_sent_start = True
     return doc
 
 def nlp(text, model):
-    model.add_pipe("new_line_segmenter", before="transformer")
-    doc = model(text)
+    model.add_pipe("new_line_segmenter", before="ner")
+    doc = model("\n".join(text.split("."))) #fixes some problems but creates others with words separated by dots ex: 12.12.23
     ents = []
     for ent in excude_manual(doc.ents):
         ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
@@ -107,24 +107,3 @@ def nlp(text, model):
             ents = remove_pattern(p, ents)
     ents = sorted(ents,key=lambda x: x.start_char)
     return FakeDoc(ents, doc.text)
-
-# def nlp_pipe(texts):
-#     snlp = spacy.load(spacy_model)
-#     for doc in snlp.pipe(texts):
-#         ents = []
-#         for ent in excude_manual(doc.ents):
-#             ents.append(ent)
-
-#         with open('patterns.csv', 'r') as csvfd:
-#             reader = csv.DictReader(csvfd, delimiter="\t")
-#             for r in reader:
-#                 add_ent_by_pattern(ents, text, r['Pattern'], r['Label'])
-        
-#         ents = correct_ent(ents)
-#         with open('exclude.csv', 'r') as csvfd:
-#             reader = csv.DictReader(csvfd, delimiter="\t")
-#             for r in reader:
-#                 p = re.compile(r['Pattern'])
-#                 ents = remove_pattern(p, ents)
-#         ents = sorted(ents,key=lambda x: x.start_char)
-#         yield FakeDoc(ents, doc.text)

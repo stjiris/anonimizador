@@ -4,6 +4,7 @@ import { isOldSavedUserFile, isSavedUserFile, loadSavedUserFile, SavedUserFile, 
 import MaterialReactTable, { MRT_ColumnDef } from "material-react-table";
 import {MRT_Localization_PT} from "material-react-table/locales/pt";
 import { getEntityTypes } from "../types/EntityTypes";
+import { Bicon, Button } from "../util/BootstrapIcons";
 
 type SelectFileProps = {
     setUserFile: (file: UserFile) => void
@@ -12,6 +13,9 @@ type SelectFileProps = {
 type SelectFileState = {
     list: SavedUserFile[]
 }
+
+// https://stackoverflow.com/a/18650828/2573422
+function formatBytes(a: number,b=2){if(!+a)return"0 Bytes";const c=0>b?0:b,d=Math.floor(Math.log(a)/Math.log(1024));return`${parseFloat((a/Math.pow(1024,d)).toFixed(c))} ${["Bytes","KiB","MiB","GiB","TiB","PiB","EiB","ZiB","YiB"][d]}`}
 
 export default class SelectFile extends React.Component<SelectFileProps,SelectFileState>{
     state: SelectFileState = {
@@ -28,32 +32,36 @@ export default class SelectFile extends React.Component<SelectFileProps,SelectFi
     }
 
     render(): React.ReactNode {
-        let intl = new Intl.DateTimeFormat(["pt","en"], {dateStyle: "medium", timeStyle: "medium"});
+        let intl = new Intl.DateTimeFormat(["pt","en"], {dateStyle: "short", timeStyle: "medium"});
         let cols: MRT_ColumnDef<SavedUserFile>[] = [
             {
                 header: "Ficheiros Locais",
                 Header: <><i className="bi bi-file-earmark-fill"></i> Ficheiros Locais</>,
                 accessorKey: "name",
-                Cell: ({row,renderedCellValue}) => <span role="button" onClick={() => this.props.setUserFile(loadSavedUserFile(row.original))}><i className="bi bi-file-earmark"></i> {renderedCellValue}</span>,
-            },
-            {header: "Número de Caracteres", accessorKey: "size"},
-            {
-                header: "Número de Entidades",
-                Cell: ({row}) => <div className="d-flex">{getEntityTypes().map( (t,i) => <div className="mx-1 px-1">{row.original.ents.filter(e => e.type === t.name).length} <span key={i} className='badge text-body' style={{background: t.color}}>{t.name}</span></div>)}</div>
+                size: 80,
+                Cell: ({row}) => <span className="text-nowrap" role="button" title="Abrir ficheiro" onClick={() => this.props.setUserFile(loadSavedUserFile(row.original))}><Bicon n="file-earmark"/> {row.original.name}</span>
             },
             {
-                header: "Importado", accessorKey: "imported", accessorFn: (row) => intl.format(new Date(row.imported))
+                header: "Tamanho",
+                accessorFn: file => formatBytes(new Blob([JSON.stringify(file)]).size) // Overengeneering text.length
             },
             {
-                header: "Modificado", accessorKey: "modified", accessorFn: (row) => intl.format(new Date(row.modified))
+                header: "N.º de Entidades / Ocurrências",
+                accessorFn: file =>  `${file.ents.reduce((acc, c) => acc+1, 0)} / ${file.ents.reduce((acc, c) => acc+c.offsets.length, 0)}`
+            },
+            {
+                header: "Importado", accessorKey: "imported", accessorFn: (file) => intl.format(new Date(file.imported))
+            },
+            {
+                header: "Modificado", accessorKey: "modified", accessorFn: (file) => intl.format(new Date(file.modified))
             }
         ]
 
-        return (<MaterialReactTable 
+        return (<MaterialReactTable
             renderTopToolbarCustomActions={({table}) => <AddUserFileAction setUserFile={this.props.setUserFile}/>} 
             columns={cols}
             data={this.state.list}
-            localization={MRT_Localization_PT}
+            localization={{...MRT_Localization_PT, noRecordsToDisplay: "Sem ficheiros"}}
             enableRowActions={true}
             renderRowActions={({row}) => <UserFileActions file={row.original} setUserFile={this.props.setUserFile} />}
             positionActionsColumn="first"
@@ -172,17 +180,14 @@ export class AddUserFileAction extends React.Component<SelectFileProps>{
 
     render(): React.ReactNode {
         return (<>
-            <label htmlFor="file" role="button" className="btn btn-primary"><i className="bi bi-plus-circle"></i> Adicionar Ficheiro</label>
+            <label htmlFor="file" role="button" className="btn btn-primary m-auto"><Bicon n="file-earmark-plus"/> Adicionar Ficheiro</label>
             <input hidden type="file" name="file" id="file" onInput={this.onFile}></input>
         </>);
     }
 }
 
-export class UserFileActions extends React.Component<UserFileActionsProps>{
+export class UserFileActions extends React.PureComponent<UserFileActionsProps>{
     render(): React.ReactNode {
-        return (<>
-            <i className="bi bi-trash m-1 p-1 text-danger" role="button" onClick={() => deleteUserFile(this.props.file)}></i>
-            <i className="bi bi-pencil-fill m-1 p-1 text-primary" role="button" onClick={() => this.props.setUserFile(loadSavedUserFile(this.props.file))}></i>
-        </>);
+        return <Button className="m-1 p-1 text-danger btn" title="Eliminar" onClick={() => deleteUserFile(this.props.file)} i="trash"/>
     }
 }

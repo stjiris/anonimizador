@@ -1,7 +1,4 @@
-import { AnonimizeFunctionName } from "../util/anonimizeFunctions";
 import { Entity, EntityI, normalizeEntityString, OffsetRange } from "./Entity";
-import { FiltersI } from "./EntityFilters";
-import { TypeNames } from "./EntityTypes";
 
 export enum AddEntityDryRun {
     CHANGE_TYPE,
@@ -12,20 +9,24 @@ export enum AddEntityDryRun {
 export class EntityPool {    
     entities: Entity[]
     originalText: string
-    listeners: (() => void)[]
+    listeners: ((action: string) => void)[]
     
     constructor(text:string, initial?: EntityI[]){
         this.entities = initial?.map( (e, i) => Entity.makeEntity(e, i) ) || [];
         this.listeners = [];
         this.originalText = text;
-        this.updateOrder()
+        this.updateOrder("Inicio")
     }
 
-    onChange(cb: () => void){
+    overwriteEntities(entities: EntityI[]){
+        this.entities = entities.map( (e, i) => Entity.makeEntity(e, i) );
+    }
+
+    onChange(cb: (action: string) => void){
         this.listeners.push(cb);
     }
 
-    offChange( cb: () => void ){
+    offChange( cb: (action: string) => void ){
         let idx = this.listeners.findIndex((fn) => fn === cb);
         if( idx >= 0 ){
             this.listeners.splice(idx, 1)
@@ -45,7 +46,7 @@ export class EntityPool {
 
         first.addOffset(removed);
         first.offsetsLength = first.offsets.length;
-        this.updateOrder();
+        this.updateOrder("Juntar entidades");
     }
 
     splitEntities(indexes: number[]) {
@@ -65,7 +66,7 @@ export class EntityPool {
         });
 
         this.entities = newEnt;
-        this.updateOrder();
+        this.updateOrder("Separar entidades");
     }
 
     removeEntities(indexes: number[]) {
@@ -74,19 +75,19 @@ export class EntityPool {
             this.entities.splice(i, 1);
         }) // indexes are sorted
 
-        this.updateOrder();
+        this.updateOrder("Remover entidades");
     }
 
 
-    notify(){
+    notify(action: string){
         for( let l of this.listeners ){
-            l();
+            l(action);
         }
     }
 
-    updateOrder(){
-        let typeCounts: {[key in TypeNames]?: number } = {}
-        let funcCounts: {[key in AnonimizeFunctionName]?: number } = {}
+    updateOrder(action: string){
+        let typeCounts: {[key: string]: number } = {}
+        let funcCounts: {[key: number]: number } = {}
 
         this.entities.sort( (a,b) => a.offsets[0].start - b.offsets[0].start ).forEach( (e, i) => {
             e.index = i+1;
@@ -94,13 +95,12 @@ export class EntityPool {
                 typeCounts[e.type] = 0;
             }
             e.typeIndex = ++typeCounts[e.type]!;
-            let name = e.anonimizingFunctionName();
-            if( !funcCounts[name] ){
-                funcCounts[name] = 0;
+            if( !funcCounts[e.funcIndex] ){
+                funcCounts[e.funcIndex] = 0;
             }
-            e.funcIndex = funcCounts[name]!++;
+            e.funcIndex = funcCounts[e.funcIndex]!++;
         });
-        this.notify()
+        this.notify(action)
     }
 
     expandCollapse(startOffset: number, endOffset: number, text: string) {
@@ -113,7 +113,7 @@ export class EntityPool {
                 break;
             }
         }
-        if( update ) this.notify()
+        if( update ) this.notify("Modificar ocurrência")
     }
 
     splitOffset(startOffset: number, endOffset: number) {
@@ -121,7 +121,6 @@ export class EntityPool {
         this.entities.forEach( (ent) => {
             let toSplit = []
             let i = 0;
-            console.log(ent);
             for( let off of ent.offsets ){
                 if( (off.start >= startOffset && off.end < endOffset) || (off.start < endOffset && off.end >= startOffset) ){
                     toSplit.push(i);
@@ -143,7 +142,7 @@ export class EntityPool {
             }
         });
         this.entities = newEnt;
-        this.updateOrder();
+        this.updateOrder("Separar entidades");
     }
 
     removeOffset(startOffset: number, endOffset: number){
@@ -175,7 +174,7 @@ export class EntityPool {
             this.entities.splice(i, 1);
         }
         if( deleted > 0 || entsToDel.length > 0 ){
-            this.updateOrder();
+            this.updateOrder("Remover entidades");
         }
     }
 
@@ -220,11 +219,11 @@ export class EntityPool {
         let used = false;
         // Loop to remove "colisions"
         for(let ent of this.entitiesAt(startOffset, endOffset)){
-            ent.type = label as TypeNames;
+            ent.type = label;
             used = true;
         }
 
-        if( used ) return this.notify();
+        if( used ) return this.notify("Modificar tipo de entidade");
 
         let normed = normalizeEntityString(text)+label
         // Loop to check similarities
@@ -232,6 +231,7 @@ export class EntityPool {
             if( curr.offsets.some( off => normalizeEntityString(off.preview)+curr.type === normed ) ){
                 curr.addOffset([{start: startOffset, end: endOffset, preview: text}])
                 used = true
+                break
             }
         }
 
@@ -243,8 +243,9 @@ export class EntityPool {
         }
 
         // sort by start offset
-        this.updateOrder();
+        this.updateOrder("Adicionar ocurrência");
     }
+<<<<<<< HEAD
 
     applyFilters(filters: FiltersI[]): number{
         let occurs = 0
@@ -276,4 +277,6 @@ export class EntityPool {
         return occurs;
     }
 
+=======
+>>>>>>> dev
 }

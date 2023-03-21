@@ -4,7 +4,6 @@ import { Entity, EntityI } from "./Entity";
 export interface SavedUserFile {
     name: string
     html_contents: string
-    size: number
     ents: EntityI[]
     imported: string
     modified: string
@@ -13,7 +12,6 @@ export interface SavedUserFile {
 export interface UserFile {
     name: string
     html_contents: string
-    size: number
     ents: Entity[]
     imported: Date
     modified: Date
@@ -41,7 +39,6 @@ export function loadSavedUserFile(obj: SavedUserFile): UserFile {
     return {
         name: obj.name,
         html_contents: obj.html_contents,
-        size: obj.size,
         ents: obj.ents.map( (e,i) => Entity.makeEntity(e,i+1)),
         imported: new Date(obj.imported),
         modified: new Date(obj.modified)

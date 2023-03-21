@@ -4,25 +4,29 @@ import MaterialReactTable, { MRT_ColumnDef, MRT_Row, MRT_TableInstance } from "m
 import AnonimizeContent from "./AnonimizeContent";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { Entity } from "../types/Entity";
-import RemoteNlpStatus from "./RemoteNlpStatus";
+import { runRemoteNlp } from "../util/runRemoteNlp";
 import { updateUserFile } from '../util/UserFileCRUDL';
-import { AnonimizeStateState } from "../types/AnonimizeState";
+import { AnonimizeStateState, AnonimizeVisualState } from "../types/AnonimizeState";
 import { EntityPool } from "../types/EntityPool";
-import { getEntityType, getEntityTypes, TypeNames } from "../types/EntityTypes";
-import { FiltersI } from "../types/EntityFilters";
-import { Bicon } from "../util/BootstrapIcons";
+import { getEntityType, getEntityTypes } from "../types/EntityTypes";
+import { Bicon, Button } from "../util/BootstrapIcons";
 
 interface AnonimizeProps{
     file: UserFile
-    setUserFile: (file: UserFile | undefined) => void,
-    filters: FiltersI[]
+    setUserFile: (file: UserFile | undefined) => void
+    saveSateCallback: Function
+    undoRedoCallback: Function
+    stateIndex: any
+    maxStateIndex: any
+    listSize: number[]
 }
 
 interface AnonimizeState{
     anonimizeState: AnonimizeStateState
-    ents: Entity[],
-    saved: boolean,
     showTypes: boolean
+    ents: Entity[]
+    saved: boolean
+    requesting: boolean
 }
 
 let pool: EntityPool = (window as any).pool = new EntityPool("",[]);
@@ -34,18 +38,38 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     
     constructor(props: AnonimizeProps){
         super(props);
-        pool.originalText = this.doc.textContent || ""
+        pool.originalText = this.doc.textContent?.normalize("NFKC") || ""
         pool.entities = this.props.file.ents;
-        pool.updateOrder();
+        pool.updateOrder("Inicial");
         this.state ={
             anonimizeState: AnonimizeStateState.TAGGED,
             ents: [...pool.entities],
             saved: updateUserFile(props.file),
-            showTypes: true
+            showTypes: true,
+            requesting: false
         };
         if( !this.state.saved ){
             alert("Atenção! O trabalho não será guardado automáticamente.")
         }
+        this.props.saveSateCallback([...pool.entities], true)
+    }
+
+    setStateFrom(visual: AnonimizeVisualState){
+        let showTypes: boolean = false;
+        let anonimizeState: AnonimizeStateState = AnonimizeStateState.TAGGED;
+        switch(visual){
+            case AnonimizeVisualState.ANONIMIZED:
+                anonimizeState = AnonimizeStateState.ANONIMIZED;
+                break;
+            case AnonimizeVisualState.ORIGINAL:
+                anonimizeState = AnonimizeStateState.ORIGINAL;
+                break;
+            case AnonimizeVisualState.TYPES:
+                showTypes = true;
+            case AnonimizeVisualState.REPLACE:
+                anonimizeState = AnonimizeStateState.TAGGED;
+        }
+        this.setState({ showTypes, anonimizeState });
     }
 
     selectedIndexes(): number[]{
@@ -117,8 +141,9 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
         })
     }
 
-    onPoolChange = (): void => {
+    onPoolChange = (action: string): void => {
         this.props.file.ents = pool.entities;
+        this.props.saveSateCallback([...pool.entities], false)
         this.setState({ ents: [...pool.entities], saved: updateUserFile(this.props.file) })
     }
 
@@ -139,18 +164,33 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
         window.removeEventListener("beforeunload", this.confirmExit)
     }
 
+    onUndo = (): void => {
+        let newEnts = this.props.undoRedoCallback(this.props.stateIndex.current-1)
+        this.props.file.ents = newEnts
+        pool.overwriteEntities(newEnts)
+        this.setState({ents: newEnts, saved: updateUserFile(this.props.file)})
+    }
+
+    onRedo = (): void => {
+        let newEnts = this.props.undoRedoCallback(this.props.stateIndex.current+1)
+        this.props.file.ents = newEnts
+        pool.overwriteEntities(newEnts)
+        this.setState({ents: newEnts, saved: updateUserFile(this.props.file)})
+    }
+
     render(): React.ReactNode {
-        return (<div className="row container-fluid bg-dark m-0">
+        return (<div className="row container-fluid bg-dark m-0 p-0">
             <div className="col-8">
-                <div className="position-sticky top-0 bg-white py-3 px-4 mt-2 d-flex" style={{borderBottom: "5px solid #161616",zIndex:1}}>
-                    <div className="mx-2">
-                        <button className="btn red-link fw-bold" onClick={() => (this.state.saved || window.confirm("Trabalho não será guardado no browser. Sair?")) ? this.props.setUserFile(undefined) : null}><i className="bi bi-x"></i> Fechar</button>
-                    </div>
-                    <div className="mx-2 d-flex align-items-baseline">
-                        <span className="text-body btn"><i className="bi bi-file-earmark-fill"></i> {this.props.file.name}</span>
-                        {this.state.saved ? <span className="alert alert-success m-0 p-1"><i className="bi bi-check"></i> Guardado</span> : <span className="alert alert-danger m-0 p-1"><i className="bi bi-exclamation-triangle-fill"></i> Não guardado</span>}
-                    </div>
+                <div className="position-sticky top-0 bg-white p-0 m-0 d-flex" style={{borderBottom: "5px solid #161616",zIndex:1}}>
+                    <Button className="btn red-link fw-bold" onClick={() => (this.state.saved || window.confirm("Trabalho não será guardado no browser. Sair?")) ? this.props.setUserFile(undefined) : null} i="x-lg" title="Fechar ficheiro"/>
+
+                    {this.state.saved ? 
+                        <small title="Guardado automaticamente." className="text-body text-nowrap alert alert-success p-1 m-1"><Bicon n="file-earmark-check-fill"/> {this.props.file.name}</small>
+                    : 
+                        <small title="Não guardado." className="text-body text-nowrap alert alert-danger p-1 m-1"><Bicon n="file-earmark-x-fill"/> {this.props.file.name}</small>
+                    }
                     <div className="flex-grow-1"></div>
+<<<<<<< HEAD
                     <div>
                         <button className="red-link fw-bold btn" onClick={this.downloadHtml}><i className="bi bi-download"></i> Download</button>
                     </div>
@@ -170,13 +210,31 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                             <button className="red-link fw-bold btn" onClick={() => window.alert( `Filtradas ${pool.applyFilters(this.props.filters)} ocurrencia(s)` )}><Bicon n="funnel"/> Filtrar</button>
                         }
                     </div>
+=======
+                    <Button className="red-link fw-bold btn" data-bs-toggle="modal" data-bs-target="#modal-types" title="Gerir tipos" i="stickies-fill"/>
+                    <Button className="red-link fw-bold btn" onClick={this.downloadHtml} i="download" title="Download ficheiro"/>
+                    <select title="Escolher modo" className="red-link fw-bold btn text-start" onChange={(ev) => this.setStateFrom(ev.target.value as AnonimizeVisualState) } defaultValue={AnonimizeVisualState.REPLACE}>
+                        <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
+                        <option value={AnonimizeVisualState.REPLACE}>{AnonimizeVisualState.REPLACE}</option>
+                        <option value={AnonimizeVisualState.TYPES}>{AnonimizeVisualState.TYPES}</option>
+                        <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
+                    </select>
+                    <Button className="red-link fw-bold btn" onClick={() => {this.setState({requesting: true}); runRemoteNlp(this.doc, pool).finally(() => this.setState({requesting: false}))}} disabled={pool.entities.length > 0 || this.state.requesting || this.state.anonimizeState !== AnonimizeStateState.TAGGED} i="file-earmark-break" title="Sugerir" />
+                    <div className="flex-grow-1"></div>
+                    <Button id="undoButton" className="red-link fw-bold btn" onClick={this.onUndo} disabled={this.props.stateIndex.current==0} title="Desfazer" i="arrow-counterclockwise"/>
+                    <Button id="undoButton" className="red-link fw-bold btn" onClick={this.onRedo} disabled={this.props.stateIndex.current==this.props.maxStateIndex.current} title="Refazer" i="arrow-clockwise"/>
+>>>>>>> dev
                 </div>
                 <div className="bg-white p-4">
-                    <AnonimizeContent ref={this.contentRef} showTypes={this.state.showTypes} doc={this.doc} pool={pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState}/>
+                    {this.state.requesting && this.state.anonimizeState === AnonimizeStateState.TAGGED ?
+                        <div className="alert alert-info">A processar o documento, esta operação pode demorar alguns uns minutos</div>
+                    :
+                        <AnonimizeContent ref={this.contentRef} showTypes={this.state.showTypes} doc={this.doc} pool={pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState} listSize={this.props.listSize}/>
+                    }
                 </div>
             </div>
             <div className="col-4">
-                <div className="mt-2 position-sticky top-0">
+                <div className="m-0 position-sticky top-0">
                     <MaterialReactTable
                         tableInstanceRef={this.tableRef}
                         key="ent-table"
@@ -189,6 +247,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         enableHiding={true}
                         enableStickyHeader
                         enablePagination={false}
+                        enableFullScreenToggle={false}
                         renderDetailPanel={entityDetails}
                         renderTopToolbarCustomActions={(_) => {
                             let selectedeKeys = this.selectedIndexes().length
@@ -213,7 +272,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         }}
                         columns={columns} 
                         data={this.state.ents}
-                        localization={MRT_Localization_PT}/>
+                        localization={{...MRT_Localization_PT, noRecordsToDisplay: "Sem ocurrências de entidades"}}/>
                 </div>
             </div>
         </div>);
@@ -271,8 +330,8 @@ let columns: MRT_ColumnDef<Entity>[] = [{
         },
         onChange: (event) => {
             let o = row.original.type;
-            row.original.type = event.target.value as TypeNames;
-            if( o !== row.original.type ) pool.updateOrder();
+            row.original.type = event.target.value;
+            if( o !== row.original.type ) pool.updateOrder("Modificar tipo");
         }
     })
     
@@ -293,7 +352,7 @@ let columns: MRT_ColumnDef<Entity>[] = [{
         onBlur: (event) => {
             let o = row.original.overwriteAnonimization;
             row.original.overwriteAnonimization = event.target.value;
-            if( o !== row.original.overwriteAnonimization ) pool.updateOrder();
+            if( o !== row.original.overwriteAnonimization ) pool.updateOrder("Modificar anonimização de entidade");
         }
     })
 }]
