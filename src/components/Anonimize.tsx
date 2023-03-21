@@ -294,7 +294,7 @@ let columns: MRT_ColumnDef<Entity>[] = [{
     enableEditing: false,
     size: 60,
     muiTableBodyCellProps: ({row}) => ({
-        onClick: () => {
+        onClick: async () => {
             if( row.original.offsets.length === 0 ) return;
             let off = row.original.offsets[0];
 
@@ -309,12 +309,15 @@ let columns: MRT_ColumnDef<Entity>[] = [{
                 };
                 index++;
             }
-            // Technically, this does not scroll to the offset, but to the block the offset is in, but should have the same effect for the user in most cases
-            listRef.current?.scrollToItem(index, "center")
-            // let elm = document.querySelector(`[data-offset="${off.start}"]`);
-            // if( elm ){
-            //     elm.scrollIntoView({ block: "center" });
-            // }
+            let elm = document.querySelector(`[data-offset="${off.start}"]`);
+            if( elm ){
+                elm.scrollIntoView({ block: "center" });
+            } else {
+                listRef.current?.scrollToItem(index, "center")
+                // Wait for new items to be rendered
+                await new Promise(resolve => setTimeout(resolve, 100))
+                document.querySelector(`[data-offset="${off.start}"]`)?.scrollIntoView({ block: "center" });
+            }
         }
     })
 },
