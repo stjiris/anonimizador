@@ -48,7 +48,7 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 		enableEditing: true,
 		muiTableBodyCellEditTextFieldProps: ({row,table}) => ({
 			select: true,
-			children: functionsWithDescriptionArray.map( (desc,i) => <option key={i} label={desc.name} value={i}>{desc.name}</option>),
+			children: functionsWithDescriptionArray.map( (desc,i) => <option key={i} label={desc.name} value={i} selected={row.original.functionIndex == i}>{desc.name}</option>),
 			SelectProps: {
 				native: true
 			},

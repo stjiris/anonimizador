@@ -11,18 +11,17 @@ export interface EntityTypeI {
 }
 
 export const EntityTypesDefaults: {[key: string] : EntityTypeI} = {
-    PER: {name: "PER", color: "#84d2ff", functionIndex: AUTO_ANONIMIZE},
-    DAT: {name: "DAT", color: "#66fc03", functionIndex: AUTO_ANONIMIZE},
-    ORG: {name: "ORG", color: "#00ffa2", functionIndex: AUTO_ANONIMIZE},
-    LOC: {name: "LOC", color: "#fc03c2", functionIndex: AUTO_ANONIMIZE},
-    PRO: {name: "PRO", color: "#eb8634", functionIndex: AUTO_ANONIMIZE},
-    MAT: {name: "MAT", color: "#007eff", functionIndex: AUTO_ANONIMIZE},
-    CEP: {name: "CEP", color: "#eb3434", functionIndex: AUTO_ANONIMIZE},
-    TEL: {name: "TEL", color: "#ce42f5", functionIndex: AUTO_ANONIMIZE},
-    ["E-MAIL"]: {name: "E-MAIL", color: "#f5d142", functionIndex: AUTO_ANONIMIZE},
-    EMA: {name: "EMA", color: "#f5d142", functionIndex: AUTO_ANONIMIZE},
-    IDP: {name: "IDP", color: "#f5d142", functionIndex: AUTO_ANONIMIZE},
-    INST: {name: "INST", color: "#f5d142", functionIndex: AUTO_ANONIMIZE}
+    PER: {name: "PER", color: "#00e2ff", functionIndex: AUTO_ANONIMIZE},
+    DAT: {name: "DAT", color: "#b7ff63", functionIndex: AUTO_ANONIMIZE},
+    ORG: {name: "ORG", color: "#00dbc6", functionIndex: AUTO_ANONIMIZE},
+    LOC: {name: "LOC", color: "#e238ff", functionIndex: AUTO_ANONIMIZE},
+    PRO: {name: "PRO", color: "#ff9800", functionIndex: AUTO_ANONIMIZE},
+    MAT: {name: "MAT", color: "#526cff", functionIndex: AUTO_ANONIMIZE},
+    CEP: {name: "CEP", color: "#ff4133", functionIndex: AUTO_ANONIMIZE},
+    TEL: {name: "TEL", color: "#ff5f95", functionIndex: AUTO_ANONIMIZE},
+    ["E-MAIL"]: {name: "E-MAIL", color: "#ffeb3b", functionIndex: AUTO_ANONIMIZE},
+    IDP: {name: "IDP", color: "#69bcff", functionIndex: AUTO_ANONIMIZE},
+    INST: {name: "INST", color: "#71ff77", functionIndex: AUTO_ANONIMIZE}
 }
 
 const cache: {[key: string]: EntityTypeI | undefined } = {}

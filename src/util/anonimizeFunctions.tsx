@@ -96,7 +96,7 @@ export const functionsWithDescriptionArray: AnonimizeFunctionDescription[] = [
         "fun": leter
     },
     {
-        "name": "Ofucação total",
+        "name": "Ofuscação total",
         "description": "Subsituí ocurrência com reticiências. Ex: ...",
         "fun": reticiencias
     },
