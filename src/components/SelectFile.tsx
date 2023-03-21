@@ -57,11 +57,11 @@ export default class SelectFile extends React.Component<SelectFileProps,SelectFi
             }
         ]
 
-        return (<MaterialReactTable 
+        return (<MaterialReactTable
             renderTopToolbarCustomActions={({table}) => <AddUserFileAction setUserFile={this.props.setUserFile}/>} 
             columns={cols}
             data={this.state.list}
-            localization={MRT_Localization_PT}
+            localization={{...MRT_Localization_PT, noRecordsToDisplay: "Sem ficheiros"}}
             enableRowActions={true}
             renderRowActions={({row}) => <UserFileActions file={row.original} setUserFile={this.props.setUserFile} />}
             positionActionsColumn="first"
@@ -180,7 +180,7 @@ export class AddUserFileAction extends React.Component<SelectFileProps>{
 
     render(): React.ReactNode {
         return (<>
-            <label htmlFor="file" role="button" className="btn btn-primary"><i className="bi bi-plus-circle"></i> Adicionar Ficheiro</label>
+            <label htmlFor="file" role="button" className="btn btn-primary m-auto"><Bicon n="file-earmark-plus"/> Adicionar Ficheiro</label>
             <input hidden type="file" name="file" id="file" onInput={this.onFile}></input>
         </>);
     }
