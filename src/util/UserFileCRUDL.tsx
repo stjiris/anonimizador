@@ -56,7 +56,6 @@ export function deleteUserFile(userFile: UserFile | SavedUserFile): void{
         name: userFile.name,
         imported: userFile.imported,
         modified: userFile.modified,
-        size: userFile.size,
         entCount: entCount
     }
     localStorage.setItem("DELETED_FILES", JSON.stringify(deletedItems))
@@ -110,7 +109,6 @@ export function updateOldSavedUserFile(obj: any): SavedUserFile | null{
     return {
         name: obj.name,
         html_contents: obj.html_contents,
-        size: obj.html_contents.length,
         ents: obj.ents.map( (e: EntityI) => ({
             type: e.type,
             offsets: e.offsets.map(off => ({start: off.start, end: off.end, preview: text.substring(off.start, off.end+1)})),
