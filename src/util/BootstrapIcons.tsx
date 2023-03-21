@@ -13,10 +13,11 @@ export class Bicon extends PureComponent<BiconProps> {
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     i: string
+    text?: string
 }
 
 export class Button extends PureComponent<ButtonProps>{
     render(): ReactNode {
-        return <button {...this.props}><Bicon n={this.props.i}/></button>
+        return <button {...this.props}><Bicon n={this.props.i}/> {this.props.text}</button>
     }
 }

@@ -5,8 +5,8 @@ export const enum AnonimizeStateState {
 }
 
 export const enum AnonimizeVisualState {
-    ORIGINAL   = "Visualizar - Original", // Shows original file without any marks
+    ORIGINAL   = "Ver - Forma inicial", // Shows original file without any marks
     TYPES      = "Editar - Tipos", // Shows entities highlights
     REPLACE    = "Editar - Subsituições", // Shows entities highlights
-    ANONIMIZED = "Visualizar - Anonimização" // Shows file without entities
+    ANONIMIZED = "Ver - Anonimização" // Shows file without entities
 }
