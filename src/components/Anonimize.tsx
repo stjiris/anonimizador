@@ -28,24 +28,6 @@ interface AnonimizeState{
     saved: boolean
 }
 
-function setStateFrom(visual: AnonimizeVisualState){
-    let showTypes: boolean = false;
-    let anonimizeState: AnonimizeStateState = AnonimizeStateState.TAGGED;
-    switch(visual){
-        case AnonimizeVisualState.ANONIMIZED:
-            anonimizeState = AnonimizeStateState.ANONIMIZED;
-            break;
-        case AnonimizeVisualState.ORIGINAL:
-            anonimizeState = AnonimizeStateState.ORIGINAL;
-            break;
-        case AnonimizeVisualState.TYPES:
-            showTypes = true;
-        case AnonimizeVisualState.REPLACE:
-            anonimizeState = AnonimizeStateState.TAGGED;
-    }
-    return { showTypes, anonimizeState } as const;
-}
-
 let pool: EntityPool = (window as any).pool = new EntityPool("",[]);
 
 export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeState>{
@@ -68,6 +50,24 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
             alert("Atenção! O trabalho não será guardado automáticamente.")
         }
         this.props.saveSateCallback([...pool.entities], true)
+    }
+
+    setStateFrom(visual: AnonimizeVisualState){
+        let showTypes: boolean = false;
+        let anonimizeState: AnonimizeStateState = AnonimizeStateState.TAGGED;
+        switch(visual){
+            case AnonimizeVisualState.ANONIMIZED:
+                anonimizeState = AnonimizeStateState.ANONIMIZED;
+                break;
+            case AnonimizeVisualState.ORIGINAL:
+                anonimizeState = AnonimizeStateState.ORIGINAL;
+                break;
+            case AnonimizeVisualState.TYPES:
+                showTypes = true;
+            case AnonimizeVisualState.REPLACE:
+                anonimizeState = AnonimizeStateState.TAGGED;
+        }
+        this.setState({ showTypes, anonimizeState });
     }
 
     selectedIndexes(): number[]{
@@ -189,7 +189,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                     }
                     <div className="flex-grow-1"></div>
                     <Button className="red-link fw-bold btn" onClick={this.downloadHtml} i="download" title="Download ficheiro"/>
-                    <select title="Escolher modo" className="red-link fw-bold btn text-start" onChange={(ev) => this.setState(setStateFrom(ev.target.value as AnonimizeVisualState)) } defaultValue={AnonimizeVisualState.REPLACE}>
+                    <select title="Escolher modo" className="red-link fw-bold btn text-start" onChange={(ev) => this.setStateFrom(ev.target.value as AnonimizeVisualState) } defaultValue={AnonimizeVisualState.REPLACE}>
                         <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
                         <option value={AnonimizeVisualState.REPLACE}>{AnonimizeVisualState.REPLACE}</option>
                         <option value={AnonimizeVisualState.TYPES}>{AnonimizeVisualState.TYPES}</option>
