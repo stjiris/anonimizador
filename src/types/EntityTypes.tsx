@@ -11,7 +11,7 @@ export interface EntityTypeI {
 }
 
 export const EntityTypesDefaults: {[key: string] : EntityTypeI} = {
-    PER: {name: "PER", color: "#00e2ff", functionIndex: AUTO_ANONIMIZE},
+    PES: {name: "PES", color: "#00e2ff", functionIndex: AUTO_ANONIMIZE},
     DAT: {name: "DAT", color: "#b7ff63", functionIndex: AUTO_ANONIMIZE},
     ORG: {name: "ORG", color: "#00dbc6", functionIndex: AUTO_ANONIMIZE},
     LOC: {name: "LOC", color: "#e238ff", functionIndex: AUTO_ANONIMIZE},

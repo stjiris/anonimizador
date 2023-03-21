@@ -205,7 +205,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                 </div>
                 <div className="bg-white p-4">
                     {this.state.requesting && this.state.anonimizeState === AnonimizeStateState.TAGGED ?
-                        <div className="alert alert-info">A processar o documento, esta operação pode demorar alguns uns minutos</div>
+                        <div className="alert alert-info">A processar o documento, esta operação poderá demorar.</div>
                     :
                         <AnonimizeContent ref={this.contentRef} showTypes={this.state.showTypes} doc={this.doc} pool={pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState} listSize={this.props.listSize}/>
                     }

@@ -16,7 +16,7 @@ class FakeEntity:
     def __init__(self,label,start,end,text: str):
         soff = len(text) - len(text.lstrip())
 
-        self.label_ = label
+        self.label_ = label if label != "PER" else "PES"
         self.start_char = start+soff
         self.text = text.strip()
         self.end_char = self.start_char+len(self.text)
