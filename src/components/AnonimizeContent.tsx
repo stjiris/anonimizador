@@ -5,8 +5,6 @@ import { Entity } from '../types/Entity'
 import { AddEntityDryRun, EntityPool } from '../types/EntityPool'
 import { EntityTypeI, getEntityType, getEntityTypes } from '../types/EntityTypes'
 import { TokenSelection } from '../types/Selection'
-import { VariableSizeList } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
 
 
 export interface AnonimizeContentProps {
@@ -135,25 +133,6 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
         const getSize =  (index: number): number => {
             return this.props.listSize[index] || 20;
         }
-        
-        const list = ({ height }: { height: number }) => (
-            <AutoSizer disableHeight>
-                {({ width }) => (
-                    <VariableSizeList 
-                    height={height}
-                    width={width}
-                    itemCount={listItems.length}
-                    itemSize={getSize}
-                    >
-                    {({ index, style }) => (
-                        <div style={{...style}}>
-                            {listItems[index]}
-                        </div>
-                    )}
-                    </VariableSizeList >
-                )}
-            </AutoSizer>
-        );
      
         if (this.state.sizer == true || this.props.anonimizeState != AnonimizeStateState.TAGGED) {
             return <>
