@@ -37,6 +37,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     tableRef: React.RefObject<MRT_TableInstance<Entity>> = React.createRef();
     doc: HTMLElement = new DOMParser().parseFromString(this.props.file.html_contents, "text/html").body;
     
+    
     constructor(props: AnonimizeProps){
         super(props);
         pool.originalText = this.doc.textContent?.normalize("NFKC") || ""
