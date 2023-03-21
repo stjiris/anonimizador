@@ -78,7 +78,7 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 	}
 
 	render(): React.ReactNode {
-		return <div className="App">
+		return <div className="App vh-100">
 			<style>
 				{/* Generate type colors */}
 				{`[data-anonimize-type^="ERRO"]{

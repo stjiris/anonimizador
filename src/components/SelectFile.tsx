@@ -58,6 +58,7 @@ export default class SelectFile extends React.Component<SelectFileProps,SelectFi
         ]
 
         return (<MaterialReactTable
+            muiTablePaperProps={{className: "container"}}
             renderTopToolbarCustomActions={({table}) => <AddUserFileAction setUserFile={this.props.setUserFile}/>} 
             columns={cols}
             data={this.state.list}
