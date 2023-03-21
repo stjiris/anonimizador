@@ -1,5 +1,6 @@
-import { EntityTypeI, getEntityType, TypeNames } from "./EntityTypes";
-import { AnonimizeFunction, AnonimizeFunctionName, functionsWithDescription, identity } from "../util/anonimizeFunctions";
+import { identity } from "lodash";
+import { AnonimizeFunction, AnonimizeFunctionDescription, functionsWithDescriptionArray } from "../util/anonimizeFunctions";
+import { getEntityType } from "./EntityTypes";
 
 export const normalizeEntityString = (str: string): string => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]/g, "");
 
@@ -10,14 +11,14 @@ export interface OffsetRange{
 }
 
 export interface EntityI {
-    type: TypeNames
+    type: string
     offsets: OffsetRange[]
     offsetsLength: number // helper for Material-react-table
     overwriteAnonimization?: string // use this if exists else use type
 }
 
 export class Entity implements EntityI {
-    type: TypeNames;
+    type: string;
     offsets: OffsetRange[];
     offsetsLength: number;
     overwriteAnonimization?: string;
@@ -26,7 +27,7 @@ export class Entity implements EntityI {
     funcIndex: number;
     
     constructor(label: string){
-        this.type = label as TypeNames
+        this.type = label
         this.offsets = [];
         this.offsetsLength = 0;
         this.index = -1
@@ -48,18 +49,17 @@ export class Entity implements EntityI {
         else{
             let type = getEntityType(this.type);
             if( !type ) return identity;
-            return functionsWithDescription[type.functionName].fun;
+            return functionsWithDescriptionArray[type.functionIndex].fun;
         }
     }
 
-    anonimizingFunctionName(): AnonimizeFunctionName{
+    anonimizingFunctionDescription(): AnonimizeFunctionDescription{
         if( this.overwriteAnonimization ){
-            return "Não anonimizar";
+            return {name: "Valor exato", description:"", fun: () => this.overwriteAnonimization! };
         }
         else{
             let type = getEntityType(this.type);
-            if( !type ) return "Não anonimizar";
-            return type.functionName;
+            return functionsWithDescriptionArray[type.functionIndex];
         }
     }
 

@@ -1,10 +1,7 @@
 import React from "react";
+import { Bicon } from "../util/BootstrapIcons";
 
-interface HeaderProps {
-    actions: React.ReactNode[]
-}
-
-export default class Header extends React.Component<HeaderProps>{
+export default class Header extends React.PureComponent {
     render(): React.ReactNode {
         return  <header className="py-2 align-items-center d-flex flex-wrap">
           <a className="align-items-center d-flex flex-wrap text-decoration-none nav-link" href="./">
@@ -17,7 +14,7 @@ export default class Header extends React.Component<HeaderProps>{
           <div className="flex-fill d-none d-lg-block"></div>
           <nav className="d-print-none">
               <ul className="container d-flex nav align-items-center justify-content-evenly flex-wrap">
-                {this.props.actions.map( (a, i) => <li key={i.toString()} className="nav-link py-1 px-2 mx-1">{a}</li>)}
+                <a className="nav-link fs-6 bg-transparent red-link fw-bold" href="https://docs.google.com/document/d/e/2PACX-1vTaR6kTasw0iGYSSMbJpq2wMgrBN5K37jg5ab_qMih_VpXRO5ZAAeeeDiRYzvyrD_VDxBM2ccW-VuBQ/pub" target="_blank"><Bicon n="question-circle"/> Ajuda</a>
               </ul>
           </nav>
       </header>
