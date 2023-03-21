@@ -190,27 +190,6 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                         <small title="Não guardado." className="text-body text-nowrap alert alert-danger p-1 m-1"><Bicon n="file-earmark-x-fill"/> {this.props.file.name}</small>
                     }
                     <div className="flex-grow-1"></div>
-<<<<<<< HEAD
-                    <div>
-                        <button className="red-link fw-bold btn" onClick={this.downloadHtml}><i className="bi bi-download"></i> Download</button>
-                    </div>
-                    <div>
-                        <button className="red-link fw-bold btn" onClick={() => this.setState({showTypes: !this.state.showTypes})} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}><Bicon n="eye"/> {this.state.showTypes ? "Substituições" : "Tipos"}</button>
-                    </div>
-                    <div>
-                        <select className="red-link fw-bold btn text-end" onChange={(ev) => this.setState({anonimizeState: ev.target.value as AnonimizeStateState}) } defaultValue={AnonimizeStateState.TAGGED}>
-                            <option value={AnonimizeStateState.ORIGINAL}>{AnonimizeStateState.ORIGINAL}</option>
-                            <option value={AnonimizeStateState.TAGGED}>{AnonimizeStateState.TAGGED}</option>
-                            <option value={AnonimizeStateState.ANONIMIZED}>{AnonimizeStateState.ANONIMIZED}</option>
-                        </select>
-                    </div>
-                    <div>
-                        {pool.entities.length <= 0 ? 
-                            <RemoteNlpStatus pool={pool} filters={this.props.filters} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}/> :
-                            <button className="red-link fw-bold btn" onClick={() => window.alert( `Filtradas ${pool.applyFilters(this.props.filters)} ocurrencia(s)` )}><Bicon n="funnel"/> Filtrar</button>
-                        }
-                    </div>
-=======
                     <Button className="red-link fw-bold btn" data-bs-toggle="modal" data-bs-target="#modal-types" title="Gerir tipos" i="stickies-fill"/>
                     <Button className="red-link fw-bold btn" onClick={this.downloadHtml} i="download" title="Download ficheiro"/>
                     <select title="Escolher modo" className="red-link fw-bold btn text-start" onChange={(ev) => this.setStateFrom(ev.target.value as AnonimizeVisualState) } defaultValue={AnonimizeVisualState.REPLACE}>
@@ -223,7 +202,6 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                     <div className="flex-grow-1"></div>
                     <Button id="undoButton" className="red-link fw-bold btn" onClick={this.onUndo} disabled={this.props.stateIndex.current==0} title="Desfazer" i="arrow-counterclockwise"/>
                     <Button id="undoButton" className="red-link fw-bold btn" onClick={this.onRedo} disabled={this.props.stateIndex.current==this.props.maxStateIndex.current} title="Refazer" i="arrow-clockwise"/>
->>>>>>> dev
                 </div>
                 <div className="bg-white p-4">
                     {this.state.requesting && this.state.anonimizeState === AnonimizeStateState.TAGGED ?
