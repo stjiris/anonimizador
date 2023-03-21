@@ -146,7 +146,7 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
                     itemSize={getSize}
                     >
                     {({ index, style }) => (
-                        <div style={{...style}} id={"List Block Number: " + index}>
+                        <div style={{...style}}>
                             {listItems[index]}
                         </div>
                     )}
@@ -171,7 +171,7 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
         else {
             return <>
                 <div id="content" className={this.props.showTypes ? 'show-type' : 'show-cod'} ref={this.contentRef}>
-                    {list({ height: window.innerHeight})}
+                    {listItems}
                 </div>
                 <AnonimizeTooltip 
                     pool={this.props.pool}
