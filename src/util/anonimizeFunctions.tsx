@@ -51,7 +51,7 @@ export const processo: AnonimizeFunction = (str, ...args) => {
 
 export const automatic: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) => {
     if( type == "PES" )
-        return leter(str, type, idx, typeIdx, typeIdx) // overwrite funIdx, automatically only we should call it.
+        return leter(str, type, idx, typeIdx, typeIdx-1) // overwrite funIdx, automatically only we should call it.
     if( type == "DAT" )
         return year(str, type, idx, typeIdx, funIdx)
     if( type == "PRO" )

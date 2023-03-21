@@ -47,7 +47,7 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 	anonimizeColumn: MRT_ColumnDef<EntityTypeI> = {
 		header: "Anonimização",
 		Header: <><Bicon n="pencil"/> Anonimização</>,
-		accessorFn: (ent) => functionsWithDescriptionArray[ent.functionIndex].name,
+		accessorFn: (ent) => {console.log(ent, functionsWithDescriptionArray, ent.functionIndex); return functionsWithDescriptionArray[ent.functionIndex].name},
 		enableEditing: true,
 		muiTableBodyCellEditTextFieldProps: ({row,table}) => ({
 			select: true,

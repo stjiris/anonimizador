@@ -52,7 +52,7 @@ export function getEntityTypes(): EntityTypeI[]{
             EntityTypesStored[key] = {
                 name: key,
                 color: EntityTypesDefaults[key].color,
-                functionName: EntityTypesDefaults[key].functionIndex
+                functionIndex: EntityTypesDefaults[key].functionIndex
             }
         }
         else{

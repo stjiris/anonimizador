@@ -39,7 +39,7 @@ export function loadSavedUserFile(obj: SavedUserFile): UserFile {
     return {
         name: obj.name,
         html_contents: obj.html_contents,
-        ents: obj.ents.map( (e,i) => Entity.makeEntity(e,i+1)),
+        ents: obj.ents.map( (e,i) => Entity.makeEntity(e,i)),
         imported: new Date(obj.imported),
         modified: new Date(obj.modified)
     }
