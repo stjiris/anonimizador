@@ -150,7 +150,7 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
                     ref={this.props.listRef}
                     >
                     {({ index, style }) => (
-                        <div style={{...style}} id={"List Block Number: " + index}>
+                        <div style={{...style}}>
                             {listItems[index]}
                         </div>
                     )}

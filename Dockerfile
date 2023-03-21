@@ -22,7 +22,7 @@ ENV PYTHON_COMMAND=/opt/app/env/bin/python
 
 COPY package*.json ./
 
-RUN npm ci --omit=dev
+RUN npm ci
 
 ENV PUBLIC_URL="."
 
