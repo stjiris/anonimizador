@@ -39,7 +39,7 @@ export default class SelectFile extends React.Component<SelectFileProps,SelectFi
                 Header: <><i className="bi bi-file-earmark-fill"></i> Ficheiros Locais</>,
                 accessorKey: "name",
                 size: 80,
-                Cell: ({row}) => <span className="text-nowrap" role="button" title="Abrir ficheiro" onClick={() => this.props.setUserFile(loadSavedUserFile(row.original))}><Bicon n="file-earmark"/> {row.original.name}</span>
+                Cell: ({row}) => <span className="text-nowrap"><Bicon n="file-earmark"/> {row.original.name}</span>
             },
             {
                 header: "Tamanho",
@@ -64,6 +64,11 @@ export default class SelectFile extends React.Component<SelectFileProps,SelectFi
             localization={{...MRT_Localization_PT, noRecordsToDisplay: "Sem ficheiros"}}
             enableRowActions={true}
             renderRowActions={({row}) => <UserFileActions file={row.original} setUserFile={this.props.setUserFile} />}
+            muiTableBodyRowProps={({row})=>({
+                onClick: () => this.props.setUserFile(loadSavedUserFile(row.original)),
+                title: `Abrir ${row.original.name}`,
+                style: {cursor: "pointer"}
+            })}
             positionActionsColumn="first"
             enablePagination={false}
             enableDensityToggle={false}
@@ -188,6 +193,6 @@ export class AddUserFileAction extends React.Component<SelectFileProps>{
 
 export class UserFileActions extends React.PureComponent<UserFileActionsProps>{
     render(): React.ReactNode {
-        return <Button className="m-1 p-1 text-danger btn" title="Eliminar" onClick={() => deleteUserFile(this.props.file)} i="trash"/>
+        return <Button className="m-1 p-1 text-danger btn" title="Eliminar" onClickCapture={() => deleteUserFile(this.props.file)} i="trash"/>
     }
 }
