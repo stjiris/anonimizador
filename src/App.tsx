@@ -8,6 +8,7 @@ import MaterialReactTable, { MRT_ColumnDef } from 'material-react-table';
 import { MRT_Localization_PT } from 'material-react-table/locales/pt';
 import { addEntityType, deleteEntityType, EntityTypeI, EntityTypesDefaults, getEntityTypes, restoreEntityTypes, updateEntityType } from './types/EntityTypes';
 import { functionsWithDescriptionArray } from './util/anonimizeFunctions';
+import { Bicon, Button } from './util/BootstrapIcons';
 
 interface AppState{
 	userFile: UserFile | undefined
@@ -29,6 +30,7 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 
 	typeColumn: MRT_ColumnDef<EntityTypeI> = {
 		header: "Tipo",
+		Header: <><Bicon n="pencil"/> Tipo</>,
 		accessorKey: "color",
 		enableEditing: true,
 		muiTableBodyCellEditTextFieldProps: ({row, table}) => ({
@@ -44,6 +46,7 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 
 	anonimizeColumn: MRT_ColumnDef<EntityTypeI> = {
 		header: "Anonimização",
+		Header: <><Bicon n="pencil"/> Anonimização</>,
 		accessorFn: (ent) => functionsWithDescriptionArray[ent.functionIndex].name,
 		enableEditing: true,
 		muiTableBodyCellEditTextFieldProps: ({row,table}) => ({
@@ -59,7 +62,11 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 	anonimizeExample: MRT_ColumnDef<EntityTypeI> = {
 		header: "Descrição Anonimização",
 		accessorFn: (row) => functionsWithDescriptionArray[row.functionIndex].description,
-		enableEditing: false
+		enableEditing: false,
+		muiTableBodyCellProps: {
+			className: "text-nowrap"
+		}
+		
 	}
 
 	componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
@@ -125,7 +132,7 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 										onClick: () => {table.setEditingCell(cell);}
 									})}
 									enableRowActions={true}
-									renderRowActions={({row}) => EntityTypesDefaults[row.original.name] ? <></> : <button className="btn btn-danger" onClick={() => {deleteEntityType(row.original.name); this.setState({entitieTypes: getEntityTypes()})}}><i className='bi bi-trash'></i></button>}
+									renderRowActions={({row}) => EntityTypesDefaults[row.original.name] ? <></> : <Button className="btn text-danger" onClick={() => {deleteEntityType(row.original.name); this.setState({entitieTypes: getEntityTypes()})}} i='trash' title="Eliminar"/>}
 								/>
 					<form className="d-flex m-2" onSubmit={(evt) => {
 						evt.preventDefault(); 
