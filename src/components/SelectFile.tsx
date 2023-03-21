@@ -188,6 +188,6 @@ export class AddUserFileAction extends React.Component<SelectFileProps>{
 
 export class UserFileActions extends React.PureComponent<UserFileActionsProps>{
     render(): React.ReactNode {
-        return <Button className="m-1 p-1 text-danger" title="Eliminar" onClick={() => deleteUserFile(this.props.file)} i="trash"/>
+        return <Button className="m-1 p-1 text-danger btn" title="Eliminar" onClick={() => deleteUserFile(this.props.file)} i="trash"/>
     }
 }

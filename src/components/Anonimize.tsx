@@ -6,10 +6,10 @@ import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { Entity } from "../types/Entity";
 import RemoteNlpStatus from "./RemoteNlpStatus";
 import { updateUserFile } from '../util/UserFileCRUDL';
-import { AnonimizeStateState } from "../types/AnonimizeState";
+import { AnonimizeStateState, AnonimizeVisualState } from "../types/AnonimizeState";
 import { EntityPool } from "../types/EntityPool";
 import { getEntityType, getEntityTypes } from "../types/EntityTypes";
-import { Bicon } from "../util/BootstrapIcons";
+import { Bicon, Button } from "../util/BootstrapIcons";
 
 interface AnonimizeProps{
     file: UserFile
@@ -23,9 +23,27 @@ interface AnonimizeProps{
 
 interface AnonimizeState{
     anonimizeState: AnonimizeStateState
-    ents: Entity[],
-    saved: boolean,
     showTypes: boolean
+    ents: Entity[]
+    saved: boolean
+}
+
+function setStateFrom(visual: AnonimizeVisualState){
+    let showTypes: boolean = false;
+    let anonimizeState: AnonimizeStateState = AnonimizeStateState.TAGGED;
+    switch(visual){
+        case AnonimizeVisualState.ANONIMIZED:
+            anonimizeState = AnonimizeStateState.ANONIMIZED;
+            break;
+        case AnonimizeVisualState.ORIGINAL:
+            anonimizeState = AnonimizeStateState.ORIGINAL;
+            break;
+        case AnonimizeVisualState.TYPES:
+            showTypes = true;
+        case AnonimizeVisualState.REPLACE:
+            anonimizeState = AnonimizeStateState.TAGGED;
+    }
+    return { showTypes, anonimizeState } as const;
 }
 
 let pool: EntityPool = (window as any).pool = new EntityPool("",[]);
@@ -159,46 +177,35 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
     }
 
     render(): React.ReactNode {
-        return (<div className="row container-fluid bg-dark m-0">
+        return (<div className="row container-fluid bg-dark m-0 p-0">
             <div className="col-8">
-                <div className="position-sticky top-0 bg-white py-3 px-4 mt-2 d-flex" style={{borderBottom: "5px solid #161616",zIndex:1}}>
-                    <div className="mx-2">
-                        <button className="btn red-link fw-bold" onClick={() => (this.state.saved || window.confirm("Trabalho não será guardado no browser. Sair?")) ? this.props.setUserFile(undefined) : null}><i className="bi bi-x"></i> Fechar</button>
-                    </div>
-                    <div className="mx-2 d-flex align-items-baseline">
-                        <span className="text-body btn"><i className="bi bi-file-earmark-fill"></i> {this.props.file.name}</span>
-                        {this.state.saved ? <span className="alert alert-success m-0 p-1"><i className="bi bi-check"></i> Guardado</span> : <span className="alert alert-danger m-0 p-1"><i className="bi bi-exclamation-triangle-fill"></i> Não guardado</span>}
-                    </div>
+                <div className="position-sticky top-0 bg-white p-0 m-0 d-flex" style={{borderBottom: "5px solid #161616",zIndex:1}}>
+                    <Button className="btn red-link fw-bold" onClick={() => (this.state.saved || window.confirm("Trabalho não será guardado no browser. Sair?")) ? this.props.setUserFile(undefined) : null} i="x-lg" title="Fechar ficheiro"/>
+
+                    {this.state.saved ? 
+                        <small title="Guardado automaticamente." className="text-body text-nowrap alert alert-success p-1 m-1"><Bicon n="file-earmark-check-fill"/> {this.props.file.name}</small>
+                    : 
+                        <small title="Não guardado." className="text-body text-nowrap alert alert-danger p-1 m-1"><Bicon n="file-earmark-x-fill"/> {this.props.file.name}</small>
+                    }
                     <div className="flex-grow-1"></div>
-                    <div>
-                        <button className="red-link fw-bold btn" onClick={this.downloadHtml}><i className="bi bi-download"></i> Download</button>
-                    </div>
-                    <div>
-                        <button className="red-link fw-bold btn" onClick={() => this.setState({showTypes: !this.state.showTypes})} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}><Bicon n="eye"/> {this.state.showTypes ? "Substituições" : "Tipos"}</button>
-                    </div>
-                    <div>
-                        <select className="red-link fw-bold btn text-end" onChange={(ev) => this.setState({anonimizeState: ev.target.value as AnonimizeStateState}) } defaultValue={AnonimizeStateState.TAGGED}>
-                            <option value={AnonimizeStateState.ORIGINAL}>{AnonimizeStateState.ORIGINAL}</option>
-                            <option value={AnonimizeStateState.TAGGED}>{AnonimizeStateState.TAGGED}</option>
-                            <option value={AnonimizeStateState.ANONIMIZED}>{AnonimizeStateState.ANONIMIZED}</option>
-                        </select>
-                    </div>
-                    <div>
-                        {pool.entities.length <= 0 ? 
-                            <RemoteNlpStatus pool={pool} doc={this.doc} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}/> : "Sugerido"
-                        }
-                    </div>
-                    <div>
-                        <button id="undoButton" className="red-link fw-bold btn" onClick={this.onUndo} disabled={this.props.stateIndex.current==0 ? true : false}><i className="bi bi-arrow-counterclockwise"></i></button>
-                        <button id="redoButton" className="red-link fw-bold btn" onClick={this.onRedo} disabled={this.props.stateIndex.current==this.props.maxStateIndex.current ? true : false}><i className="bi bi-arrow-clockwise"></i></button>
-                    </div>
+                    <Button className="red-link fw-bold btn" onClick={this.downloadHtml} i="download" title="Download ficheiro"/>
+                    <select title="Escolher modo" className="red-link fw-bold btn text-start" onChange={(ev) => this.setState(setStateFrom(ev.target.value as AnonimizeVisualState)) } defaultValue={AnonimizeVisualState.REPLACE}>
+                        <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
+                        <option value={AnonimizeVisualState.REPLACE}>{AnonimizeVisualState.REPLACE}</option>
+                        <option value={AnonimizeVisualState.TYPES}>{AnonimizeVisualState.TYPES}</option>
+                        <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
+                    </select>
+                    <RemoteNlpStatus pool={pool} doc={this.doc} disabled={this.state.anonimizeState !== AnonimizeStateState.TAGGED}/>
+                    <div className="flex-grow-1"></div>
+                    <Button id="undoButton" className="red-link fw-bold btn" onClick={this.onUndo} disabled={this.props.stateIndex.current==0} title="Desfazer" i="arrow-counterclockwise"/>
+                    <Button id="undoButton" className="red-link fw-bold btn" onClick={this.onRedo} disabled={this.props.stateIndex.current==this.props.maxStateIndex.current} title="Refazer" i="arrow-clockwise"/>
                 </div>
                 <div className="bg-white p-4">
                     <AnonimizeContent ref={this.contentRef} showTypes={this.state.showTypes} doc={this.doc} pool={pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState} listSize={this.props.listSize}/>
                 </div>
             </div>
             <div className="col-4">
-                <div className="mt-2 position-sticky top-0">
+                <div className="m-0 position-sticky top-0">
                     <MaterialReactTable
                         tableInstanceRef={this.tableRef}
                         key="ent-table"

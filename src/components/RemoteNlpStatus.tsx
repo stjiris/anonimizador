@@ -1,6 +1,7 @@
 import React from "react";
 import { Entity, normalizeEntityString } from "../types/Entity";
 import { EntityPool } from "../types/EntityPool";
+import { Button } from "../util/BootstrapIcons";
 
 interface RemoteEntity {
     text: string,
@@ -84,6 +85,6 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
     }
 
     render(): React.ReactNode {
-        return <button className="red-link fw-bold btn" onClick={this.runRemoteNlp} disabled={this.props.pool.entities.length > 0 || this.state.requested || this.props.disabled}><i className="bi bi-file-earmark-break"></i> {this.state.text}</button>;
+        return <Button className="red-link fw-bold btn" onClick={this.runRemoteNlp} disabled={this.props.pool.entities.length > 0 || this.state.requested || this.props.disabled} i="file-earmark-break" title={this.state.text} />
     }
 }

@@ -48,7 +48,7 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 		enableEditing: true,
 		muiTableBodyCellEditTextFieldProps: ({row,table}) => ({
 			select: true,
-			children: functionsWithDescriptionArray.map( (desc,i ) => <option label={desc.name} value={i}>{desc.name}</option>),
+			children: functionsWithDescriptionArray.map( (desc,i) => <option key={i} label={desc.name} value={i}>{desc.name}</option>),
 			SelectProps: {
 				native: true
 			},
@@ -140,7 +140,7 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 						}}>
 						<input className="form-control" name="tipo" placeholder="Tipo..." required></input>
 						<input  className="form-control form-control-color" name="color" type="color"></input>
-						<select  className="form-select" name="anonimização" required>{functionsWithDescriptionArray.map( (desc,i ) => <option label={desc.name} value={i}>{desc.name}</option>)}</select>
+						<select  className="form-select" name="anonimização" required>{functionsWithDescriptionArray.map( (desc,i ) => <option key={i} label={desc.name} value={i}>{desc.name}</option>)}</select>
 						<button className="form-control btn btn-primary">Adicionar</button>
 					</form>
 				</div>
