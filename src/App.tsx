@@ -96,7 +96,7 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 				<Anonimize key="anonimize" setUserFile={this.setUserFile} file={this.state.userFile} saveSateCallback={this.props.saveSateCallback} undoRedoCallback={this.props.undoRedoCallback} stateIndex={this.props.stateIndex} maxStateIndex={this.props.maxStateIndex} listSize={this.props.listSize} />}
 			<BootstrapModal key="modal-types" id="modal-types">
 				<div className="modal-header">
-					<div><h5 className="modal-title" id="modal-types-label">Tipos de entidades</h5></div>
+					<div><h5 className="modal-title" id="modal-types-label">Gerir tipos de entidades</h5></div>
 				</div>
 				<div className="modal-body p-0">
 					<MaterialReactTable
