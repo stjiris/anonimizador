@@ -57,7 +57,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
         super(props);
         pool.originalText = this.doc.textContent?.normalize("NFKC") || ""
         pool.entities = this.props.file.ents;
-        pool.updateOrder();
+        pool.updateOrder("Inicial");
         this.state ={
             anonimizeState: AnonimizeStateState.TAGGED,
             ents: [...pool.entities],
@@ -139,7 +139,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
         })
     }
 
-    onPoolChange = (): void => {
+    onPoolChange = (action: string): void => {
         this.props.file.ents = pool.entities;
         this.props.saveSateCallback([...pool.entities], false)
         this.setState({ ents: [...pool.entities], saved: updateUserFile(this.props.file) })
@@ -301,7 +301,7 @@ let columns: MRT_ColumnDef<Entity>[] = [{
         onChange: (event) => {
             let o = row.original.type;
             row.original.type = event.target.value;
-            if( o !== row.original.type ) pool.updateOrder();
+            if( o !== row.original.type ) pool.updateOrder("Modificar tipo");
         }
     })
     
@@ -322,7 +322,7 @@ let columns: MRT_ColumnDef<Entity>[] = [{
         onBlur: (event) => {
             let o = row.original.overwriteAnonimization;
             row.original.overwriteAnonimization = event.target.value;
-            if( o !== row.original.overwriteAnonimization ) pool.updateOrder();
+            if( o !== row.original.overwriteAnonimization ) pool.updateOrder("Modificar anonimização de entidade");
         }
     })
 }]

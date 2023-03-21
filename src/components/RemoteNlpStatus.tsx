@@ -77,7 +77,7 @@ export default class RemoteNlpStatus extends React.Component<RemoteNlpStatusProp
         }
 
         this.props.pool.entities = Object.values(entities).sort((a, b) => a.offsets[0].start-b.offsets[0].start)
-        this.props.pool.updateOrder();
+        this.props.pool.updateOrder("Sugerir");
         this.setState({
             requested: false,
             text: "Sugerir"
