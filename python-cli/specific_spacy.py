@@ -3,6 +3,7 @@ import re
 import sys
 import csv
 from spacy.language import Language
+from spacy.matcher import Matcher
 
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
 PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A-Z0-9]*"
@@ -78,6 +79,26 @@ def remove_pattern(p, ents):
             new_list.append(e)
     return new_list
 
+def get_both_genders(words):
+    new_words=[]
+    for word in words:
+        if word.endswith("o"):
+            new_word = word[:-1] + "a"
+            new_words.append(word)
+            new_words.append(new_word)
+        elif word.endswith("a"):
+            new_word = word[:-1] + "o"
+            new_words.append(word)
+            new_words.append(new_word)
+        elif word.endswith("r"):
+            new_word = word + "a"
+            new_words.append(word)
+            new_words.append(new_word)
+        else:
+            new_words.append(word)
+        
+    return new_words
+
 @Language.component("new_line_segmenter")
 def new_line_segmenter(doc):
     for i, token in enumerate(doc[:-1]):
@@ -87,9 +108,52 @@ def new_line_segmenter(doc):
             doc[i+1].is_sent_start = True
     return doc
 
+@Language.component("label_professions")
+def label_professions(doc):
+    
+    #Create matcher
+    matcher = Matcher(doc.vocab)
+    
+    #Create entity list
+    entities = []
+    
+    #Open professions file to create a list with professions
+    with open("profissoes.txt", "r") as f:
+        professions = [line.strip().lower() for line in f]
+    
+    #Create new professions list with both genders
+    new_professions = get_both_genders(professions)
+    
+    #Make each profession a pattern        
+    pattern=[{"LOWER": {"IN": new_professions}}]#, {"TEXT": {"REGEX": r"\b(\w+)(a|o|as|os)?\b"}}]
+    #Add patterns to the matcher
+    matcher.add("PROFESSIONS",[pattern])
+    
+    #Run matcher on document and saves it on matches
+    matches = matcher(doc)
+    
+    #Copy entities from doc to the new entity list
+    for ent in doc.ents:
+        entities.append(ent)
+        
+    #Finds where match is on document and adds it to entity list
+    for match_id, start, end in matches:
+        span = doc[start:end]
+        entities.append(FakeEntity("PROF", start, end, span.text))
+        
+    #Sort entity list by their position in the doc
+    entities = sorted(entities,key=lambda x: x.start_char)
+    
+    #Return doc with new entities
+    return FakeDoc(entities, doc.text)
+
 def nlp(text, model):
     model.add_pipe("new_line_segmenter", before="ner")
+    model.add_pipe("label_professions", after="ner")
+    
+    #Runs the model
     doc = model("\n".join(text.split(".")))
+    
     ents = []
     for ent in excude_manual(doc.ents):
         ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
