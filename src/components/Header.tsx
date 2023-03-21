@@ -1,4 +1,5 @@
 import React from "react";
+import { Bicon } from "../util/BootstrapIcons";
 
 export default class Header extends React.PureComponent {
     render(): React.ReactNode {
@@ -13,7 +14,7 @@ export default class Header extends React.PureComponent {
           <div className="flex-fill d-none d-lg-block"></div>
           <nav className="d-print-none">
               <ul className="container d-flex nav align-items-center justify-content-evenly flex-wrap">
-                <a className="nav-link fs-6 bg-transparent red-link fw-bold" href="https://docs.google.com/document/d/e/2PACX-1vTaR6kTasw0iGYSSMbJpq2wMgrBN5K37jg5ab_qMih_VpXRO5ZAAeeeDiRYzvyrD_VDxBM2ccW-VuBQ/pub" target="_blank">Ajuda</a>
+                <a className="nav-link fs-6 bg-transparent red-link fw-bold" href="https://docs.google.com/document/d/e/2PACX-1vTaR6kTasw0iGYSSMbJpq2wMgrBN5K37jg5ab_qMih_VpXRO5ZAAeeeDiRYzvyrD_VDxBM2ccW-VuBQ/pub" target="_blank"><Bicon n="question-circle"/> Ajuda</a>
               </ul>
           </nav>
       </header>

@@ -208,7 +208,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                     <Button id="undoButton" className="red-link fw-bold btn" onClick={this.onUndo} disabled={this.props.stateIndex.current==0} title="Desfazer" i="arrow-counterclockwise"/>
                     <Button id="undoButton" className="red-link fw-bold btn" onClick={this.onRedo} disabled={this.props.stateIndex.current==this.props.maxStateIndex.current} title="Refazer" i="arrow-clockwise"/>
                     <small className="text-white text-nowrap p-1 m-1 text-center"><Bicon n="dot"/></small>
-                    <a className="red-link fw-bold btn" href="https://docs.google.com/document/d/e/2PACX-1vTaR6kTasw0iGYSSMbJpq2wMgrBN5K37jg5ab_qMih_VpXRO5ZAAeeeDiRYzvyrD_VDxBM2ccW-VuBQ/pub" target="_blank"><Bicon n="question-lg"/></a>
+                    <a className="red-link fw-bold btn" href="https://docs.google.com/document/d/e/2PACX-1vTaR6kTasw0iGYSSMbJpq2wMgrBN5K37jg5ab_qMih_VpXRO5ZAAeeeDiRYzvyrD_VDxBM2ccW-VuBQ/pub" target="_blank" title="Abrir ajuda"><Bicon n="question-circle"/></a>
                 </div>
                 <div className="bg-white p-4">
                     {this.state.requesting && this.state.anonimizeState === AnonimizeStateState.TAGGED ?
