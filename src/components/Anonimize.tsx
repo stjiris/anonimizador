@@ -182,13 +182,13 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
         return (<div className="row container-fluid bg-dark m-0 p-0">
             <div className="col-8">
                 <div className="position-sticky top-0 bg-white p-0 m-0 d-flex" style={{borderBottom: "5px solid #161616",zIndex:1}}>
-                    <Button className="btn red-link fw-bold m-1 p-1" onClick={() => (this.state.saved || window.confirm("Trabalho não será guardado no browser. Sair?")) ? this.props.setUserFile(undefined) : null} i="x-lg" title="Fechar ficheiro"/>
+                    <Button className="btn red-link fw-bold m-1 p-1" onClick={() => (this.state.saved || window.confirm("Trabalho não será guardado no browser. Sair?")) ? this.props.setUserFile(undefined) : null} i="arrow-left" title="Fechar ficheiro"/>
                     {this.state.saved ? 
-                        <small title="Guardado automaticamente." className="text-body text-nowrap alert alert-success p-1 m-1"><Bicon n="file-earmark-check-fill"/> {this.props.file.name}</small>
+                        <span title="Guardado automaticamente." className="text-body text-nowrap alert alert-success p-1 m-1"><Bicon n="file-earmark-check-fill"/> <small>{this.props.file.name}</small></span>
                     : 
-                        <small title="Não guardado." className="text-body text-nowrap alert alert-danger p-1 m-1"><Bicon n="file-earmark-x-fill"/> {this.props.file.name}</small>
+                        <span title="Não guardado." className="text-body text-nowrap alert alert-danger p-1 m-1"><Bicon n="file-earmark-x-fill"/> <small>{this.props.file.name}</small></span>
                     }
-                    <Button title="Gerir tipos" i="stickies-fill" text="Tipos" className="red-link btn m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types"/>
+                    <Button title="Gerir tipos" i="file-earmark-font" text="Tipos" className="red-link btn m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types"/>
                     <button className="red-link btn m-1 p-1" onClick={() => {this.setState({requesting: true}); runRemoteNlp(this.doc, pool).finally(() => this.setState({requesting: false}))}} disabled={pool.entities.length > 0 || this.state.requesting || this.state.anonimizeState !== AnonimizeStateState.TAGGED}>
                         {pool.entities.length > 0 || this.state.requesting || this.state.anonimizeState !== AnonimizeStateState.TAGGED ? 
                             <del><Bicon n="file-earmark-play"/> Sugerir</del>
