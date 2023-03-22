@@ -190,7 +190,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                     }
                     <Button className="red-link fw-bold btn" data-bs-toggle="modal" data-bs-target="#modal-types" title="Gerir tipos" i="stickies-fill"/>
                     <small className="text-white text-nowrap p-1 m-1 flex-grow-1 text-center"><Bicon n="dot"/></small>
-                    <select title="Escolher modo" className="red-link fw-bold btn text-start" onChange={(ev) => this.setStateFrom(ev.target.value as AnonimizeVisualState) } defaultValue={AnonimizeVisualState.REPLACE}>
+                    <select title="Escolher modo" className="red-link fw-bold btn text-start" onChange={(ev) => this.setStateFrom(ev.target.value as AnonimizeVisualState) } defaultValue={AnonimizeVisualState.TYPES}>
                         <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
                         <option value={AnonimizeVisualState.REPLACE}>{AnonimizeVisualState.REPLACE}</option>
                         <option value={AnonimizeVisualState.TYPES}>{AnonimizeVisualState.TYPES}</option>
