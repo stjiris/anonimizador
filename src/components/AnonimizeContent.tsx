@@ -7,6 +7,8 @@ import { EntityTypeI, getEntityType, getEntityTypes } from '../types/EntityTypes
 import { TokenSelection } from '../types/Selection'
 import { VariableSizeList } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
+import { ReactSketchCanvas, ExportImageType } from 'react-sketch-canvas';
+import { Bicon, Button } from "../util/BootstrapIcons";
 
 
 export interface AnonimizeContentProps {
@@ -18,6 +20,8 @@ export interface AnonimizeContentProps {
     listSize: number[]
     listRef: React.RefObject<VariableSizeList>
     offsetIndex: {[key: number]: number}
+    images: any[]
+    setInCanvas: Function
 }
 
 export interface AnonimizeContentState {
@@ -25,22 +29,43 @@ export interface AnonimizeContentState {
     selectionWould: AddEntityDryRun | undefined
     selectionAffects: number,
     sizer: boolean
+    image: any
 }
 
 export default class AnonimizeContent extends React.Component<AnonimizeContentProps,AnonimizeContentState>{
     contentRef: React.RefObject<HTMLDivElement> = React.createRef();
+    canvasRef: React.RefObject<any> = React.createRef();
     nodes: HTMLElement[] = []
     state: AnonimizeContentState = {
         selection: undefined,
         selectionWould: undefined,
         selectionAffects: 0,
-        sizer: true
+        sizer: true,
+        image: {
+            id: null,
+            src: "",
+            width: 0,
+            height: 0
+        }
     }
 
     updateSelection = (ev: MouseEvent) => {
         let sel = window.getSelection();
         if( !sel || sel.isCollapsed ){
             sel = null
+
+            // Only treat images when not doing normal selection
+            if (ev.target instanceof HTMLImageElement) {
+                this.setState({
+                    image: {
+                        id: ev.target.getAttribute('image_id'),
+                        src: ev.target.src,
+                        width: ev.target.width,
+                        height: ev.target.height
+                    }
+                });
+            }
+
         }
         else{
             let commonAncestorContainer = sel.getRangeAt(0).commonAncestorContainer;
@@ -130,7 +155,7 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
         let offset = 0;
 
         for(let i=0; i < this.props.doc.childNodes.length; i++){
-            listItems.push(<AnonimizeBlock key={i} listIdx={i} sizer={this.state.sizer} element={this.props.doc.childNodes[i]} offset={offset} ents={this.props.ents} anonimizeState={this.props.anonimizeState} listSize={this.props.listSize}/>)
+            listItems.push(<AnonimizeBlock key={i} listIdx={i} sizer={this.state.sizer} element={this.props.doc.childNodes[i]} offset={offset} ents={this.props.ents} anonimizeState={this.props.anonimizeState} listSize={this.props.listSize} images={this.props.images}/>)
             this.props.offsetIndex[offset] = i;
             offset += (this.props.doc.childNodes[i].textContent?.normalize("NFKC") || "").length;
         }
@@ -158,13 +183,64 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
                 )}
             </AutoSizer>
         );
-     
+
+        const saveImage =  () => {
+            this.canvasRef.current.exportImage('png').then(
+                (data: string) => {
+                    console.log(data);
+                    this.props.images[this.state.image.id].overwriteSrc = data;
+                    this.setState({image: {
+                        id: null,
+                        src: null,
+                        width: null,
+                        height: null
+                    }})
+                }
+            );
+            this.canvasRef.current.resetCanvas();
+        }
+        
+        
+
+        const cancelImage =  () => {
+            this.canvasRef.current.resetCanvas();
+            this.setState({image: {
+                id: null,
+                src: null,
+                width: null,
+                height: null
+            }})
+        }
+
+        const resetImage =  () => {
+            this.canvasRef.current.resetCanvas();
+            this.props.images[this.state.image.id].originalSrc = this.props.images[this.state.image.id].overwriteSrc
+            this.setState({image: {
+                id: null,
+                src: null,
+                width: null,
+                height: null
+            }})
+        }
+
+        const undoImage =  () => {
+            this.canvasRef.current?.undo();
+        }
+
+        const redoImage =  () => {
+            this.canvasRef.current?.redo();
+        }
+
+        const toggleErasor =  (erase: boolean) => {
+            this.canvasRef.current?.eraseMode(erase);
+        }
+
         if (this.state.sizer == true || this.props.anonimizeState != AnonimizeStateState.TAGGED) {
             return <>
                 <div id="content" className={this.props.showTypes ? 'show-type' : 'show-cod'} ref={this.contentRef}>
                     {listItems}
                 </div>
-                <AnonimizeTooltip 
+                <AnonimizeTooltip
                     pool={this.props.pool}
                     selection={this.state.selection}
                     selectionWould={this.state.selectionWould}
@@ -173,7 +249,29 @@ export default class AnonimizeContent extends React.Component<AnonimizeContentPr
             </>
         }
         else {
+            this.props.setInCanvas(this.state.image.id != null)
             return <>
+                <div className='canvas' style={{visibility: this.state.image.id != null ? "visible" : "hidden"}}>
+                    <div className='canvasButtons'>
+                        <Button id="imageUndoButton" className="red-link fw-bold btn" onClick={undoImage} title="Desfazer" i="arrow-counterclockwise"/>
+                        <Button id="imageUndoButton" className="red-link fw-bold btn" onClick={() => toggleErasor(true)} title="Apagar" i="bi bi-eraser"/>
+                        <Button id="imageUndoButton" className="red-link fw-bold btn" onClick={() => toggleErasor(false)} title="Escrever" i="bi bi-pencil"/>
+                        <Button id="imageRedoButton" className="red-link fw-bold btn" onClick={redoImage} title="Refazer" i="arrow-clockwise"/>
+                    </div>
+                    <ReactSketchCanvas
+                        ref={this.canvasRef}
+                        backgroundImage={this.state.image.src}
+                        width={this.state.image.width}
+                        height={this.state.image.height}
+                        strokeWidth={4}
+                        strokeColor="black"
+                    />
+                    <div className='canvasButtons'>
+                        <button type="button" onClick={resetImage} className="btn btn-danger">Recomeçar</button>
+                        <button type="button" onClick={cancelImage} className="btn btn-warning">Cancelar</button>
+                        <button type="button" onClick={saveImage} className="btn btn-primary">Gravar</button>
+                    </div>
+                </div>
                 <div id="content" className={this.props.showTypes ? 'show-type' : 'show-cod'} ref={this.contentRef}>
                     {list({ height: window.innerHeight})}
                 </div>
@@ -196,6 +294,7 @@ interface AnonimizeBlockProps{
     listSize: number[]
     listIdx: number
     sizer: boolean
+    images: any[]
 }
 
 class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
@@ -234,12 +333,35 @@ class AnonimizeBlock extends React.Component<AnonimizeBlockProps>{
         let r = [];
         let suboffset = 0;
         for(let i = 0; i < elmt.childNodes.length; i++){
-            r.push(<AnonimizeBlock key={i} sizer={this.props.sizer} listIdx={-1} element={elmt.childNodes[i]} offset={this.props.offset + suboffset} ents={this.props.ents} anonimizeState={this.props.anonimizeState} listSize={this.props.listSize} />)
+            r.push(<AnonimizeBlock key={i} sizer={false} listIdx={this.props.listIdx} element={elmt.childNodes[i]} offset={this.props.offset + suboffset} ents={this.props.ents} anonimizeState={this.props.anonimizeState} listSize={this.props.listSize} images={this.props.images} />)
             suboffset += (elmt.childNodes[i].textContent?.normalize("NFKC") || "").length
         }
         
         let attrs: any  = {};
         attrs['ref'] = this.blockRef;
+        
+        // Add id to images
+        if (Tag === 'img') {
+            attrs['image_id'] = this.props.listIdx.toString()
+            // If image is not in the list, add it
+            if (this.props.images[this.props.listIdx] === undefined) {
+                this.props.images[this.props.listIdx] = {
+                    originalSrc: elmtElmt.getAttribute('src'),
+                    overwriteSrc: null,
+                }
+            }
+            else {
+                // if in mode original keep normal src
+                if (this.props.anonimizeState === AnonimizeStateState.ORIGINAL) {
+                    elmtElmt.setAttribute('src', this.props.images[this.props.listIdx].originalSrc)
+                }
+                // if in mode overwrite keep overwrite src
+                else if (this.props.images[this.props.listIdx].overwriteSrc !== null) {
+                    elmtElmt.setAttribute('src', this.props.images[this.props.listIdx].overwriteSrc)
+                }
+            }
+        }
+
         for(let attr of elmtElmt.getAttributeNames()){
             attrs[attr] = elmtElmt.getAttribute(attr);
         }

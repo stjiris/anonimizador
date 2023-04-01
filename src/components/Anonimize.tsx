@@ -21,6 +21,8 @@ interface AnonimizeProps{
     maxStateIndex: any
     listSize: number[]
     offsetIndex: {[key: number]: number}
+    images: any[]
+    setInCanvas: Function
 }
 
 interface AnonimizeState{
@@ -219,7 +221,7 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
                     {this.state.requesting && this.state.anonimizeState === AnonimizeStateState.TAGGED ?
                         <div className="alert alert-info">A processar o documento, esta operação poderá demorar.</div>
                     :
-                        <AnonimizeContent ref={this.contentRef} showTypes={this.state.showTypes} doc={this.doc} pool={pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState} listSize={this.props.listSize} listRef={listRef} offsetIndex={this.props.offsetIndex} />
+                        <AnonimizeContent ref={this.contentRef} showTypes={this.state.showTypes} doc={this.doc} pool={pool} ents={this.state.ents} anonimizeState={this.state.anonimizeState} listSize={this.props.listSize} listRef={listRef} offsetIndex={this.props.offsetIndex} images={this.props.images} setInCanvas={this.props.setInCanvas} />
                     }
                 </div>
             </div>

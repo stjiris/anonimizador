@@ -16,7 +16,7 @@ interface AppState{
 	error: Error | undefined
 }
 
-export default class App extends React.Component<{saveSateCallback: Function, undoRedoCallback: Function, stateIndex: any, maxStateIndex: any, listSize: number[], offsetIndex: {[key: number]: number}},AppState>{
+export default class App extends React.Component<{saveSateCallback: Function, undoRedoCallback: Function, stateIndex: any, maxStateIndex: any, listSize: number[], offsetIndex: {[key: number]: number}, images: any[], setInCanvas: Function},AppState>{
 	state: AppState = {
 		userFile: undefined,
 		entitieTypes: getEntityTypes(),
@@ -100,7 +100,7 @@ export default class App extends React.Component<{saveSateCallback: Function, un
 					</div> : <></>}
 					<SelectFile key="select" setUserFile={this.setUserFile} />
 				</> : 
-				<Anonimize key="anonimize" setUserFile={this.setUserFile} file={this.state.userFile} saveSateCallback={this.props.saveSateCallback} undoRedoCallback={this.props.undoRedoCallback} stateIndex={this.props.stateIndex} maxStateIndex={this.props.maxStateIndex} listSize={this.props.listSize} offsetIndex={this.props.offsetIndex} />}
+				<Anonimize key="anonimize" setUserFile={this.setUserFile} file={this.state.userFile} saveSateCallback={this.props.saveSateCallback} undoRedoCallback={this.props.undoRedoCallback} stateIndex={this.props.stateIndex} maxStateIndex={this.props.maxStateIndex} listSize={this.props.listSize} offsetIndex={this.props.offsetIndex} images={this.props.images} setInCanvas={this.props.setInCanvas} />}
 			<BootstrapModal key="modal-types" id="modal-types">
 				<div className="modal-header">
 					<div><h5 className="modal-title" id="modal-types-label">Gerir tipos de entidades</h5></div>

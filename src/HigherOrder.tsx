@@ -9,16 +9,28 @@ export default function HigherOrder () {
   const maxStateIndex = useRef<number>(0);
   const listSize = useRef<number[]>([]);
   const offsetIndex = useRef<{[key: number]: number}>({});
+  const images = useRef<any>([]);
+  const inCanvas = useRef<boolean>(false);
 
   useEffect(() => {
     function handleUndoKeyDown(event: any) {
       if (event.ctrlKey && event.code === 'KeyZ') {
-        document.getElementById('undoButton')!.click();
+        if (inCanvas.current) {
+          document.getElementById('imageUndoButton')!.click();
+        }
+        else {
+          document.getElementById('undoButton')!.click();
+        }
       }
     }
     function handleRedoKeyDown(event: any) {
       if (event.ctrlKey && event.code === 'KeyY') {
-        document.getElementById('redoButton')!.click();
+        if (inCanvas.current) {
+          document.getElementById('imageRedoButton')!.click();
+        }
+        else {
+          document.getElementById('redoButton')!.click();
+        }
       }
     }
 
@@ -61,8 +73,12 @@ export default function HigherOrder () {
     return savedStates.current[i];
   }
 
+  const setInCanvas = (newCanvas: boolean) => {
+    inCanvas.current = newCanvas;
+  }
+
 
   return (
-    <App saveSateCallback={saveSateCallback} undoRedoCallback={undoRedoCallback} stateIndex={stateIndex} maxStateIndex={maxStateIndex} listSize={listSize.current} offsetIndex={offsetIndex.current}/>
+    <App saveSateCallback={saveSateCallback} undoRedoCallback={undoRedoCallback} stateIndex={stateIndex} maxStateIndex={maxStateIndex} listSize={listSize.current} offsetIndex={offsetIndex.current} images={images.current} setInCanvas={setInCanvas}/>
   )
 }
