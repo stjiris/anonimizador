@@ -167,6 +167,26 @@ def get_both_genders(words):
         
     return new_words
     
+def split_into_chunks(text, tokenizer, max_length=512):
+    chunks = []
+    tokens = tokenizer(text)
+    current_chunk = []
+    current_length = 0
+
+    for token in tokens:
+        if current_length + len(token) <= max_length:
+            current_chunk.append(token.text)
+            current_length += len(token)
+        else:
+            chunks.append(" ".join(current_chunk))
+            current_chunk = [token.text]
+            current_length = len(token)
+
+    if current_chunk:
+        chunks.append(" ".join(current_chunk))
+
+    return chunks
+    
 def nlp(text):
     snlp = spacy.load(spacy_model)
     snlp.add_pipe("new_line_segmenter", before="ner")
@@ -179,23 +199,34 @@ def nlp(text):
 
     #Run the model 
     #doc = snlp("\n".join(text.split(".")))
-    doc = snlp(text)
+    #doc = snlp(text)
     
-    for ent in excude_manual(doc.ents):
-        ents.append(ent)
- 
-    with open('../patterns.csv', 'r') as csvfd:
-        reader = csv.DictReader(csvfd, delimiter="\t")
-        for r in reader:
-            add_ent_by_pattern(ents, text, r['Pattern'], r['Label'])
+    #Create tokenizer
+    tokenizer = snlp.tokenizer
     
-    ents = correct_ent(ents)
-    with open('../exclude.csv', 'r') as csvfd:
-        reader = csv.DictReader(csvfd, delimiter="\t")
-        for r in reader:
-            p = re.compile(r['Pattern'])
-            ents = remove_pattern(p, ents)
-    ents = sorted(ents,key=lambda x: x.start_char)
+    #Split text into chunks if they exceed the token limit
+    text_chunks = split_into_chunks(text, tokenizer)
+    
+    #Run the model for each chunk
+    docs = [snlp(chunk) for chunk in text_chunks]
+
+    for doc in docs:
+        for ent in excude_manual(doc.ents):
+            ents.append(ent)
+    
+        with open('../patterns.csv', 'r') as csvfd:
+            reader = csv.DictReader(csvfd, delimiter="\t")
+            for r in reader:
+                add_ent_by_pattern(ents, text, r['Pattern'], r['Label'])
+        
+        ents = correct_ent(ents)
+        with open('../exclude.csv', 'r') as csvfd:
+            reader = csv.DictReader(csvfd, delimiter="\t")
+            for r in reader:
+                p = re.compile(r['Pattern'])
+                ents = remove_pattern(p, ents)
+                
+    #ents = sorted(ents,key=lambda x: x.start_char)
     return FakeDoc(ents, doc.text)
 
 # def nlp_pipe(texts):
