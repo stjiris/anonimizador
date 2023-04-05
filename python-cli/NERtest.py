@@ -93,7 +93,8 @@ def remove_entities_with_excluded_words(doc):
             entities.append(ent)
         else:
             n+=1
-    print("Excluded Entities:",n)
+    if n>=1:
+        print("Excluded Entities:",n)
     doc.ents = entities
     return doc
 
@@ -172,25 +173,41 @@ def split_into_chunks(text, tokenizer, max_length=512):
     tokens = tokenizer(text)
     current_chunk = []
     current_length = 0
+    positions=[0]
+    position=0
+    final_position=0
 
     for token in tokens:
-        if current_length + len(token) <= max_length:
+        if current_length + len(token.text) <= max_length:
             current_chunk.append(token.text)
-            current_length += len(token)
+            current_length += len(token.text)
+            position = current_length
         else:
-            chunks.append(" ".join(current_chunk))
+            chunk_text = text[positions[-1]:positions[-1] + position]
+
+            chunks.append(chunk_text)
+            
+            final_position+=position
+            positions.append(final_position)
             current_chunk = [token.text]
-            current_length = len(token)
+            current_length = len(token.text)
+            position = current_length
 
     if current_chunk:
-        chunks.append(" ".join(current_chunk))
+        chunk_text = text[positions[-1]:positions[-1] + position]
 
-    return chunks
+        chunks.append(chunk_text)
+        
+        
+        final_position+=position
+        positions.append(final_position)
+
+    return chunks, positions
     
 def nlp(text):
     snlp = spacy.load(spacy_model)
     snlp.add_pipe("new_line_segmenter", before="ner")
-    snlp.add_pipe("label_professions", after="ner")
+    #snlp.add_pipe("label_professions", after="ner")
     snlp.add_pipe("remove_entities_with_excluded_words", last=True)
     print(snlp.pipe_names)
     
@@ -208,10 +225,18 @@ def nlp(text):
     text_chunks = split_into_chunks(text, tokenizer)
     
     #Run the model for each chunk
-    docs = [snlp(chunk) for chunk in text_chunks]
+    #docs = [snlp(chunk) for chunk in text_chunks]
 
-    for doc in docs:
+    #for doc in docs:
+    for chunk, position in zip(text_chunks[0],text_chunks[1]):
+        print(chunk)
+        print(position)
+        doc=snlp(chunk)
+        # for ent in doc.ents:
+        #     print(ent.start_char)
         for ent in excude_manual(doc.ents):
+            ent.start_char += position
+            ent.end_char += position
             ents.append(ent)
     
         with open('../patterns.csv', 'r') as csvfd:
@@ -226,7 +251,9 @@ def nlp(text):
                 p = re.compile(r['Pattern'])
                 ents = remove_pattern(p, ents)
                 
-    #ents = sorted(ents,key=lambda x: x.start_char)
+    ents = sorted(ents,key=lambda x: x.start_char)
+    for ent in ents:
+        print(ent.text,ent.start_char,ent.end_char)
     return FakeDoc(ents, doc.text)
 
 # def nlp_pipe(texts):
