@@ -29,7 +29,7 @@ class FakeDoc:
         self.ents = ents
         self.text = text
 
-def excude_manual(ents):
+def exclude_manual(ents):
     new_list = []
     for e in ents:
         label,start,end,text = e.label_,e.start_char,e.end_char,e.text
@@ -204,6 +204,21 @@ def split_into_chunks(text, tokenizer, max_length=512):
 
     return chunks, positions
     
+def process_entities(ents):
+    with open('../patterns.csv', 'r') as csvfd:
+        reader = csv.DictReader(csvfd, delimiter="\t")
+        for r in reader:
+            add_ent_by_pattern(ents, text, r['Pattern'], r['Label'])
+    
+    ents = correct_ent(ents)
+    with open('../exclude.csv', 'r') as csvfd:
+        reader = csv.DictReader(csvfd, delimiter="\t")
+        for r in reader:
+            p = re.compile(r['Pattern'])
+            ents = remove_pattern(p, ents)
+    
+    return ents
+    
 def nlp(text):
     snlp = spacy.load(spacy_model)
     snlp.add_pipe("new_line_segmenter", before="ner")
@@ -215,73 +230,44 @@ def nlp(text):
     ents = []
 
     #Run the model 
-    #doc = snlp("\n".join(text.split(".")))
-    #doc = snlp(text)
+    #doc = snlp("\n".join(text.split("."))) #solves \n problems but creates "." problems
     
-    #Create tokenizer
-    tokenizer = snlp.tokenizer
-    
-    #Split text into chunks if they exceed the token limit
-    text_chunks = split_into_chunks(text, tokenizer)
-    
-    #Run the model for each chunk
-    #docs = [snlp(chunk) for chunk in text_chunks]
-
-    #for doc in docs:
-    for chunk, position in zip(text_chunks[0],text_chunks[1]):
-        print(chunk)
-        print(position)
-        doc=snlp(chunk)
-        # for ent in doc.ents:
-        #     print(ent.start_char)
-        for ent in excude_manual(doc.ents):
-            ent.start_char += position
-            ent.end_char += position
-            ents.append(ent)
-    
-        with open('../patterns.csv', 'r') as csvfd:
-            reader = csv.DictReader(csvfd, delimiter="\t")
-            for r in reader:
-                add_ent_by_pattern(ents, text, r['Pattern'], r['Label'])
+    try:
+        doc = snlp(text) #runs the model on the full text (for num_tokens<512)
+        print("Good token size. Text will be processed normally.")
         
-        ents = correct_ent(ents)
-        with open('../exclude.csv', 'r') as csvfd:
-            reader = csv.DictReader(csvfd, delimiter="\t")
-            for r in reader:
-                p = re.compile(r['Pattern'])
-                ents = remove_pattern(p, ents)
-                
+        for ent in exclude_manual(doc.ents):
+            ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
+            
+    except RuntimeError:
+        print("Tokens exceeded 512. Text will be processed in chunks.")
+        
+        #Create tokenizer
+        tokenizer = snlp.tokenizer
+        
+        #Split text into chunks if they exceed the token limit and keep their offsets
+        #text_chunks is a tuple: (chunks,positions)
+        text_chunks = split_into_chunks(text, tokenizer)
+        
+        #Run the model for each chunk
+        for chunk, position in zip(text_chunks[0],text_chunks[1]):
+            
+            #Run the model for current chunk
+            doc=snlp(chunk)
+            
+            for ent in exclude_manual(doc.ents):
+                ent.start_char += position
+                ent.end_char += position
+                ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
+        
+    ents = process_entities(ents)            
     ents = sorted(ents,key=lambda x: x.start_char)
-    for ent in ents:
-        print(ent.text,ent.start_char,ent.end_char)
     return FakeDoc(ents, doc.text)
-
-# def nlp_pipe(texts):
-#     snlp = spacy.load(spacy_model)
-#     for doc in snlp.pipe(texts):
-#         ents = []
-#         for ent in excude_manual(doc.ents):
-#             ents.append(ent)
-
-#         with open('patterns.csv', 'r') as csvfd:
-#             reader = csv.DictReader(csvfd, delimiter="\t")
-#             for r in reader:
-#                 add_ent_by_pattern(ents, text, r['Pattern'], r['Label'])
-        
-#         ents = correct_ent(ents)
-#         with open('exclude.csv', 'r') as csvfd:
-#             reader = csv.DictReader(csvfd, delimiter="\t")
-#             for r in reader:
-#                 p = re.compile(r['Pattern'])
-#                 ents = remove_pattern(p, ents)
-#         ents = sorted(ents,key=lambda x: x.start_char)
-#         yield FakeDoc(ents, doc.text)
 
 if __name__ == "__main__":
     f=open("teste.txt","r")
     text = f.read()
     doc = nlp(text)
-    #print(text)
     for ent in doc.ents:
-        print(ent.text, ent.label_)
+        print(ent.text, ent.label_, ent.start_char, ent.end_char)
     
