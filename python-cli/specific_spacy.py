@@ -27,7 +27,7 @@ class FakeDoc:
         self.ents = ents
         self.text = text
 
-def excude_manual(ents):
+def exclude_manual(ents):
     new_list = []
     for e in ents:
         label,start,end,text = e.label_,e.start_char,e.end_char,e.text
@@ -147,17 +147,7 @@ def label_professions(doc):
     #Return doc with new entities
     return FakeDoc(entities, doc.text)
 
-def nlp(text, model):
-    model.add_pipe("new_line_segmenter", before="ner")
-    model.add_pipe("label_professions", after="ner")
-    
-    #Runs the model
-    doc = model("\n".join(text.split(".")))
-    
-    ents = []
-    for ent in excude_manual(doc.ents):
-        ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
-
+def process_entities(ents, text):
     with open('patterns.csv', 'r') as csvfd:
         reader = csv.DictReader(csvfd, delimiter="\t")
         for r in reader:
@@ -169,5 +159,79 @@ def nlp(text, model):
         for r in reader:
             p = re.compile(r['Pattern'])
             ents = remove_pattern(p, ents)
+            
+    return ents
+
+def split_into_chunks(text, tokenizer, max_length=512):
+    chunks = []
+    tokens = tokenizer(text)
+    current_chunk = []
+    current_length = 0
+    positions=[0]
+    position=0
+    final_position=0
+
+    for token in tokens:
+        if current_length + len(token.text) <= max_length:
+            current_chunk.append(token.text)
+            current_length += len(token.text)
+            position = current_length
+        else:
+            chunk_text = text[positions[-1]:positions[-1] + position]
+
+            chunks.append(chunk_text)
+            
+            final_position+=position
+            positions.append(final_position)
+            current_chunk = [token.text]
+            current_length = len(token.text)
+            position = current_length
+
+    if current_chunk:
+        chunk_text = text[positions[-1]:positions[-1] + position]
+
+        chunks.append(chunk_text)
+        
+        
+        final_position+=position
+        positions.append(final_position)
+
+    return chunks, positions
+
+def nlp(text, model):
+    model.add_pipe("new_line_segmenter", before="ner")
+    model.add_pipe("label_professions", after="ner")
+    
+    #Create entity list
+    ents = []
+    
+    try:
+        #Runs the model
+        doc = model(text)
+        
+        for ent in exclude_manual(doc.ents):
+            ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
+    
+    except RuntimeError:
+        
+        #Create tokenizer
+        tokenizer = model.tokenizer
+        
+        #Split text into chunks if they exceed the token limit and keep their offsets
+        #text_chunks is a tuple: (chunks,positions)
+        text_chunks = split_into_chunks(text, tokenizer)
+        
+        #Run the model for each chunk
+        for chunk, position in zip(text_chunks[0],text_chunks[1]):
+            
+            #Run the model for current chunk
+            doc=model(chunk)
+            
+            for ent in exclude_manual(doc.ents):
+                ent.start_char += position
+                ent.end_char += position
+                ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
+        
+    ents = process_entities(ents, text)   
     ents = sorted(ents,key=lambda x: x.start_char)
     return FakeDoc(ents, doc.text)
