@@ -187,33 +187,33 @@ export default class Anonimize extends React.Component<AnonimizeProps,AnonimizeS
         return (<div className="row container-fluid bg-dark m-0 p-0">
             <div className="col-8">
                 <div className="position-sticky top-0 bg-white p-0 m-0 d-flex" style={{borderBottom: "5px solid #161616",zIndex:1}}>
-                    <Button className="btn red-link fw-bold" onClick={() => (this.state.saved || window.confirm("Trabalho não será guardado no browser. Sair?")) ? this.props.setUserFile(undefined) : null} i="x-lg" title="Fechar ficheiro"/>
+                    <Button className="btn red-link fw-bold m-1 p-1" onClick={() => (this.state.saved || window.confirm("Trabalho não será guardado no browser. Sair?")) ? this.props.setUserFile(undefined) : null} i="arrow-left" title="Fechar ficheiro"/>
                     {this.state.saved ? 
-                        <small title="Guardado automaticamente." className="text-body text-nowrap alert alert-success p-1 m-1"><Bicon n="file-earmark-check-fill"/> {this.props.file.name}</small>
+                        <span title="Guardado automaticamente." className="text-body text-nowrap alert alert-success p-1 m-1"><Bicon n="file-earmark-check-fill"/> <small>{this.props.file.name}</small></span>
                     : 
-                        <small title="Não guardado." className="text-body text-nowrap alert alert-danger p-1 m-1"><Bicon n="file-earmark-x-fill"/> {this.props.file.name}</small>
+                        <span title="Não guardado." className="text-body text-nowrap alert alert-danger p-1 m-1"><Bicon n="file-earmark-x-fill"/> <small>{this.props.file.name}</small></span>
                     }
-                    <Button className="red-link fw-bold btn" data-bs-toggle="modal" data-bs-target="#modal-types" title="Gerir tipos" i="stickies-fill"/>
-                    <small className="text-white text-nowrap p-1 m-1 flex-grow-1 text-center"><Bicon n="dot"/></small>
-                    <select title="Escolher modo" className="red-link fw-bold btn text-start" onChange={(ev) => this.setStateFrom(ev.target.value as AnonimizeVisualState) } defaultValue={AnonimizeVisualState.REPLACE}>
-                        <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
-                        <option value={AnonimizeVisualState.REPLACE}>{AnonimizeVisualState.REPLACE}</option>
-                        <option value={AnonimizeVisualState.TYPES}>{AnonimizeVisualState.TYPES}</option>
-                        <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
-                    </select>
-                    <Button className="red-link fw-bold btn" onClick={this.downloadHtml} i="download" title="Download ficheiro"/>
-                    <small className="text-white text-nowrap p-1 m-1 flex-grow-1 text-center"><Bicon n="dot"/></small>
-                    <button className="red-link fw-bold btn" onClick={() => {this.setState({requesting: true}); runRemoteNlp(this.doc, pool).finally(() => this.setState({requesting: false}))}} disabled={pool.entities.length > 0 || this.state.requesting || this.state.anonimizeState !== AnonimizeStateState.TAGGED}>
+                    <Button title="Gerir tipos" i="file-earmark-font" text="Tipos" className="red-link btn m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types"/>
+                    <button className="red-link btn m-1 p-1" onClick={() => {this.setState({requesting: true}); runRemoteNlp(this.doc, pool).finally(() => this.setState({requesting: false}))}} disabled={pool.entities.length > 0 || this.state.requesting || this.state.anonimizeState !== AnonimizeStateState.TAGGED}>
                         {pool.entities.length > 0 || this.state.requesting || this.state.anonimizeState !== AnonimizeStateState.TAGGED ? 
                             <del><Bicon n="file-earmark-play"/> Sugerir</del>
                         :
                             <><Bicon n="file-earmark-play"/> Sugerir</>
                         }
                     </button>
-                    <Button id="undoButton" className="red-link fw-bold btn" onClick={this.onUndo} disabled={this.props.stateIndex.current==0} title="Desfazer" i="arrow-counterclockwise"/>
-                    <Button id="undoButton" className="red-link fw-bold btn" onClick={this.onRedo} disabled={this.props.stateIndex.current==this.props.maxStateIndex.current} title="Refazer" i="arrow-clockwise"/>
+                    <small className="text-white text-nowrap p-1 m-1 flex-grow-1 text-center"><Bicon n="dot"/></small>
+                    <select title="Escolher modo" className="red-link btn m-1 p-1 text-start" onChange={(ev) => this.setStateFrom(ev.target.value as AnonimizeVisualState) } defaultValue={AnonimizeVisualState.TYPES} style={{backgroundColor: "var(--secondary-gold)"}}>
+                        <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
+                        <option value={AnonimizeVisualState.REPLACE}>{AnonimizeVisualState.REPLACE}</option>
+                        <option value={AnonimizeVisualState.TYPES}>{AnonimizeVisualState.TYPES}</option>
+                        <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
+                    </select>
+                    <Button className="red-link btn m-1 p-1" onClick={this.downloadHtml} i="download" title="Download ficheiro"/>
+                    <small className="text-white text-nowrap p-1 m-1 flex-grow-1 text-center"><Bicon n="dot"/></small>
+                    <Button id="undoButton" className="red-link m-1 p-1 btn" onClick={this.onUndo} disabled={this.props.stateIndex.current==0} title="Desfazer" i="arrow-counterclockwise"/>
+                    <Button id="undoButton" className="red-link m-1 p-1 btn" onClick={this.onRedo} disabled={this.props.stateIndex.current==this.props.maxStateIndex.current} title="Refazer" i="arrow-clockwise"/>
                     <small className="text-white text-nowrap p-1 m-1 text-center"><Bicon n="dot"/></small>
-                    <a className="red-link fw-bold btn" href="https://docs.google.com/document/d/e/2PACX-1vTaR6kTasw0iGYSSMbJpq2wMgrBN5K37jg5ab_qMih_VpXRO5ZAAeeeDiRYzvyrD_VDxBM2ccW-VuBQ/pub" target="_blank" title="Abrir ajuda"><Bicon n="question-circle"/></a>
+                    <a className="red-link m-1 p-1 btn" href="https://docs.google.com/document/d/e/2PACX-1vTaR6kTasw0iGYSSMbJpq2wMgrBN5K37jg5ab_qMih_VpXRO5ZAAeeeDiRYzvyrD_VDxBM2ccW-VuBQ/pub" target="_blank" title="Abrir ajuda"><Bicon n="question-circle"/></a>
                 </div>
                 <div className="bg-white p-4">
                     {this.state.requesting && this.state.anonimizeState === AnonimizeStateState.TAGGED ?
