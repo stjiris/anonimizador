@@ -40,7 +40,7 @@ export async function runRemoteNlp(doc: HTMLElement, pool: EntityPool){
         }
         let soff = text.substring(0,ent.start_char).match(/\n/g)?.length || 0
         let eoff = text.substring(0,ent.end_char).match(/\n/g)?.length || 0
-        if( pool.originalText.substring(ent.start_char-soff+errorOffset, ent.end_char-eoff+errorOffset) == text.substring(ent.start_char, ent.end_char) ){
+        if( pool.originalText.substring(ent.start_char-soff+errorOffset, ent.end_char-eoff+errorOffset) == ent.text ){
             entities[id].addOffset([{start: ent.start_char-soff+errorOffset, end: ent.end_char-1-eoff+errorOffset, preview: ent.text}]) // Spacy has an endchar outside of entity
         }
         else{
@@ -48,16 +48,22 @@ export async function runRemoteNlp(doc: HTMLElement, pool: EntityPool){
             if( m ){
                 errorOffset+=m.index || 0;
             }
-            if( pool.originalText.substring(ent.start_char-soff+errorOffset, ent.end_char-eoff+errorOffset) == text.substring(ent.start_char, ent.end_char) ){
+            if( pool.originalText.substring(ent.start_char-soff+errorOffset, ent.end_char-eoff+errorOffset) == ent.text ){
                 entities[id].addOffset([{start: ent.start_char-soff+errorOffset, end: ent.end_char-1-eoff+errorOffset, preview: ent.text}]) // Spacy has an endchar outside of entity
             }
             else{
-                console.log(pool.originalText.substring(ent.start_char-soff+errorOffset, ent.end_char-eoff+errorOffset), text.substring(ent.start_char, ent.end_char), ent, soff, eoff);
+                let m = pool.originalText.match(ent.text);
+                if( m && pool.originalText.substring(m.index || 0, (m.index || 0)+ent.text.length) == ent.text ){
+                    entities[id].addOffset([{start: m.index || 0, end: (m.index||0)+ent.text.length-1, preview: ent.text}]) // Spacy has an endchar outside of entity
+                }
+                else{
+                    console.error("Cannot add entity", ent.text)
+                }
             }
         }
     }
 
-    pool.entities = Object.values(entities).sort((a, b) => a.offsets[0].start-b.offsets[0].start)
+    pool.entities = Object.values(entities).filter(e => e.offsets.length > 0).sort((a, b) => a.offsets[0].start-b.offsets[0].start)
     pool.updateOrder("Sugerir");
     runRemoteNlpRequesting = false;
 }

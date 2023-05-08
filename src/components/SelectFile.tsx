@@ -39,7 +39,13 @@ export default class SelectFile extends React.Component<SelectFileProps,SelectFi
                 Header: <><i className="bi bi-file-earmark-fill"></i> Ficheiros Locais</>,
                 accessorKey: "name",
                 size: 80,
-                Cell: ({row}) => <span className="text-nowrap"><Bicon n="file-earmark"/> {row.original.name}</span>
+                /*muiTableBodyCellProps={({row})=>({
+                    onClick: () => this.props.setUserFile(loadSavedUserFile(row.original)),
+                    title: `Abrir ${row.original.name}`,
+                    style: {cursor: "pointer"}
+                })}
+                 <span className="text-nowrap"><Bicon n="file-earmark"/> {row.original.name}</span>*/
+                Cell: ({row}) => <Button i="file-earmark" className="text-nowrap text-primary btn " title={`Abrir ${row.original.name}`} text={row.original.name} onClick={() => this.props.setUserFile(loadSavedUserFile(row.original))}/>
             },
             {
                 header: "Tamanho",
@@ -65,11 +71,6 @@ export default class SelectFile extends React.Component<SelectFileProps,SelectFi
             localization={{...MRT_Localization_PT, noRecordsToDisplay: "Sem ficheiros"}}
             enableRowActions={true}
             renderRowActions={({row}) => <UserFileActions file={row.original} setUserFile={this.props.setUserFile} />}
-            muiTableBodyRowProps={({row})=>({
-                onClick: () => this.props.setUserFile(loadSavedUserFile(row.original)),
-                title: `Abrir ${row.original.name}`,
-                style: {cursor: "pointer"}
-            })}
             positionActionsColumn="first"
             enablePagination={false}
             enableDensityToggle={false}
