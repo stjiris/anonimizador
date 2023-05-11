@@ -63,6 +63,15 @@ export class Entity implements EntityI {
         }
     }
 
+    toStub(): EntityI {
+        return {
+            type: this.type,
+            offsets: [...this.offsets.map(o => ({...o}))],
+            offsetsLength: this.offsetsLength,
+            overwriteAnonimization: this.overwriteAnonimization
+        }
+    }
+
     static makeEntity(obj: EntityI, index: number): Entity {
         let e = new Entity(obj.type);
         e.offsets = obj.offsets

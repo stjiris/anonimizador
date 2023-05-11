@@ -1,14 +1,7 @@
-import {ButtonHTMLAttributes, HTMLAttributes, MouseEventHandler, PureComponent, ReactNode } from "react"
+import {ButtonHTMLAttributes } from "react"
 
-interface BiconProps{
-    n: string
-    children?: ReactNode
-}
-
-export class Bicon extends PureComponent<BiconProps> {
-    render(): ReactNode {
-        return <i className={`bi bi-${this.props.n}`}></i>
-    }
+export function Bicon(props: {n: string}) {
+    return <i className={`bi bi-${props.n}`}></i>    
 }
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -16,8 +9,6 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
     text?: string
 }
 
-export class Button extends PureComponent<ButtonProps>{
-    render(): ReactNode {
-        return <button {...this.props}><Bicon n={this.props.i}/> {this.props.text}</button>
-    }
+export function Button({i, text, ...props}: ButtonHTMLAttributes<HTMLButtonElement> & {i: string, text?: string}){
+    return <button {...props}><Bicon n={i}/>{text ? ` ${text}` : ""}</button>
 }
