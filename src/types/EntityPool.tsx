@@ -11,10 +11,11 @@ export class EntityPool {
     originalText: string
     listeners: ((action: string) => void)[]
     
-    constructor(text:string, initial?: EntityI[]){
+    constructor(text:string, initial?: EntityI[], cb?: (action: string) => void){
         this.entities = initial?.map( (e, i) => Entity.makeEntity(e, i) ) || [];
         this.listeners = [];
         this.originalText = text;
+        if( cb ) this.onChange(cb);
         this.updateOrder("Inicio")
     }
 

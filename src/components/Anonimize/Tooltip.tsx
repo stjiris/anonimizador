@@ -7,12 +7,12 @@ interface AnonimizeTooltipProps {
     selectionWould: AddEntityDryRun | undefined
     selectionAffects: number
     selection: TokenSelection | undefined
-    pool: EntityPool
+    pool: EntityPool | undefined
 }
 
 
 export default function AnonimizeTooltip(props: AnonimizeTooltipProps){
-    if( !props.selection ) return <></>
+    if( !props.selection || !props.pool) return <></>
     
     let sel = props.selection;
     let start = document.querySelector(`[data-offset="${sel.start}"]`);
@@ -39,20 +39,20 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps){
         case AddEntityDryRun.CHANGE_ARRAY:
             return <div style={style}>
                 <div className="d-flex flex-column gap-1 bg-white p-1 border">
-                    {props.entityTypes.map( (t,i) => <span key={i} role="button" className='badge text-body' style={{background: t.color}} onMouseDown={() => setType(props.pool, sel, t)}>{t.name}</span>)}
+                    {props.entityTypes.map( (t,i) => <span key={i} role="button" className='badge text-body' style={{background: t.color}} onMouseDown={() => setType(props.pool!, sel, t)}>{t.name}</span>)}
                 </div>
             </div>;
         case AddEntityDryRun.CHANGE_OFFSET:
             return <div style={style}>
                 <div className="d-flex flex-column gap-1 bg-white p-1 border">
-                    {props.entityTypes.map( (t,i) => <span key={i} role="button" className='badge text-body' style={{background: t.color}} onMouseDown={() => setType(props.pool, sel, t)}>{t.name}</span>)}
+                    {props.entityTypes.map( (t,i) => <span key={i} role="button" className='badge text-body' style={{background: t.color}} onMouseDown={() => setType(props.pool!, sel, t)}>{t.name}</span>)}
                 </div>
             </div>;
         case AddEntityDryRun.CHANGE_TYPE:
             return <div style={style}>
                 <div className="d-flex flex-column gap-1 bg-white p-1 border">
-                    <span role="button" onMouseDown={() => removeType(props.pool, sel)}><i className='bi bi-trash'></i> Remover</span>
-                    {props.entityTypes.map( (t,i) => <span key={i} role="button" className='badge text-body' style={{background: t.color}} onMouseDown={() => setType(props.pool, sel, t)}>{t.name}</span>)}
+                    <span role="button" onMouseDown={() => removeType(props.pool!, sel)}><i className='bi bi-trash'></i> Remover</span>
+                    {props.entityTypes.map( (t,i) => <span key={i} role="button" className='badge text-body' style={{background: t.color}} onMouseDown={() => setType(props.pool!, sel, t)}>{t.name}</span>)}
                 </div>
             </div>;
         default:

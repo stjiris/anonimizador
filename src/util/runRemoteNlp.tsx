@@ -33,7 +33,9 @@ export async function runRemoteNlp(doc: HTMLElement, pool: EntityPool){
     })
     let errorOffset = 0;
     let entities: {[key: string]: Entity} = {};
+    let lastEndOffset = 0;
     for( let ent of resArray ){
+        console.log(lastEndOffset)
         let id = normalizeEntityString(ent.text) + ent.label_
         if( !(id in entities) ){
             entities[id] = new Entity(ent.label_);
@@ -42,22 +44,44 @@ export async function runRemoteNlp(doc: HTMLElement, pool: EntityPool){
         let eoff = text.substring(0,ent.end_char).match(/\n/g)?.length || 0
         if( pool.originalText.substring(ent.start_char-soff+errorOffset, ent.end_char-eoff+errorOffset) == ent.text ){
             entities[id].addOffset([{start: ent.start_char-soff+errorOffset, end: ent.end_char-1-eoff+errorOffset, preview: ent.text}]) // Spacy has an endchar outside of entity
+            lastEndOffset = ent.end_char-1-eoff+errorOffset;
         }
         else{
-            let m = pool.originalText.substring(ent.start_char-soff+errorOffset).match(ent.text);
+            let m = pool.originalText.substring(ent.start_char-soff+errorOffset).match(ent.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')); // escape because string.match uses new RegExp
             if( m ){
                 errorOffset+=m.index || 0;
             }
             if( pool.originalText.substring(ent.start_char-soff+errorOffset, ent.end_char-eoff+errorOffset) == ent.text ){
                 entities[id].addOffset([{start: ent.start_char-soff+errorOffset, end: ent.end_char-1-eoff+errorOffset, preview: ent.text}]) // Spacy has an endchar outside of entity
+                lastEndOffset = ent.end_char-1-eoff+errorOffset
             }
             else{
-                let m = pool.originalText.match(ent.text);
-                if( m && pool.originalText.substring(m.index || 0, (m.index || 0)+ent.text.length) == ent.text ){
-                    entities[id].addOffset([{start: m.index || 0, end: (m.index||0)+ent.text.length-1, preview: ent.text}]) // Spacy has an endchar outside of entity
+                let m = pool.originalText.substring(lastEndOffset).match(ent.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')); // escape because string.match uses new RegExp
+                if( m && pool.originalText.substring(lastEndOffset+(m.index || 0), lastEndOffset+(m.index || 0)+ent.text.length) == ent.text ){
+                    entities[id].addOffset([{start: lastEndOffset+(m.index || 0), end: lastEndOffset+(m.index||0)+ent.text.length-1, preview: ent.text}]) // Spacy has an endchar outside of entity
+                    lastEndOffset += (m.index||0)+ent.text.length-1
                 }
                 else{
-                    console.error("Cannot add entity", ent.text)
+                    let allMatches = pool.originalText.matchAll(new RegExp(ent.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'),"g"));
+                    let m = allMatches.next();
+                    let minDist = Infinity
+                    let minIndex = Infinity
+                    while( !m.done ){
+                        console.error("Cannot add entity", ent.text, m.value.index, ent.start_char)
+                        if( Math.abs((m.value.index|| 0)-ent.start_char) < minDist ){
+                            minDist = Math.abs((m.value.index|| 0)-ent.start_char)
+                            minIndex = m.value.index || 0
+                        }
+                        minDist = Math.min(Math.abs((m.value.index|| 0)-ent.start_char), minDist);
+                        m = allMatches.next();
+                    }
+                    if( minDist != Infinity ){
+                        entities[id].addOffset([{start: minIndex, end: minIndex+ent.text.length-1, preview: ent.text}])
+                        lastEndOffset = minIndex+ent.text.length-1
+                    }
+                    else{
+                        console.error("Cannot add entity", ent.text)
+                    }
                 }
             }
         }

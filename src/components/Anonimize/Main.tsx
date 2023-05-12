@@ -13,25 +13,33 @@ import { Bicon, Button } from "../../util/BootstrapIcons";
 import { table } from "console";
 import { tab } from "@testing-library/user-event/dist/tab";
 import { HistoryCommands } from "./HistoryCommands";
+import { SavedBadge } from "../../util/savedBadge";
 
 interface AnonimizeProps{
     file: UserFile
     setUserFile: (file: UserFile | undefined) => void
 }
 
+const Sep = () => <small className="text-white text-nowrap p-1 m-1 flex-grow-1 text-center"><Bicon n="dot" /></small>;
 export default function Anonimize(props: AnonimizeProps){
     // consts
     const doc: HTMLElement = new DOMParser().parseFromString(props.file.html_contents, "text/html").body;
-    const pool = new EntityPool(doc.textContent?.normalize("NFKC") || "", props.file.ents);
-
-    // States
-    const [anonimizeState, setAnonimizeSate] = useState<AnonimizeStateCombined>(getAnonimizedStateCombined(AnonimizeVisualState.TYPES));
-    const [ents, setEnts] = useState<Entity[]>(pool.entities);
-    const [saved, setSaved] = useState<boolean>(updateUserFile(props.file));
-    const [requesting, setRequesting] = useState<boolean>(false);
     
     // refs
     const anonimizedHTML = useRef<string>("")
+    const poolRef = useRef<EntityPool>();
+    if( !poolRef.current ){
+        poolRef.current = new EntityPool(doc.textContent?.normalize("NFKC") || "", props.file.ents)
+    }
+
+    const pool = poolRef.current!;
+
+    // States
+    const [anonimizeState, setAnonimizeSate] = useState<AnonimizeStateCombined>(getAnonimizedStateCombined(AnonimizeVisualState.TYPES));
+    const [ents, setEnts] = useState<Entity[]>([...pool.entities]);
+    const [saved, setSaved] = useState<boolean>(updateUserFile(props.file));
+    const [requesting, setRequesting] = useState<boolean>(false);
+    
     
     const onExit = (evt: BeforeUnloadEvent) => {
         if( !saved ){
@@ -53,26 +61,16 @@ export default function Anonimize(props: AnonimizeProps){
             pool.offChange(onPoolChange)
             window.removeEventListener("beforeunload", onExit)
         }
-    },[])
+    },[props.file])
     
     return <div className="row container-fluid bg-dark m-0 p-0">
         <div className="col-8">
             <div className="position-sticky top-0 bg-white p-0 m-0 d-flex" style={{borderBottom: "5px solid #161616",zIndex:1}}>
                 <Button className="btn red-link fw-bold m-1 p-1" onClick={() => (saved || window.confirm("Trabalho não será guardado no browser. Sair?")) ? props.setUserFile(undefined) : null} i="arrow-left" title="Fechar ficheiro"/>
-                {saved ? 
-                    <span title="Guardado automaticamente." className="text-body text-nowrap alert alert-success p-1 m-1"><Bicon n="file-earmark-check-fill"/> <small>{props.file.name}</small></span>
-                : 
-                    <span title="Não guardado." className="text-body text-nowrap alert alert-danger p-1 m-1"><Bicon n="file-earmark-x-fill"/> <small>{props.file.name}</small></span>
-                }
+                <SavedBadge saved={saved} name={props.file.name} />
                 <Button title="Gerir tipos" i="file-earmark-font" text="Tipos" className="red-link btn m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types"/>
-                <button className="red-link btn m-1 p-1" onClick={() => {setRequesting(true); runRemoteNlp(doc, pool).finally(() => setRequesting(false))}} disabled={pool.entities.length > 0 || requesting || anonimizeState.state !== AnonimizeStateState.TAGGED}>
-                    {pool.entities.length > 0 || requesting || anonimizeState.state !== AnonimizeStateState.TAGGED ? 
-                        <del><Bicon n="file-earmark-play"/> Sugerir</del>
-                    :
-                        <><Bicon n="file-earmark-play"/> Sugerir</>
-                    }
-                </button>
-                <small className="text-white text-nowrap p-1 m-1 flex-grow-1 text-center"><Bicon n="dot"/></small>
+                <Button i="file-earmark-play" text="Sugerir" className="red-link btn m-1 p-1" onClick={() => {setRequesting(true); runRemoteNlp(doc, pool).finally(() => setRequesting(false))}} disabled={pool.entities.length > 0 || requesting || anonimizeState.state !== AnonimizeStateState.TAGGED} />
+                <Sep/>
                 <select title="Escolher modo" className="red-link btn m-1 p-1 text-start" onChange={(ev) => setAnonimizeSate(getAnonimizedStateCombined(ev.target.value as AnonimizeVisualState)) } defaultValue={AnonimizeVisualState.TYPES} style={{backgroundColor: "var(--secondary-gold)"}}>
                     <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
                     <option value={AnonimizeVisualState.REPLACE}>{AnonimizeVisualState.REPLACE}</option>
@@ -80,15 +78,15 @@ export default function Anonimize(props: AnonimizeProps){
                     <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
                 </select>
                 <Button className="red-link btn m-1 p-1" onClick={() => onClickDownload(anonimizeState.state, props.file, anonimizedHTML.current)} i="download" title="Download ficheiro"/>
-                <small className="text-white text-nowrap p-1 m-1 flex-grow-1 text-center"><Bicon n="dot"/></small>
+                <Sep/>
                 <HistoryCommands pool={pool}/>
-                <small className="text-white text-nowrap p-1 m-1 text-center"><Bicon n="dot"/></small>
+                <Sep/>
                 <a className="red-link m-1 p-1 btn" href="https://docs.google.com/document/d/e/2PACX-1vTaR6kTasw0iGYSSMbJpq2wMgrBN5K37jg5ab_qMih_VpXRO5ZAAeeeDiRYzvyrD_VDxBM2ccW-VuBQ/pub" target="_blank" title="Abrir ajuda"><Bicon n="question-circle"/></a>
             </div>
             <div className="bg-white p-4">
                 {requesting && anonimizeState.state === AnonimizeStateState.TAGGED ?
                     <div className="alert alert-info">A processar o documento, esta operação poderá demorar.</div>
-                :
+                :   
                     <AnonimizeContent accessHtml={(html) => anonimizedHTML.current = html} showTypes={anonimizeState.showTypes} doc={doc} pool={pool} ents={ents} anonimizeState={anonimizeState.state}/>
                 }
             </div>
@@ -96,9 +94,9 @@ export default function Anonimize(props: AnonimizeProps){
         <div className="col-4">
             <div className="m-0 position-sticky top-0">
                 <MaterialReactTable
-                    key="ent-table"
-                    enableRowSelection
-                    enableColumnOrdering
+                key="ent-table"
+                enableRowSelection
+                enableColumnOrdering
                     enableEditing
                     positionActionsColumn="last"
                     editingMode="cell"
