@@ -14,6 +14,7 @@ import { table } from "console";
 import { tab } from "@testing-library/user-event/dist/tab";
 import { HistoryCommands } from "./HistoryCommands";
 import { SavedBadge } from "../../util/savedBadge";
+import BootstrapModal from "../../util/BootstrapModal";
 
 interface AnonimizeProps{
     file: UserFile
@@ -63,76 +64,78 @@ export default function Anonimize(props: AnonimizeProps){
         }
     },[props.file])
     
-    return <div className="row container-fluid bg-dark m-0 p-0">
-        <div className="col-8">
-            <div className="position-sticky top-0 bg-white p-0 m-0 d-flex" style={{borderBottom: "5px solid #161616",zIndex:1}}>
-                <Button className="btn red-link fw-bold m-1 p-1" onClick={() => (saved || window.confirm("Trabalho não será guardado no browser. Sair?")) ? props.setUserFile(undefined) : null} i="arrow-left" title="Fechar ficheiro"/>
-                <SavedBadge saved={saved} name={props.file.name} />
-                <Button title="Gerir tipos" i="file-earmark-font" text="Tipos" className="red-link btn m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types"/>
-                <Button i="file-earmark-play" text="Sugerir" className="red-link btn m-1 p-1" onClick={() => {setRequesting(true); runRemoteNlp(doc, pool).finally(() => setRequesting(false))}} disabled={pool.entities.length > 0 || requesting || anonimizeState.state !== AnonimizeStateState.TAGGED} />
-                <Sep/>
-                <select title="Escolher modo" className="red-link btn m-1 p-1 text-start" onChange={(ev) => setAnonimizeSate(getAnonimizedStateCombined(ev.target.value as AnonimizeVisualState)) } defaultValue={AnonimizeVisualState.TYPES} style={{backgroundColor: "var(--secondary-gold)"}}>
-                    <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
-                    <option value={AnonimizeVisualState.REPLACE}>{AnonimizeVisualState.REPLACE}</option>
-                    <option value={AnonimizeVisualState.TYPES}>{AnonimizeVisualState.TYPES}</option>
-                    <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
-                </select>
-                <Button className="red-link btn m-1 p-1" onClick={() => onClickDownload(anonimizeState.state, props.file, anonimizedHTML.current)} i="download" title="Download ficheiro"/>
-                <Sep/>
-                <HistoryCommands pool={pool}/>
-                <Sep/>
-                <a className="red-link m-1 p-1 btn" href="https://docs.google.com/document/d/e/2PACX-1vTaR6kTasw0iGYSSMbJpq2wMgrBN5K37jg5ab_qMih_VpXRO5ZAAeeeDiRYzvyrD_VDxBM2ccW-VuBQ/pub" target="_blank" title="Abrir ajuda"><Bicon n="question-circle"/></a>
+    return <>
+        <div className="row container-fluid bg-dark m-0 p-0">
+            <div className="col-8">
+                <div className="position-sticky top-0 bg-white p-0 m-0 d-flex" style={{borderBottom: "5px solid #161616",zIndex:1}}>
+                    <Button className="btn red-link fw-bold m-1 p-1" onClick={() => (saved || window.confirm("Trabalho não será guardado no browser. Sair?")) ? props.setUserFile(undefined) : null} i="arrow-left" title="Fechar ficheiro"/>
+                    <SavedBadge saved={saved} name={props.file.name} />
+                    <Button title="Gerir tipos" i="file-earmark-font" text="Tipos" className="red-link btn m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types"/>
+                    <Button i="file-earmark-play" text="Sugerir" className="red-link btn m-1 p-1" onClick={() => {setRequesting(true); runRemoteNlp(doc, pool).finally(() => setRequesting(false))}} disabled={pool.entities.length > 0 || requesting || anonimizeState.state !== AnonimizeStateState.TAGGED} />
+                    <Sep/>
+                    <select title="Escolher modo" className="red-link btn m-1 p-1 text-start" onChange={(ev) => setAnonimizeSate(getAnonimizedStateCombined(ev.target.value as AnonimizeVisualState)) } defaultValue={AnonimizeVisualState.TYPES} style={{backgroundColor: "var(--secondary-gold)"}}>
+                        <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
+                        <option value={AnonimizeVisualState.REPLACE}>{AnonimizeVisualState.REPLACE}</option>
+                        <option value={AnonimizeVisualState.TYPES}>{AnonimizeVisualState.TYPES}</option>
+                        <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
+                    </select>
+                    <Button className="red-link btn m-1 p-1" onClick={() => onClickDownload(anonimizeState.state, props.file, anonimizedHTML.current)} i="download" title="Download ficheiro"/>
+                    <Sep/>
+                    <HistoryCommands pool={pool}/>
+                    <a className="red-link m-1 p-1 btn" href="https://docs.google.com/document/d/e/2PACX-1vTaR6kTasw0iGYSSMbJpq2wMgrBN5K37jg5ab_qMih_VpXRO5ZAAeeeDiRYzvyrD_VDxBM2ccW-VuBQ/pub" target="_blank" title="Abrir ajuda"><Bicon n="question-circle"/></a>
+                </div>
+                <div className="bg-white p-4">
+                    {requesting && anonimizeState.state === AnonimizeStateState.TAGGED ?
+                        <div className="alert alert-info">A processar o documento, esta operação poderá demorar.</div>
+                    :   
+                        <AnonimizeContent accessHtml={(html) => anonimizedHTML.current = html} showTypes={anonimizeState.showTypes} doc={doc} pool={pool} ents={ents} anonimizeState={anonimizeState.state}/>
+                    }
+                </div>
             </div>
-            <div className="bg-white p-4">
-                {requesting && anonimizeState.state === AnonimizeStateState.TAGGED ?
-                    <div className="alert alert-info">A processar o documento, esta operação poderá demorar.</div>
-                :   
-                    <AnonimizeContent accessHtml={(html) => anonimizedHTML.current = html} showTypes={anonimizeState.showTypes} doc={doc} pool={pool} ents={ents} anonimizeState={anonimizeState.state}/>
-                }
+            <div className="col-4">
+                <div className="m-0 position-sticky top-0">
+                    <MaterialReactTable
+                    key="ent-table"
+                    enableRowSelection
+                    enableColumnOrdering
+                        enableEditing
+                        positionActionsColumn="last"
+                        editingMode="cell"
+                        enableDensityToggle={false}
+                        enableHiding={true}
+                        enableStickyHeader
+                        enablePagination={false}
+                        enableFullScreenToggle={false}
+                        renderDetailPanel={entityDetails(pool)}
+                        renderTopToolbarCustomActions={({table}) => {
+                            let selectedeKeys = selectedIndexes(table).length
+                            return <div className="d-flex w-100"> 
+                                <Button i="union" text="Juntar" className="btn btn-primary" disabled={selectedeKeys <= 1} onClick={() => joinSelectedEntities(table, pool)} />
+                                <Button i="exclude" text="Separar" className="btn btn-warning mx-2" disabled={selectedeKeys === 0} onClick={() => splitSelectedEntities(table, pool)} />
+                                <Button i="trash" text="Remover" className="btn btn-danger" disabled={selectedeKeys === 0} onClick={() => removeSelectedEntities(table, pool)} />
+                            </div>
+                        }}
+                        muiTableBodyCellProps={{style: {
+                            whiteSpace: "normal",
+                            wordWrap:"break-word" 
+                        }}}
+                        muiTableHeadCellProps={{
+                            style: {
+                                borderBottom: "5px solid #161616"
+                            }
+                        }}
+                        positionToolbarAlertBanner="bottom"
+                        initialState={{
+                            density: 'compact'
+                        }}
+                        columns={[HEADER,ENTITY,TYPE(pool),ANONIMIZE(pool)]} 
+                        data={ents}
+                        localization={{...MRT_Localization_PT, noRecordsToDisplay: "Sem ocurrências de entidades"}}/>
+                </div>
             </div>
         </div>
-        <div className="col-4">
-            <div className="m-0 position-sticky top-0">
-                <MaterialReactTable
-                key="ent-table"
-                enableRowSelection
-                enableColumnOrdering
-                    enableEditing
-                    positionActionsColumn="last"
-                    editingMode="cell"
-                    enableDensityToggle={false}
-                    enableHiding={true}
-                    enableStickyHeader
-                    enablePagination={false}
-                    enableFullScreenToggle={false}
-                    renderDetailPanel={entityDetails(pool)}
-                    renderTopToolbarCustomActions={({table}) => {
-                        let selectedeKeys = selectedIndexes(table).length
-                        return <div className="d-flex w-100"> 
-                            <Button i="union" text="Juntar" className="btn btn-primary" disabled={selectedeKeys <= 1} onClick={() => joinSelectedEntities(table, pool)} />
-                            <Button i="exclude" text="Separar" className="btn btn-warning mx-2" disabled={selectedeKeys === 0} onClick={() => splitSelectedEntities(table, pool)} />
-                            <Button i="trash" text="Remover" className="btn btn-danger" disabled={selectedeKeys === 0} onClick={() => removeSelectedEntities(table, pool)} />
-                        </div>
-                    }}
-                    muiTableBodyCellProps={{style: {
-                        whiteSpace: "normal",
-                        wordWrap:"break-word" 
-                    }}}
-                    muiTableHeadCellProps={{
-                        style: {
-                            borderBottom: "5px solid #161616"
-                        }
-                    }}
-                    positionToolbarAlertBanner="bottom"
-                    initialState={{
-                        density: 'compact'
-                    }}
-                    columns={[HEADER,ENTITY,TYPE(pool),ANONIMIZE(pool)]} 
-                    data={ents}
-                    localization={{...MRT_Localization_PT, noRecordsToDisplay: "Sem ocurrências de entidades"}}/>
-            </div>
-        </div>
-    </div>
+        <BootstrapModal id="modal-types"><></></BootstrapModal>
+    </>
 }
 
 const selectedIndexes = (table: MRT_TableInstance<Entity>) => Object.keys(table.getState().rowSelection).map(k => parseInt(k)).filter(k => !isNaN(k));

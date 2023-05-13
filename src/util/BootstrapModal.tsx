@@ -1,5 +1,4 @@
-import React from "react";
-import { createRef } from "react";
+import { createRef, useEffect, useRef } from "react";
 
 type BootstrapModalProps = {
     id: string
@@ -8,38 +7,26 @@ type BootstrapModalProps = {
     onShow?: (elm: HTMLElement) => void
 }
 
-export default class BootstrapModal extends React.Component<BootstrapModalProps>{
-    elmRef: React.RefObject<HTMLDivElement> = createRef()
+export default function BootstrapModal(props: BootstrapModalProps){
+    const elmRef = useRef<HTMLDivElement>(null);
 
-    fireOnHide = () => {
-        if( this.props.onHide ){
-            this.props.onHide(this.elmRef.current!)
+    const fireHide = () => props.onHide ? props.onHide(elmRef.current!) : null;
+    const fireShow = () => props.onShow ? props.onShow(elmRef.current!) : null;
+
+    useEffect(() => {
+        elmRef.current?.addEventListener("hide.bs.modal", fireHide);
+        elmRef.current?.addEventListener("show.bs.modal", fireShow);
+        return () => {
+            elmRef.current?.removeEventListener("hide.bs.modal", fireHide)
+            elmRef.current?.removeEventListener("show.bs.modal", fireShow)
         }
-    }
+    }, [])
 
-    fireOnShow = () => {
-        if( this.props.onShow ){
-            this.props.onShow(this.elmRef.current!)
-        }
-    }
-
-    componentDidMount(): void {
-        this.elmRef.current?.addEventListener("hide.bs.modal", this.fireOnHide)
-        this.elmRef.current?.addEventListener("show.bs.modal", this.fireOnShow)
-    }
-
-    componentWillUnmount(): void {
-        this.elmRef.current?.removeEventListener("hide.bs.modal", this.fireOnHide)
-        this.elmRef.current?.removeEventListener("show.bs.modal", this.fireOnShow)
-    }
-
-    render(): React.ReactNode {
-        return <div ref={this.elmRef} className="modal fade" id={this.props.id} tabIndex={-1} role="dialog" aria-labelledby={`${this.props.id}-label`} aria-hidden="true">
-            <div className="modal-dialog modal-xl">
-                <div className="modal-content">
-                    {this.props.children}
-                </div>
+    return <div ref={elmRef} className="modal fade" id={props.id} tabIndex={-1} role="dialog" aria-labelledby={`${props.id}-label`} aria-hidden="true">
+        <div className="modal-dialog modal-xl">
+            <div className="modal-content">
+                {props.children}
             </div>
         </div>
-    }
+    </div>
 }
