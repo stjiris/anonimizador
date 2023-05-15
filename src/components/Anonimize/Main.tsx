@@ -15,6 +15,7 @@ import { tab } from "@testing-library/user-event/dist/tab";
 import { HistoryCommands } from "./HistoryCommands";
 import { SavedBadge } from "../../util/savedBadge";
 import BootstrapModal from "../../util/BootstrapModal";
+import { EntityTable } from "./EntityTable";
 
 interface AnonimizeProps{
     file: UserFile
@@ -37,7 +38,6 @@ export default function Anonimize(props: AnonimizeProps){
 
     // States
     const [anonimizeState, setAnonimizeSate] = useState<AnonimizeStateCombined>(getAnonimizedStateCombined(AnonimizeVisualState.TYPES));
-    const [ents, setEnts] = useState<Entity[]>([...pool.entities]);
     const [saved, setSaved] = useState<boolean>(updateUserFile(props.file));
     const [requesting, setRequesting] = useState<boolean>(false);
     
@@ -51,7 +51,6 @@ export default function Anonimize(props: AnonimizeProps){
 
     const onPoolChange = (action: string): void => {
         props.file.ents = pool.entities;
-        setEnts([...pool.entities]);
         setSaved(updateUserFile(props.file))
     }
 
@@ -88,49 +87,13 @@ export default function Anonimize(props: AnonimizeProps){
                     {requesting && anonimizeState.state === AnonimizeStateState.TAGGED ?
                         <div className="alert alert-info">A processar o documento, esta operação poderá demorar.</div>
                     :   
-                        <AnonimizeContent accessHtml={(html) => anonimizedHTML.current = html} showTypes={anonimizeState.showTypes} doc={doc} pool={pool} ents={ents} anonimizeState={anonimizeState.state}/>
+                        <AnonimizeContent accessHtml={(html) => anonimizedHTML.current = html} showTypes={anonimizeState.showTypes} doc={doc} pool={pool} anonimizeState={anonimizeState.state}/>
                     }
                 </div>
             </div>
             <div className="col-4">
                 <div className="m-0 position-sticky top-0">
-                    <MaterialReactTable
-                    key="ent-table"
-                    enableRowSelection
-                    enableColumnOrdering
-                        enableEditing
-                        positionActionsColumn="last"
-                        editingMode="cell"
-                        enableDensityToggle={false}
-                        enableHiding={true}
-                        enableStickyHeader
-                        enablePagination={false}
-                        enableFullScreenToggle={false}
-                        renderDetailPanel={entityDetails(pool)}
-                        renderTopToolbarCustomActions={({table}) => {
-                            let selectedeKeys = selectedIndexes(table).length
-                            return <div className="d-flex w-100"> 
-                                <Button i="union" text="Juntar" className="btn btn-primary" disabled={selectedeKeys <= 1} onClick={() => joinSelectedEntities(table, pool)} />
-                                <Button i="exclude" text="Separar" className="btn btn-warning mx-2" disabled={selectedeKeys === 0} onClick={() => splitSelectedEntities(table, pool)} />
-                                <Button i="trash" text="Remover" className="btn btn-danger" disabled={selectedeKeys === 0} onClick={() => removeSelectedEntities(table, pool)} />
-                            </div>
-                        }}
-                        muiTableBodyCellProps={{style: {
-                            whiteSpace: "normal",
-                            wordWrap:"break-word" 
-                        }}}
-                        muiTableHeadCellProps={{
-                            style: {
-                                borderBottom: "5px solid #161616"
-                            }
-                        }}
-                        positionToolbarAlertBanner="bottom"
-                        initialState={{
-                            density: 'compact'
-                        }}
-                        columns={[HEADER,ENTITY,TYPE(pool),ANONIMIZE(pool)]} 
-                        data={ents}
-                        localization={{...MRT_Localization_PT, noRecordsToDisplay: "Sem ocurrências de entidades"}}/>
+                    <EntityTable pool={pool}/>                    
                 </div>
             </div>
         </div>

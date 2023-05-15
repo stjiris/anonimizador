@@ -37,7 +37,7 @@ export function getEntityType(label: string): EntityTypeI{
 
     if( cache[label] ) return cache[label]!;
 
-    return {name: `${label}*`, color: "#f5d142", functionIndex: AUTO_ANONIMIZE}
+    return {name: `${label}`, color: "#f5d142", functionIndex: AUTO_ANONIMIZE}
 }
 
 export function getEntityTypes(): EntityTypeI[]{

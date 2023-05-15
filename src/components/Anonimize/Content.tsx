@@ -16,7 +16,6 @@ import AnonimizeTooltip from './Tooltip';
 interface AnonimizeContentProps {
     doc: HTMLElement
     pool: EntityPool
-    ents: Entity[]
     anonimizeState: AnonimizeStateState
     showTypes: boolean
     accessHtml: (html: string) => void
@@ -29,8 +28,10 @@ export default function AnonimizeContent(props: AnonimizeContentProps){
     let listItems: JSX.Element[] = [];
     let offset = 0;
 
+    let ents = props.pool.useEntities()();
+
     for(let i=0; i < props.doc.childNodes.length; i++){
-        listItems.push(<AnonimizeBlock key={i} element={props.doc.childNodes[i]} offset={offset} ents={props.ents} anonimizeState={props.anonimizeState}/>)
+        listItems.push(<AnonimizeBlock key={i} element={props.doc.childNodes[i]} offset={offset} ents={ents} anonimizeState={props.anonimizeState}/>)
         offset += (props.doc.childNodes[i].textContent?.normalize("NFKC") || "").length;
     }
 

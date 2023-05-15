@@ -18,7 +18,6 @@ export function HistoryCommands({pool}: HistoryCommandsProps){
     const history = historyRef.current!;
     
     useEffect(() => {
-        if( !pool ) return;
         const keyDownEventHandler = (ev: KeyboardEvent) => handleKeyDown(ev, history)
         window.addEventListener("keydown", keyDownEventHandler)
         return () => {
