@@ -1,6 +1,4 @@
-import { EntityI } from "../types/Entity";
-import { isOldSavedUserFile, isSavedUserFile, SavedUserFile, UserFile } from "../types/UserFile"
-import { getEntityTypes } from "../types/EntityTypes";
+import { isSavedUserFile, SavedUserFile, UserFile } from "../types/UserFile"
 
 function alertUpdateListUserFile(){
     window.dispatchEvent(new CustomEvent("AlertUpdateListUserFile"));
@@ -48,10 +46,18 @@ export function updateUserFile(userFile: UserFile | SavedUserFile): boolean{
 
 export function deleteUserFile(userFile: UserFile | SavedUserFile): void{
     let deletedItems: any = JSON.parse( localStorage.getItem("DELETED_FILES") || "{}" );
-    let entCount: any = {}
-    for (let e of getEntityTypes()) {
-        entCount[e.name] = userFile.ents.filter(t => t.type === e.name).length
+    let entCount = {} as Record<string, number>;
+    if( userFile instanceof UserFile ){
+        userFile.pool.entities.forEach(e => {
+            entCount[e.type] = (entCount[e.type] || 0) + 1;
+        })
     }
+    else{
+        userFile.ents.forEach(e => {
+            entCount[e.type] = (entCount[e.type] || 0) + 1;
+        })
+    }
+
     deletedItems[userFile.name] = {
         name: userFile.name,
         imported: userFile.imported,
@@ -76,46 +82,4 @@ export function listUserFile(): SavedUserFile[]{
         }
     }
     return userFileList;
-}
-
-export function updateSavedUserFiles(): void{
-    for (let i = 0; i < localStorage.length; i++) {
-        const name = localStorage.key(i);
-        if( name != null ){
-            let maybeFile = localStorage.getItem(name);
-            if( maybeFile !== null ){
-                try{
-                    let maybeOldFile = JSON.parse(maybeFile);
-                    let file = updateOldSavedUserFile(maybeOldFile);
-                    if( file ){
-                        localStorage.setItem(name, JSON.stringify(file))
-                    }
-                }
-                catch(e){
-                    console.log(e);
-                }
-            }
-        }
-    }
-    alertUpdateListUserFile();
-}
-
-updateSavedUserFiles();
-
-export function updateOldSavedUserFile(obj: any): SavedUserFile | null{
-    if( !isOldSavedUserFile(obj) ) return null;
-
-    let text = new DOMParser().parseFromString(obj.html_contents, "text/html").body.textContent || "";
-    return {
-        name: obj.name,
-        html_contents: obj.html_contents,
-        ents: obj.ents.map( (e: EntityI) => ({
-            type: e.type,
-            offsets: e.offsets.map(off => ({start: off.start, end: off.end, preview: text.substring(off.start, off.end+1)})),
-            offsetsLength: e.offsets.length,
-            overwriteAnonimization: e.overwriteAnonimization
-        })),
-        imported: new Date().toString(),
-        modified: new Date().toString()
-    }
 }

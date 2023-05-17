@@ -1,6 +1,6 @@
 import { identity } from "lodash";
 import { AnonimizeFunction, AnonimizeFunctionDescription, functionsWithDescriptionArray } from "../util/anonimizeFunctions";
-import { getEntityType } from "./EntityTypes";
+import { EntityTypeFunction } from "./EntityTypes";
 
 export const normalizeEntityString = (str: string): string => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]/g, "");
 
@@ -42,23 +42,24 @@ export class Entity implements EntityI {
         this.offsetsLength = this.offsets.length;
     }
 
-    anonimizingFunction(): AnonimizeFunction{
+    anonimizingFunction(entityTypes: EntityTypeFunction[]): AnonimizeFunction{
         if( this.overwriteAnonimization ){
             return () => this.overwriteAnonimization!;
         }
         else{
-            let type = getEntityType(this.type);
+            let type = entityTypes.find( t => t.name == this.type );
             if( !type ) return identity;
             return functionsWithDescriptionArray[type.functionIndex].fun;
         }
     }
 
-    anonimizingFunctionDescription(): AnonimizeFunctionDescription{
+    anonimizingFunctionDescription(entityTypes: EntityTypeFunction[]): AnonimizeFunctionDescription{
         if( this.overwriteAnonimization ){
             return {name: "Valor exato", description:"", fun: () => this.overwriteAnonimization! };
         }
         else{
-            let type = getEntityType(this.type);
+            let type = entityTypes.find( t => t.name == this.type );
+            if( !type ) return {name: "Valor exato", description:"", fun: () => this.overwriteAnonimization! }
             return functionsWithDescriptionArray[type.functionIndex];
         }
     }

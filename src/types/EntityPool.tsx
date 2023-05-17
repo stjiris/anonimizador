@@ -147,7 +147,7 @@ export class EntityPool {
         this.updateOrder("Separar entidades");
     }
 
-    removeOffset(startOffset: number, endOffset: number){
+    removeOffset(startOffset: number, endOffset: number, update: boolean=true){
         let deleted = 0;
         let entsToDel = [];
         let j=0;
@@ -176,7 +176,9 @@ export class EntityPool {
             this.entities.splice(i, 1);
         }
         if( deleted > 0 || entsToDel.length > 0 ){
-            this.updateOrder("Remover entidades");
+            if( update ){
+                this.updateOrder("Remover entidades");
+            }
         }
     }
 

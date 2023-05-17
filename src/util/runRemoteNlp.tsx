@@ -1,5 +1,18 @@
+import { AnonimizeStateState } from "../types/AnonimizeState";
 import { Entity, normalizeEntityString } from "../types/Entity";
-import { EntityPool } from "../types/EntityPool";
+import { UserFile } from "../types/UserFile";
+import { Button } from "./BootstrapIcons";
+
+export function SuggestButton({setRequesting, file, requesting, state}: {setRequesting: (b: boolean) => void, file: UserFile, requesting: boolean, state: AnonimizeStateState}){
+    let ents = file.pool.useEntities()();
+
+    if( requesting ){
+        return <button className="red-link btn m-1 p-1" disabled><span className="spinner-border spinner-border-sm" role="status"></span> A sugerir...</button>
+    }
+
+    return <Button i="file-earmark-play" text="Sugerir" className="red-link btn m-1 p-1" onClick={() => {setRequesting(true); runRemoteNlp(file).finally(() => setRequesting(false))}} disabled={ents.length > 0 || requesting || state !== AnonimizeStateState.TAGGED} />
+}
+
 
 interface RemoteEntity {
     text: string,
@@ -8,11 +21,13 @@ interface RemoteEntity {
     end_char: number
 }
 
-    
 let runRemoteNlpRequesting = false;
-export async function runRemoteNlp(doc: HTMLElement, pool: EntityPool){
+export async function runRemoteNlp(file: UserFile){
     if( runRemoteNlpRequesting ) return;
     runRemoteNlpRequesting = true;
+
+    let doc = file.doc;
+    let pool = file.pool;
     
     let text = Array.from(doc.children).map(h => h.textContent).join("\n").normalize("NFKC")
 
@@ -35,7 +50,6 @@ export async function runRemoteNlp(doc: HTMLElement, pool: EntityPool){
     let entities: {[key: string]: Entity} = {};
     let lastEndOffset = 0;
     for( let ent of resArray ){
-        console.log(lastEndOffset)
         let id = normalizeEntityString(ent.text) + ent.label_
         if( !(id in entities) ){
             entities[id] = new Entity(ent.label_);

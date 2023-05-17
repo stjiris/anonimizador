@@ -1,10 +1,11 @@
-import React, { ChangeEvent, useMemo, useState } from "react";
-import { createUserFile, deleteUserFile, readSavedUserFile, listUserFile, updateOldSavedUserFile } from "../util/UserFileCRUDL";
-import { isOldSavedUserFile, isSavedUserFile, loadSavedUserFile, SavedUserFile, UserFile } from "../types/UserFile";
+import React, { ChangeEvent, useEffect, useMemo, useState } from "react";
+import { createUserFile, deleteUserFile, readSavedUserFile, listUserFile } from "../util/UserFileCRUDL";
+import { isSavedUserFile, SavedUserFile, UserFile } from "../types/UserFile";
 import MaterialReactTable, { MRT_ColumnDef } from "material-react-table";
 import {MRT_Localization_PT} from "material-react-table/locales/pt";
-import { getEntityTypes } from "../types/EntityTypes";
+import { EntityTypeColorDefaults } from "../types/EntityTypes";
 import { Bicon, Button } from "../util/BootstrapIcons";
+import { AUTO_ANONIMIZE } from "../util/anonimizeFunctions";
 
 type SelectFileProps = {
     setUserFile: (file: UserFile) => void
@@ -42,7 +43,8 @@ const cols: MRT_ColumnDef<SavedUserFile>[] = [
 
 export default function SelectFile({setUserFile}:{setUserFile: (file: UserFile) => void}){
     const [list, setList] = useState<SavedUserFile[]>(listUserFile());
-    useMemo(() => {
+
+    useEffect(() => {
         const update = () => setList(listUserFile());
         window.addEventListener("AlertUpdateListUserFile", update);
         return () => {
@@ -73,11 +75,11 @@ export default function SelectFile({setUserFile}:{setUserFile: (file: UserFile) 
         enableGlobalFilter={false}
         enableFullScreenToggle={false}
         enableColumnActions={false}
-        muiTableBodyRowProps={({row}) => ({onClick: (e) => setUserFile(loadSavedUserFile(row.original))})}
+        muiTableBodyRowProps={({row}) => ({onClick: (e) => setUserFile(new UserFile(row.original))})}
     />
 }
 
-async function onFile(event: React.ChangeEvent<HTMLInputElement>, setUserFile: (file: UserFile) => void){
+async function onFile(event: React.ChangeEvent<HTMLInputElement>): Promise<UserFile | undefined>{
     let files = event.target.files;
     if( files == null) return;
     
@@ -89,13 +91,12 @@ async function onFile(event: React.ChangeEvent<HTMLInputElement>, setUserFile: (
     if( file.type == "application/json"){
         let loadedUserFile = await file.text().then( txt => {
             let obj = JSON.parse(txt);
-            if( isSavedUserFile(obj) )
+            if( isSavedUserFile(obj) ){
                 return obj
-            else if ( isOldSavedUserFile(obj) ){
-                return updateOldSavedUserFile(obj);
             }
-            else
+            else{
                 return null
+            }
         }).catch(e => {
             console.log(e);
             return null;
@@ -116,8 +117,7 @@ async function onFile(event: React.ChangeEvent<HTMLInputElement>, setUserFile: (
             catch(e){
                 alert("Aviso! Ficheiro grande demais para ser guardado no browser. Poderá trabalhar nele à mesma.");
             }
-            setUserFile(loadSavedUserFile(loadedUserFile))
-            return;
+            return new UserFile(loadedUserFile);
         }
     }
     
@@ -139,27 +139,22 @@ async function onFile(event: React.ChangeEvent<HTMLInputElement>, setUserFile: (
 
         let documentDom = new DOMParser().parseFromString(content, "text/html");
         
-        let userFile: UserFile = {
+        let userFile: SavedUserFile = {
             html_contents: documentDom.body.innerHTML,
             name: file.name,
-            size: documentDom.body.innerHTML.length,
+            functions: Object.keys(EntityTypeColorDefaults).map(k => ({name: k, functionIndex: AUTO_ANONIMIZE})),
             ents: [],
-            imported: new Date(),
-            modified: new Date()
-        } as UserFile;
+            imported: new Date().toString(),
+            modified: new Date().toString()
+        };
         
         event.target.value = "";
-        try{
-            createUserFile(userFile);
-        }
-        catch(e){
-            alert("Aviso! Ficheiro grande demais para ser guardado no browser. Poderá trabalhar nele à mesma.");
-        }
-        setUserFile(userFile);
+        return new UserFile(userFile);
 
     }).catch(e => {
         console.error(e);
         window.alert("Falha ao interpertar ficheiro submetido.");
+        return undefined
     }).finally(() => {
         event.target.disabled = false;
     })
@@ -169,12 +164,12 @@ export function AddUserFileAction({setUserFile}: {setUserFile: (file: UserFile) 
     const [uploading, setUploading] = useState<boolean>(false);
     const onChange = async (e: ChangeEvent<HTMLInputElement>) => {
         setUploading(true);
-        await onFile(e, setUserFile);
+        await onFile(e).then( f => f ? setUserFile(f) : null)
         setUploading(false);
     }
 
     return <>
-        <label htmlFor="file" role="button" className={`btn btn-primary m-auto ${uploading ? "disabled":""}`}><Bicon n="file-earmark-plus"/>{uploading ? " A carregar ficheiro..." : " Adicionar Ficheiro"}</label>
+        <label htmlFor="file" role="button" className={`btn btn-primary m-auto ${uploading ? "disabled":""}`}>{uploading ? <><span className="spinner-border spinner-border-sm" role="status"></span> A carregar ficheiro...</> : <><Bicon n="file-earmark-plus"/> Adicionar Ficheiro</>}</label>
         <input hidden type="file" name="file" id="file" onChange={onChange}></input>
     </>
 

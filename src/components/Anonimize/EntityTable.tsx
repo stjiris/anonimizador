@@ -3,12 +3,14 @@ import { Button } from "../../util/BootstrapIcons"
 import MaterialReactTable, { MRT_ColumnDef, MRT_Row, MRT_TableInstance } from "material-react-table";
 import { Entity } from "../../types/Entity";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
-import { getEntityType, getEntityTypes } from "../../types/EntityTypes";
-import { useEffect, useState } from "react";
+import { UserFile } from "../../types/UserFile";
+import { EntityTypeI } from "../../types/EntityTypes";
+import { FULL_ANONIMIZE } from "../../util/anonimizeFunctions";
 
 
-export function EntityTable({pool}: {pool: EntityPool}){
-    const ents = pool.useEntities()();
+export function EntityTable({file}: {file: UserFile}){
+    const ents = file.pool.useEntities()();
+    const types = file.useTypes()();
     
     return <MaterialReactTable
             key="ent-table"
@@ -22,13 +24,13 @@ export function EntityTable({pool}: {pool: EntityPool}){
                 enableStickyHeader
                 enablePagination={false}
                 enableFullScreenToggle={false}
-                renderDetailPanel={entityDetails(pool)}
+                renderDetailPanel={entityDetails(file.pool)}
                 renderTopToolbarCustomActions={({table}) => {
                     let selectedeKeys = selectedIndexes(table).length
                     return <div className="d-flex w-100"> 
-                        <Button i="union" text="Juntar" className="btn btn-primary" disabled={selectedeKeys <= 1} onClick={() => joinSelectedEntities(table, pool)} />
-                        <Button i="exclude" text="Separar" className="btn btn-warning mx-2" disabled={selectedeKeys === 0} onClick={() => splitSelectedEntities(table, pool)} />
-                        <Button i="trash" text="Remover" className="btn btn-danger" disabled={selectedeKeys === 0} onClick={() => removeSelectedEntities(table, pool)} />
+                        <Button i="union" text="Juntar" className="btn btn-primary" disabled={selectedeKeys <= 1} onClick={() => joinSelectedEntities(table, file.pool)} />
+                        <Button i="exclude" text="Separar" className="btn btn-warning mx-2" disabled={selectedeKeys === 0} onClick={() => splitSelectedEntities(table, file.pool)} />
+                        <Button i="trash" text="Remover" className="btn btn-danger" disabled={selectedeKeys === 0} onClick={() => removeSelectedEntities(table, file.pool)} />
                     </div>
                 }}
                 muiTableBodyCellProps={{style: {
@@ -44,7 +46,7 @@ export function EntityTable({pool}: {pool: EntityPool}){
                 initialState={{
                     density: 'compact'
                 }}
-                columns={[HEADER,ENTITY,TYPE(pool),ANONIMIZE(pool)]} 
+                columns={[HEADER,ENTITY,TYPE(file.pool,types),ANONIMIZE(file.pool,types)]} 
                 data={ents}
                 localization={{...MRT_Localization_PT, noRecordsToDisplay: "Sem ocurrências de entidades"}}/>
 }
@@ -103,17 +105,17 @@ const ENTITY: MRT_ColumnDef<Entity> = {
     })
 }
 
-const TYPE: (pool: EntityPool) => MRT_ColumnDef<Entity> = (pool) => ({
+const TYPE: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (pool, types) => ({
     header: "Tipo",
     accessorKey: "type",
     size: 40,
     Cell: ({row, cell, table}) => {
-        let color = getEntityType(row.original.type);
+        let color = types.find(t => t.name == row.original.type) || {name: `${row.original.type}*`, color: "red", functionIndex: FULL_ANONIMIZE};
         return <span className='badge text-body' onClick={() => table.setEditingCell(cell)} style={{background: color.color}}>{color.name}</span>
     },
     muiTableBodyCellEditTextFieldProps: ({row}) => ({
         select: true,
-        children: getEntityTypes().map( t => <option key={t.name} label={t.name} value={t.name}>{t.name}</option>),
+        children: types.map( t => <option key={t.name} label={t.name} value={t.name}>{t.name}</option>),
         SelectProps: {
             native: true
         },
@@ -126,19 +128,19 @@ const TYPE: (pool: EntityPool) => MRT_ColumnDef<Entity> = (pool) => ({
 })
 
 
-const ANONIMIZE: (pool: EntityPool) => MRT_ColumnDef<Entity> = (pool) => ({
+const ANONIMIZE: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (pool, types) => ({
     header: "Anonimização",
     accessorKey: "overwriteAnonimization",
     enableColumnFilter: false,
     enableColumnDragging: false,
     enableColumnActions: false,
     size: 40,
-    Cell: ({row}) => row.original.overwriteAnonimization ? row.original.overwriteAnonimization : <span className="text-muted">{row.original.anonimizingFunction()(row.original.offsets[0].preview, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex)}</span>,
+    Cell: ({row}) => row.original.overwriteAnonimization ? row.original.overwriteAnonimization : <span className="text-muted">{row.original.anonimizingFunction(types)(row.original.offsets[0].preview, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex)}</span>,
     muiTableBodyCellProps: ({cell, table}) => ({
         onClick: () => table.setEditingCell(cell)
     }),
     muiTableBodyCellEditTextFieldProps: ({row}) => ({
-        placeholder: row.original.anonimizingFunction()(row.original.offsets[0].preview, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex),
+        placeholder: row.original.anonimizingFunction(types)(row.original.offsets[0].preview, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex),
         onBlur: (event) => {
             let o = row.original.overwriteAnonimization;
             row.original.overwriteAnonimization = event.target.value;

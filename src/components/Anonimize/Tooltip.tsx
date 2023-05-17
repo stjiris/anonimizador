@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react"
 import { AddEntityDryRun, EntityPool } from "../../types/EntityPool"
-import { EntityTypeI, getEntityType, getEntityTypes } from "../../types/EntityTypes"
+import { EntityTypeColor, getEntityTypeColor } from "../../types/EntityTypes"
 import { TokenSelection } from "../../types/Selection"
 
 interface AnonimizeTooltipProps {
-    entityTypes: EntityTypeI[]
+    entityTypes: EntityTypeColor[]
     pool: EntityPool
     contentRef: React.RefObject<HTMLDivElement>
     nodesRef: React.MutableRefObject<HTMLElement[]>
@@ -60,14 +60,12 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps){
             return <div style={style}>
                 <div className="d-flex flex-column gap-1 bg-white p-1 border">
                     {props.entityTypes.map( (t,i) => <span key={i} role="button" className='badge text-body' style={{background: t.color}} onMouseDown={() => setType(props.pool!, sel, t)}>{t.name}</span>)}
-                    <span role="button" onMouseDown={() => setNewType(props.pool, sel)}><i className='bi bi-plus'></i> Nova</span>
                 </div>
             </div>;
         case AddEntityDryRun.CHANGE_OFFSET:
             return <div style={style}>
                 <div className="d-flex flex-column gap-1 bg-white p-1 border">
                     {props.entityTypes.map( (t,i) => <span key={i} role="button" className='badge text-body' style={{background: t.color}} onMouseDown={() => setType(props.pool!, sel, t)}>{t.name}</span>)}
-                    <span role="button" onMouseDown={() => setNewType(props.pool, sel)}><i className='bi bi-plus'></i> Nova</span>
                 </div>
             </div>;
         case AddEntityDryRun.CHANGE_TYPE:
@@ -75,7 +73,6 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps){
                 <div className="d-flex flex-column gap-1 bg-white p-1 border">
                     <span role="button" onMouseDown={() => removeType(props.pool!, sel)}><i className='bi bi-trash'></i> Remover</span>
                     {props.entityTypes.map( (t,i) => <span key={i} role="button" className='badge text-body' style={{background: t.color}} onMouseDown={() => setType(props.pool!, sel, t)}>{t.name}</span>)}
-                    <span role="button" onMouseDown={() => setNewType(props.pool, sel)}><i className='bi bi-plus'></i> Nova</span>
                 </div>
             </div>;
         default:
@@ -83,15 +80,8 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps){
     }
 }
 
-function setNewType(pool: EntityPool, selection: TokenSelection){
-    let type = prompt("Adicionar novo tipo:");
-    if( type ){
-        setType(pool, selection, getEntityType(type));
-    }
-}
-
-function setType(pool: EntityPool, selection: TokenSelection, type: EntityTypeI){
-    pool.removeOffset(selection.start, selection.end);
+function setType(pool: EntityPool, selection: TokenSelection, type: EntityTypeColor){
+    pool.removeOffset(selection.start, selection.end, false);
     pool.addEntity(selection.start, selection.end, selection.text, type.name);
 }
 

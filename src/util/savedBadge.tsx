@@ -1,16 +1,11 @@
 import { useEffect } from "react"
+import { UserFile } from "../types/UserFile"
 import { Bicon } from "./BootstrapIcons"
 
-export function SavedBadge(props: {saved: boolean, name: string}){
-    useEffect(() => {
-        if( !props.saved ) {
-            alert("Atenção! O trabalho não será guardado automáticamente")
-        }
-    }, [props.saved])
-    if( props.saved ){
-        return <span title="Guardado automaticamente." className="text-body text-nowrap alert alert-success p-1 m-1"><Bicon n="file-earmark-check-fill"/> <small>{props.name}</small></span>
-    }
-    else{
-        return <span title="Não guardado." className="text-body text-nowrap alert alert-danger p-1 m-1"><Bicon n="file-earmark-x-fill"/> <small>{props.name}</small></span>
-    }
+export function SavedBadge({file}: {file: UserFile}){
+    const saved = file.useSave()();
+
+    const title = saved ? "Guardado automaticamente." : "Não guardado"
+
+    return <span title={title} className={`text-body text-nowrap alert alert-${saved ? "success" : "danger"} p-1 m-1`}><Bicon n={saved ? "file-earmark-check-fill" : "file-earmark-x-fill"}/> <small>{file.name}</small></span>
 }

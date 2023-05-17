@@ -1,13 +1,15 @@
 import React from "react"
 import { AnonimizeStateState } from "../../types/AnonimizeState"
 import { Entity } from "../../types/Entity"
+import { EntityTypeI } from "../../types/EntityTypes"
 import AnonimizeToken from "./Token"
 
 
 interface AnonimizeBlockProps{
     element: ChildNode
     offset: number
-    ents: Entity[],
+    ents: Entity[]
+    types: EntityTypeI[]
     anonimizeState: AnonimizeStateState
 }
 
@@ -22,7 +24,7 @@ export default function AnonimizeBlock(props: AnonimizeBlockProps){
         var token;
         while((token = reg.exec(elmtStr)) !== null) {
             
-            tokensElems.push(<AnonimizeToken key={token.index} string={token[0]} offset={props.offset+token.index} ents={props.ents} anonimizeState={props.anonimizeState} />);
+            tokensElems.push(<AnonimizeToken entityTypes={props.types} key={token.index} string={token[0]} offset={props.offset+token.index} ents={props.ents} anonimizeState={props.anonimizeState} />);
         }
         return <>{tokensElems}</>
     }
@@ -33,7 +35,7 @@ export default function AnonimizeBlock(props: AnonimizeBlockProps){
     let r = [];
     let suboffset = 0;
     for(let i = 0; i < elmt.childNodes.length; i++){
-        r.push(<AnonimizeBlock key={i} element={elmt.childNodes[i]} offset={props.offset + suboffset} ents={props.ents} anonimizeState={props.anonimizeState}/>)
+        r.push(<AnonimizeBlock key={i} element={elmt.childNodes[i]} offset={props.offset + suboffset} ents={props.ents} types={props.types} anonimizeState={props.anonimizeState}/>)
         suboffset += (elmt.childNodes[i].textContent?.normalize("NFKC") || "").length
     }
     

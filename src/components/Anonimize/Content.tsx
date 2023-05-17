@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom';
 import { AnonimizeStateState } from '../../types/AnonimizeState'
 import { Entity } from '../../types/Entity'
 import { AddEntityDryRun, EntityPool } from '../../types/EntityPool'
-import { EntityTypeI, getEntityType, getEntityTypes } from '../../types/EntityTypes'
 import { TokenSelection } from '../../types/Selection'
 import { VariableSizeList } from 'react-window';
 import AutoSizer from 'react-virtualized-auto-sizer';
@@ -12,10 +11,10 @@ import { Bicon, Button } from "../../util/BootstrapIcons";
 import AnonimizeToken from './Token';
 import AnonimizeBlock from './Block';
 import AnonimizeTooltip from './Tooltip';
+import { UserFile } from '../../types/UserFile';
 
 interface AnonimizeContentProps {
-    doc: HTMLElement
-    pool: EntityPool
+    file: UserFile
     anonimizeState: AnonimizeStateState
     showTypes: boolean
     accessHtml: (html: string) => void
@@ -28,11 +27,12 @@ export default function AnonimizeContent(props: AnonimizeContentProps){
     let listItems: JSX.Element[] = [];
     let offset = 0;
 
-    let ents = props.pool.useEntities()();
+    const ents = props.file.pool.useEntities()();
+    const entityTypes = props.file.useTypes()();
 
-    for(let i=0; i < props.doc.childNodes.length; i++){
-        listItems.push(<AnonimizeBlock key={i} element={props.doc.childNodes[i]} offset={offset} ents={ents} anonimizeState={props.anonimizeState}/>)
-        offset += (props.doc.childNodes[i].textContent?.normalize("NFKC") || "").length;
+    for(let i=0; i < props.file.doc.childNodes.length; i++){
+        listItems.push(<AnonimizeBlock key={i} element={props.file.doc.childNodes[i]} offset={offset} types={entityTypes} ents={ents} anonimizeState={props.anonimizeState}/>)
+        offset += (props.file.doc.childNodes[i].textContent?.normalize("NFKC") || "").length;
     }
 
     useEffect(() => {
@@ -41,19 +41,11 @@ export default function AnonimizeContent(props: AnonimizeContentProps){
     }, [props.anonimizeState])
 
 
-    const entityTypes = getEntityTypes();
     
     return <>
-        <style>
-            {/* Generate type colors */}
-            {`[data-anonimize-type^="ERRO"]{
-                background: red;
-            }`}
-            {entityTypes.map( ({name, color}) => `[data-anonimize-type="${name}"]{background:${color}}`)}
-        </style>
         <div id="content" className={props.showTypes ? 'show-type' : 'show-cod'} ref={contentRef}>
             {listItems}
         </div>
-        <AnonimizeTooltip entityTypes={entityTypes} pool={props.pool} contentRef={contentRef} nodesRef={nodesRef} />
+        <AnonimizeTooltip entityTypes={entityTypes} pool={props.file.pool} contentRef={contentRef} nodesRef={nodesRef} />
     </>
 }
