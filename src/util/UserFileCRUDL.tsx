@@ -4,9 +4,8 @@ function alertUpdateListUserFile(){
     window.dispatchEvent(new CustomEvent("AlertUpdateListUserFile"));
 }
 
-export function createUserFile(userFile: UserFile | SavedUserFile): boolean{
+export function createUserFile(userFile: SavedUserFile): boolean{
     try{
-        userFile.imported = userFile.modified = new Date()
         localStorage.setItem(userFile.name, JSON.stringify(userFile));
         alertUpdateListUserFile();
         return true;
@@ -32,9 +31,8 @@ export function readSavedUserFile(name: string): SavedUserFile | null {
     }
 }
 
-export function updateUserFile(userFile: UserFile | SavedUserFile): boolean{
+export function updateUserFile(userFile: SavedUserFile): boolean{
     try{
-        userFile.modified = new Date();
         localStorage.setItem(userFile.name, JSON.stringify(userFile));
         return true;
     }
@@ -44,7 +42,7 @@ export function updateUserFile(userFile: UserFile | SavedUserFile): boolean{
     }
 }
 
-export function deleteUserFile(userFile: UserFile | SavedUserFile): void{
+export function deleteUserFile(userFile: SavedUserFile): void{
     let deletedItems: any = JSON.parse( localStorage.getItem("DELETED_FILES") || "{}" );
     let entCount = {} as Record<string, number>;
     if( userFile instanceof UserFile ){

@@ -50,17 +50,21 @@ export class UserFile {
         this.typesListeners = []
     }
 
-    save(): boolean{
-        this.modified = new Date();
-
-        const saved = updateUserFile({
+    toSavedFile(): SavedUserFile{
+        return {
             name: this.name,
             html_contents: this.html_contents,
             functions: this.types.map( t => ({name: t.name, functionIndex: t.functionIndex})),
             ents: this.pool.entities.map(e => e.toStub()),
             imported: this.imported.toString(),
             modified: this.modified.toString()
-        } as SavedUserFile)
+        }
+    }
+
+    save(): boolean{
+        this.modified = new Date();
+
+        const saved = updateUserFile(this.toSavedFile())
 
         this.notifySave(saved);
 

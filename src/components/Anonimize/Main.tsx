@@ -114,7 +114,7 @@ async function onClickDownload(state: AnonimizeStateState, file: UserFile, html:
 }
 
 function makeJsonDownload(file: UserFile){
-    return new Blob([JSON.stringify(file)]);
+    return new Blob([JSON.stringify(file.toSavedFile())]);
 }
 
 function makeDocxDowload(html: string){

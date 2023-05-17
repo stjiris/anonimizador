@@ -148,14 +148,14 @@ async function onFile(event: React.ChangeEvent<HTMLInputElement>): Promise<UserF
             modified: new Date().toString()
         };
         
-        event.target.value = "";
         return new UserFile(userFile);
-
+        
     }).catch(e => {
         console.error(e);
         window.alert("Falha ao interpertar ficheiro submetido.");
         return undefined
     }).finally(() => {
+        event.target.value = "";
         event.target.disabled = false;
     })
 }
