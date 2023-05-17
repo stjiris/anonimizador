@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
+import { AUTO_ANONIMIZE } from "../util/anonimizeFunctions";
 import { updateUserFile } from "../util/UserFileCRUDL";
 import { Entity, EntityI } from "./Entity";
 import { EntityPool } from "./EntityPool";
-import { EntityTypeFunction, EntityTypeI, getEntityTypeColor } from "./EntityTypes";
+import { addEntityTypeColor, EntityTypeFunction, EntityTypeI, getEntityTypeColor, restoreEntityTypesColors, updateEntityTypeColor } from "./EntityTypes";
 
 
 export interface SavedUserFile {
@@ -61,13 +62,17 @@ export class UserFile {
             modified: this.modified.toString()
         } as SavedUserFile)
 
-        for( let cb of this.savedListeners ){
-            cb(saved)
-        }
+        this.notifySave(saved);
 
         return this.saved = saved
     }
     
+    notifySave(saved: boolean) {
+        for (let cb of this.savedListeners) {
+            cb(saved);
+        }
+    }
+
     onSave(cb: (saved: boolean) => void){
         this.savedListeners.push(cb);
     }
@@ -90,6 +95,63 @@ export class UserFile {
                 }
             }, [this.saved])
             return saved;  
+        }
+    }
+
+    addType(key: string, color: string, funcIndex: number){
+        if( this.types.some( t => t.name === key ) ){
+            return this.updateType(key, color, funcIndex)
+        }
+
+        addEntityTypeColor(key, color)
+        this.types.push({name: key,color: color,functionIndex: funcIndex})
+        this.notifyType()
+        this.save()
+    }
+
+    updateType(key: string, color: string, funcIndex: number){
+        let updated = false;
+        for( let t of this.types ){
+            if( t.name == key ){
+                updated = color !== t.color || t.functionIndex !== funcIndex
+                t.color = color;
+                t.functionIndex = funcIndex;
+                break;
+            }
+        }
+        if( updated ){
+            updateEntityTypeColor(key, color)
+            this.notifyType()
+            this.save()
+        }
+    }
+
+    deleteType(key: string){
+        if( this.pool.entities.some( e => e.type == key ) ){
+            return alert("Não foi possível remover o tipo. Existem entidades com este tipo.");
+        }
+        this.types = this.types.filter( t => t.name !== key )
+        this.notifyType();
+        this.save()
+    }
+
+    resetTypes(){
+        let colors = restoreEntityTypesColors();
+        const types = {} as Record<string, true>;
+        for( let e of this.pool.entities ){
+            types[e.type] = true;
+        }
+        for( let c of colors ){
+            types[c.name] = true
+        }
+        this.types = Object.keys(types).map(k => ({color: getEntityTypeColor(k).color, name: k, functionIndex: AUTO_ANONIMIZE}))
+        this.notifyType()
+        this.save()
+    }
+
+    notifyType(){
+        for (let cb of this.typesListeners) {
+            cb([...this.types]);
         }
     }
 

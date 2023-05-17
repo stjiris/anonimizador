@@ -24,7 +24,8 @@ export const EntityTypeColorDefaults: {[key: string]: EntityTypeColor} = {
     TEL: {name: "TEL", color: "#ff5f95"},
     ["E-MAIL"]: {name: "E-MAIL", color: "#ffeb3b"},
     IDP: {name: "IDP", color: "#69bcff"},
-    INST: {name: "INST", color: "#71ff77"}
+    INST: {name: "INST", color: "#71ff77"},
+    PROF: {name: "PROF", color: "#F7C4D8"}
 }
 
 const _type_color_cache: {[key: string]: EntityTypeColor | undefined } = {}
@@ -41,15 +42,20 @@ export function getEntityTypeColor(label: string): EntityTypeColor{
     if( _type_color_cache[label] ) return _type_color_cache[label]!;
 
     const color = randBrightColor()
-    updateEntityTypeColor(label, color)
+    addEntityTypeColor(label, color)
     return {name: `${label}`, color: color}
 }
 
 // https://stackoverflow.com/a/43195379/2573422
 function randBrightColor(){ 
-    return "hsl(" + 360 * Math.random() + ',' +
+    let c = "hsl(" + 360 * Math.random() + ',' +
                (25 + 70 * Math.random()) + '%,' + 
                (85 + 10 * Math.random()) + '%)'
+    let div = document.createElement("div");
+    div.style.backgroundColor = c;
+    let rgb = div.style.backgroundColor;
+    let [r,g,b] = (rgb.match(/\d+(\.\d+)?/g) || [127,127,127]) as string[];
+    return `#${parseFloat(r).toString(16).padStart(2,"0")}${parseFloat(g).toString(16).padStart(2,"0")}${parseFloat(b).toString(16).padStart(2,"0")}`;
 }
 
 export function getEntityTypeColors(): EntityTypeColor[]{
@@ -116,7 +122,7 @@ export function deleteEntityTypeColor(key: string): EntityTypeColor[]{
     return Object.values(EntityTypesStored);
 }
 
-export function restoreEntityTypes(): EntityTypeColor[]{
+export function restoreEntityTypesColors(): EntityTypeColor[]{
     localStorage.removeItem(EntityTypeColorVersion);
     for(let key in _type_color_cache){
         delete _type_color_cache[key]

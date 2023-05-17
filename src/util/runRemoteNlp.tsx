@@ -81,7 +81,6 @@ export async function runRemoteNlp(file: UserFile){
                     let minDist = Infinity
                     let minIndex = Infinity
                     while( !m.done ){
-                        console.error("Cannot add entity", ent.text, m.value.index, ent.start_char)
                         if( Math.abs((m.value.index|| 0)-ent.start_char) < minDist ){
                             minDist = Math.abs((m.value.index|| 0)-ent.start_char)
                             minIndex = m.value.index || 0
