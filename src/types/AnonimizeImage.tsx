@@ -6,4 +6,5 @@ export interface SaveAnonimizeImage {
 
 export interface AnonimizeImage {
     anonimizedSrc?: string
+    originalSrc: string
 }

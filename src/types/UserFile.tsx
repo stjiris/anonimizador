@@ -42,24 +42,32 @@ export class UserFile {
         this.imported = new Date(obj.imported)
         this.modified = new Date(obj.modified)
 
-        this.doc = new DOMParser().parseFromString(this.html_contents, "text/html").body;
+        let dom = new DOMParser().parseFromString(this.html_contents, "text/html");
+        this.doc = dom.body; 
 
         const text = this.doc.textContent?.normalize("NFKC");
         this.pool = new EntityPool(text || "", obj.ents.map((e,i) => Entity.makeEntity(e, i)))
         this.pool.onChange(() => this.save());
 
+        this.typesListeners = []
+
+        let images = Array.from(dom.getElementsByTagName("img") as HTMLCollectionOf<HTMLImageElement>)
+
+        this.images = {};
+        images.forEach((img, i) => {
+            this.images[i] = {originalSrc: img.src, anonimizedSrc: obj.images[i]?obj.images[i].anonimizedSrc:undefined}
+        })
+
+        this.imagesListeners = []
+
         this.savedListeners = []
         this.saved = false
         this.save()
-
-        this.typesListeners = []
-
-        this.images = obj.images
-
-        this.imagesListeners = []
     }
 
     toSavedFile(): SavedUserFile{
+        let savedImages = {} as Record<number, SaveAnonimizeImage>;
+        Object.entries(this.images).forEach(([key, img]) => savedImages[parseInt(key)] = {anonimizedSrc: img.anonimizedSrc});
         return {
             name: this.name,
             html_contents: this.html_contents,
@@ -67,7 +75,7 @@ export class UserFile {
             ents: this.pool.entities.map(e => e.toStub()),
             imported: this.imported.toString(),
             modified: this.modified.toString(),
-            images: this.images
+            images: savedImages
         }
     }
 
@@ -199,12 +207,18 @@ export class UserFile {
         this.imagesListeners.push(cb);
     }
 
-    offImages( cb: (images: Record<number,AnonimizeImage>[]) => void ){
+    offImages( cb: (images: Record<number,AnonimizeImage>) => void ){
         let idx = this.imagesListeners.findIndex((fn) => fn === cb);
         if( idx >= 0 ){
             this.savedListeners.splice(idx, 1)
         }
 
+    }
+
+    notifyImages(){
+        for (let cb of this.imagesListeners) {
+            cb({...this.images});
+        }
     }
 
     useImages(){

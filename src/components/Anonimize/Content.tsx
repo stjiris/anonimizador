@@ -1,14 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react'
-import ReactDOM from 'react-dom';
+import { useEffect, useRef } from 'react'
 import { AnonimizeStateState } from '../../types/AnonimizeState'
-import { Entity } from '../../types/Entity'
-import { AddEntityDryRun, EntityPool } from '../../types/EntityPool'
-import { TokenSelection } from '../../types/Selection'
-import { VariableSizeList } from 'react-window';
-import AutoSizer from 'react-virtualized-auto-sizer';
-import { ReactSketchCanvas, ExportImageType } from 'react-sketch-canvas';
-import { Bicon, Button } from "../../util/BootstrapIcons";
-import AnonimizeToken from './Token';
 import AnonimizeBlock from './Block';
 import AnonimizeTooltip from './Tooltip';
 import { UserFile } from '../../types/UserFile';
@@ -30,18 +21,29 @@ export default function AnonimizeContent(props: AnonimizeContentProps){
     const ents = props.file.pool.useEntities()();
     const entityTypes = props.file.useTypes()();
     const images = props.file.useImages()();
-    let _image_count = 0;
-    const nextImageId = () => _image_count++;
-
+    
     for(let i=0; i < props.file.doc.childNodes.length; i++){
-        listItems.push(<AnonimizeBlock nextImageId={nextImageId} images={images} key={i} element={props.file.doc.childNodes[i]} offset={offset} types={entityTypes} ents={ents} anonimizeState={props.anonimizeState}/>)
+        listItems.push(<AnonimizeBlock key={i} element={props.file.doc.childNodes[i]} offset={offset} types={entityTypes} ents={ents} anonimizeState={props.anonimizeState}/>)
         offset += (props.file.doc.childNodes[i].textContent?.normalize("NFKC") || "").length;
     }
 
     useEffect(() => {
         nodesRef.current = Array.from(contentRef.current?.querySelectorAll(`[data-offset]`) as NodeListOf<HTMLElement>)
         props.accessHtml(contentRef.current?.innerHTML || "");
-    }, [props.anonimizeState])
+
+        let imagesElm = Array.from(contentRef.current?.getElementsByTagName("img") as HTMLCollectionOf<HTMLImageElement>)
+
+        imagesElm.forEach((img,i) =>{
+            img.dataset.imageId = i.toString()
+            img.dataset.bsToggle = "modal"
+            img.dataset.bsTarget = "#modal-image-editor"
+            if( props.anonimizeState !== AnonimizeStateState.ORIGINAL){
+                if( images[i] && images[i].anonimizedSrc ){
+                    img.src = images[i].anonimizedSrc!
+                }
+            }
+        })
+    }, [props.anonimizeState, images])
 
 
     

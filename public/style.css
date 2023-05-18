@@ -25,6 +25,13 @@
   scroll-margin-top: 150px;
 }
 
+#content img, #image-editor {
+  display: block;
+  margin: 10px auto;
+  border: 3px solid var(--secondary-gold);
+  cursor: pointer;
+}
+
 img{
   max-width: 100%;
 }

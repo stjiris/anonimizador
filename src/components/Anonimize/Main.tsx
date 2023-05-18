@@ -18,6 +18,7 @@ import { EntityTable } from "./EntityTable";
 import { ExitButton } from "../../util/exitButton";
 import { EntitiesStyle } from "../../util/entitiesStyle";
 import { TypesModalContent } from "./TypesModalContent";
+import { ImageEditorModal } from "./ImageEditorModal";
 
 interface AnonimizeProps{
     file: UserFile
@@ -84,10 +85,9 @@ export default function Anonimize({file, ...props}: AnonimizeProps){
             </div>
         </div>
         <BootstrapModal id="modal-types">
-            <div className="modal-body">
-                <TypesModalContent file={file}/>
-            </div>
+            <TypesModalContent file={file}/>
         </BootstrapModal>
+        <ImageEditorModal file={file}/>
     </>
 }
 

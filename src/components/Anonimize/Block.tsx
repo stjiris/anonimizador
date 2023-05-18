@@ -11,8 +11,6 @@ interface AnonimizeBlockProps{
     offset: number
     ents: Entity[]
     types: EntityTypeI[]
-    nextImageId: () => number
-    images: Record<number,AnonimizeImage>
     anonimizeState: AnonimizeStateState
 }
 
@@ -38,7 +36,7 @@ export default function AnonimizeBlock(props: AnonimizeBlockProps){
     let r = [];
     let suboffset = 0;
     for(let i = 0; i < elmt.childNodes.length; i++){
-        r.push(<AnonimizeBlock nextImageId={props.nextImageId} images={props.images} key={i} element={elmt.childNodes[i]} offset={props.offset + suboffset} ents={props.ents} types={props.types} anonimizeState={props.anonimizeState}/>)
+        r.push(<AnonimizeBlock key={i} element={elmt.childNodes[i]} offset={props.offset + suboffset} ents={props.ents} types={props.types} anonimizeState={props.anonimizeState}/>)
         suboffset += (elmt.childNodes[i].textContent?.normalize("NFKC") || "").length
     }
     
@@ -60,16 +58,6 @@ export default function AnonimizeBlock(props: AnonimizeBlockProps){
 
     if( Tag === 'a' && attrs['href'] && !attrs['href'].startsWith('#')){
         attrs['target'] = '_blank'; // prevent user to exit page
-    }
-
-    if( Tag === 'img' ){
-        let id = props.nextImageId();
-        attrs["data-image-id"] = id
-        if( props.anonimizeState !== AnonimizeStateState.ORIGINAL){
-            if( props.images[id] && props.images[id].anonimizedSrc ){
-                attrs['src'] = props.images[id].anonimizedSrc
-            }
-        }
     }
 
     if( r.length === 0 ){
