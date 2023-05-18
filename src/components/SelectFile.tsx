@@ -144,6 +144,7 @@ async function onFile(event: React.ChangeEvent<HTMLInputElement>): Promise<UserF
             name: file.name,
             functions: Object.keys(EntityTypeColorDefaults).map(k => ({name: k, functionIndex: AUTO_ANONIMIZE})),
             ents: [],
+            images: {},
             imported: new Date().toString(),
             modified: new Date().toString()
         };

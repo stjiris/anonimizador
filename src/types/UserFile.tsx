@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AUTO_ANONIMIZE } from "../util/anonimizeFunctions";
 import { updateUserFile } from "../util/UserFileCRUDL";
+import { AnonimizeImage, SaveAnonimizeImage } from "./AnonimizeImage";
 import { Entity, EntityI } from "./Entity";
 import { EntityPool } from "./EntityPool";
 import { addEntityTypeColor, EntityTypeFunction, EntityTypeI, getEntityTypeColor, restoreEntityTypesColors, updateEntityTypeColor } from "./EntityTypes";
@@ -13,6 +14,7 @@ export interface SavedUserFile {
     ents: EntityI[]
     imported: string
     modified: string
+    images: Record<number,SaveAnonimizeImage>
 }
 
 export class UserFile {
@@ -20,12 +22,15 @@ export class UserFile {
     html_contents: string
     types: EntityTypeI[]
     pool: EntityPool
+    images: Record<number,AnonimizeImage>
     imported: Date
     modified: Date
     
     typesListeners: ((types: EntityTypeI[]) => void)[]
 
     savedListeners: ((saved: boolean) => void)[]
+
+    imagesListeners: ((images: Record<number,AnonimizeImage>) => void)[]
     
     saved: boolean
     doc: HTMLElement;
@@ -48,6 +53,10 @@ export class UserFile {
         this.save()
 
         this.typesListeners = []
+
+        this.images = obj.images
+
+        this.imagesListeners = []
     }
 
     toSavedFile(): SavedUserFile{
@@ -57,7 +66,8 @@ export class UserFile {
             functions: this.types.map( t => ({name: t.name, functionIndex: t.functionIndex})),
             ents: this.pool.entities.map(e => e.toStub()),
             imported: this.imported.toString(),
-            modified: this.modified.toString()
+            modified: this.modified.toString(),
+            images: this.images
         }
     }
 
@@ -184,6 +194,32 @@ export class UserFile {
             return types
         }
     }
+
+    onImages( cb: (images: Record<number,AnonimizeImage>) => void ){
+        this.imagesListeners.push(cb);
+    }
+
+    offImages( cb: (images: Record<number,AnonimizeImage>[]) => void ){
+        let idx = this.imagesListeners.findIndex((fn) => fn === cb);
+        if( idx >= 0 ){
+            this.savedListeners.splice(idx, 1)
+        }
+
+    }
+
+    useImages(){
+        return () => {
+            const [Images, setImages] = useState<Record<number,AnonimizeImage>>({...this.images})
+            const update = () => setImages({...this.images})
+            useEffect(() => {
+                this.onImages(update)
+                return () => {
+                    this.offImages(update)
+                }
+            })
+            return Images
+        }
+    }
 }
 
 export function isSavedUserFile(obj: any): obj is SavedUserFile {
@@ -192,6 +228,7 @@ export function isSavedUserFile(obj: any): obj is SavedUserFile {
             "imported" in obj && typeof obj.imported === "string" &&
             "modified" in obj && typeof obj.modified === "string" &&
             "ents" in obj && Array.isArray(obj.ents) &&
+            "images" in obj && Array.isArray(obj.images) &&
             "functions" in obj && Array.isArray(obj.functions);
 }
 

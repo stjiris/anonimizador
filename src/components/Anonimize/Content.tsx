@@ -22,16 +22,19 @@ interface AnonimizeContentProps {
 
 export default function AnonimizeContent(props: AnonimizeContentProps){
     const contentRef = useRef<HTMLDivElement>(null);
-    const nodesRef = useRef<HTMLElement[]>([])
+    const nodesRef = useRef<HTMLElement[]>([]);
 
     let listItems: JSX.Element[] = [];
     let offset = 0;
 
     const ents = props.file.pool.useEntities()();
     const entityTypes = props.file.useTypes()();
+    const images = props.file.useImages()();
+    let _image_count = 0;
+    const nextImageId = () => _image_count++;
 
     for(let i=0; i < props.file.doc.childNodes.length; i++){
-        listItems.push(<AnonimizeBlock key={i} element={props.file.doc.childNodes[i]} offset={offset} types={entityTypes} ents={ents} anonimizeState={props.anonimizeState}/>)
+        listItems.push(<AnonimizeBlock nextImageId={nextImageId} images={images} key={i} element={props.file.doc.childNodes[i]} offset={offset} types={entityTypes} ents={ents} anonimizeState={props.anonimizeState}/>)
         offset += (props.file.doc.childNodes[i].textContent?.normalize("NFKC") || "").length;
     }
 
