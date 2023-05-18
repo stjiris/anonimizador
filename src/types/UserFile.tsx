@@ -242,7 +242,7 @@ export function isSavedUserFile(obj: any): obj is SavedUserFile {
             "imported" in obj && typeof obj.imported === "string" &&
             "modified" in obj && typeof obj.modified === "string" &&
             "ents" in obj && Array.isArray(obj.ents) &&
-            "images" in obj && Array.isArray(obj.images) &&
+            "images" in obj &&
             "functions" in obj && Array.isArray(obj.functions);
 }
 
