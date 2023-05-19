@@ -3,15 +3,15 @@ import { createRef, MouseEvent, MouseEventHandler, useEffect, useRef } from "rea
 type BootstrapModalProps = {
     id: string
     children: React.ReactNode
-    onHide?: (elm: HTMLElement | null) => void
+    onHide?: () => void
     onShow?: (elm: HTMLElement | null) => void
 }
 
 export default function BootstrapModal(props: BootstrapModalProps){
     const elmRef = useRef<HTMLDivElement>(null);
 
-    const fireHide = (e: any) => props.onHide ? props.onHide(e.relatedTarget) : null;
-    const fireShow = (e: any) => props.onShow ? props.onShow(e.relatedTarget) : null;
+    const fireHide = () => props.onHide ? props.onHide() : null;
+    const fireShow = (e: any) => props.onShow ? props.onShow(e.relatedTarget || null) : null;
 
     useEffect(() => {
         elmRef.current?.addEventListener("hide.bs.modal", fireHide);

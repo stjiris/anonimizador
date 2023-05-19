@@ -223,7 +223,7 @@ export class UserFile {
 
     useImages(){
         return () => {
-            const [Images, setImages] = useState<Record<number,AnonimizeImage>>({...this.images})
+            const [images, setImages] = useState<Record<number,AnonimizeImage>>({...this.images})
             const update = () => setImages({...this.images})
             useEffect(() => {
                 this.onImages(update)
@@ -231,7 +231,7 @@ export class UserFile {
                     this.offImages(update)
                 }
             })
-            return Images
+            return images
         }
     }
 }
