@@ -8,6 +8,20 @@ import { normalizeEntityString } from "../../types/Entity";
 
 
 export function ImageEditorModal(props: {file: UserFile}){
+    const preparingWorkerRef = useRef<boolean>(false);
+    const workerRef = useRef<any>(null);
+    if( !preparingWorkerRef.current ){
+        preparingWorkerRef.current = true;
+
+        const Tesseract = ((window as any).Tesseract! as any);
+        Tesseract.createWorker().then( async (worker: any) => {
+            if( !workerRef.current ){
+                workerRef.current = worker;
+                await worker.loadLanguage("por");
+                await worker.initialize("por");
+            }
+        })
+    }
     const [imageElmt, setImageElmt] = useState<HTMLImageElement>()
 
     const onShow = (elmt: HTMLElement | null) => {
@@ -28,7 +42,7 @@ export function ImageEditorModal(props: {file: UserFile}){
             </div>
             <div className="modal-body">
                 {imageElmt ? 
-                <ImageEditor file={props.file} imageElmt={imageElmt} />
+                <ImageEditor file={props.file} imageElmt={imageElmt} worker={workerRef.current} />
                 :
                 <>Selecione uma imagem para a editar</>
                 }
@@ -37,7 +51,7 @@ export function ImageEditorModal(props: {file: UserFile}){
     </BootstrapModal>
 }
 
-function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement}){
+function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement, worker: any}){
     let canvasBackgroundRef = useRef<HTMLCanvasElement>(null)
     let canvasForegroundRef = useRef<HTMLCanvasElement>(null)
     let ctxBackgroundRef = useRef<CanvasRenderingContext2D|null>(null)
@@ -121,11 +135,7 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement}){
     }
 
     const onClickRecognize = async () => {
-        const Tesseract = ((window as any).Tesseract! as any);
-        const worker = await Tesseract.createWorker();
-        await worker.loadLanguage("por");
-        await worker.initialize("por");
-        let {data: {words}} = await worker.recognize(canvasBackgroundRef.current!)
+        let {data: {words}} = await props.worker.recognize(canvasBackgroundRef.current!)
         boxes.current = (props.file.pool.entities.length > 0 ? words.filter(({text}:any) => props.file.pool.entities.some(e => e.offsets.some(o => normalizeEntityString(o.preview).includes(normalizeEntityString(text)) ))) : words).filter(({text}: any) => text.length > 3).map(({bbox}: any) => [bbox.x0, bbox.y0, bbox.x1, bbox.y1])
     }
 
@@ -209,76 +219,3 @@ function draw(backCtx: CanvasRenderingContext2D, foreCtx: CanvasRenderingContext
         foreCtx.fill()
     }
 }
-/*
-
-
-    const onClickSave = () => {        
-        anonImage.anonimizedSrc = canvasRef.current?.toDataURL()
-        drawBase()
-        props.file.notifyImages()
-    }
-
-    const onClickReset = () => {
-        anonImage.anonimizedSrc = undefined
-        drawBase()
-        props.file.notifyImages()
-    }
-
-    const onClickRecognize = async () => {
-        const Tesseract = ((window as any).Tesseract! as any);
-        const worker = await Tesseract.createWorker();
-        await worker.loadLanguage("por");
-        await worker.initialize("por");
-        let {data: {words}} = await worker.recognize(canvasRef.current!)
-        console.log(words) // arry use bbox
-
-    }
-
-    */
-
-/*
-drawBase();
-
-        let firstClick: number[] | null = null;
-
-        let mouseupEvent = (evt: MouseEvent) => {
-            let rect = canvas.getBoundingClientRect();
-            let [mouseX,mouseY] = [evt.clientX - rect.left, evt.clientY - rect.top]
-            if( !firstClick ){
-                firstClick = [mouseX, mouseY]
-            }
-            else{
-                ctx?.beginPath()
-                ctx?.moveTo(firstClick[0], firstClick[1]);
-                ctx?.lineTo(firstClick[0], mouseY);
-                ctx?.lineTo(mouseX, mouseY);
-                ctx?.lineTo(mouseX, firstClick[1])
-                ctx?.fill()
-                firstClick = null
-            }
-        }
-
-        canvas.addEventListener("mouseup", mouseupEvent)
-
-        return () => {
-            canvas.removeEventListener("mouseup", mouseupEvent)
-        }
-*/
-/*
-
- let anonImage = props.file.images[parseInt(props.imageElmt.dataset.imageId!)]
-
-    let drawBase = () => {
-        if( !ctxRef.current ) return;
-        let ctx = ctxRef.current;
-        let img = new Image();
-        img.src = anonImage.anonimizedSrc || anonImage.originalSrc
-        img.onload = () => {
-            ctx.canvas.width = img.width
-            ctx.canvas.height = img.height
-            ctx.clearRect(0,0,ctx.canvas.width,ctx.canvas.height)
-            ctx.drawImage(img, 0, 0)
-        }
-    } 
-
-    */
