@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { UserFile } from "../../types/UserFile";
 import BootstrapModal from "../../util/BootstrapModal";
 import {ReactSketchCanvas} from "react-sketch-canvas"
-import { Button } from "../../util/BootstrapIcons";
+import { Bicon, Button } from "../../util/BootstrapIcons";
 import { AnonimizeImage } from "../../types/AnonimizeImage";
 import { normalizeEntityString } from "../../types/Entity";
 
@@ -25,7 +25,6 @@ export function ImageEditorModal(props: {file: UserFile}){
         <div className="modal-body">
             <div className="modal-header">
                 <div><h5 className="modal-title" id="modal-types-label">Anonimizar Imagem</h5></div>
-                <small>Estamos a trabalhar nesta funcionalidade. Poderão ocurrer erros.</small>
             </div>
             <div className="modal-body">
                 {imageElmt ? 
@@ -33,10 +32,6 @@ export function ImageEditorModal(props: {file: UserFile}){
                 :
                 <>Selecione uma imagem para a editar</>
                 }
-            </div>
-            <div className="modal-footer">
-                <div className="flex-grow-1"></div>
-                <button className="btn btn-secondary" type="button" data-bs-dismiss="modal">Fechar</button>
             </div>
         </div>
     </BootstrapModal>
@@ -50,7 +45,8 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement}){
     let animFrameRequest = useRef<number>()
     let boxStart = useRef<number[]|null>(null)
     let mousePos = useRef<number[]|null>(null)
-    let boxes = useRef<number[][]>([])
+    let boxes = useRef<[number, number, number, number][]>([])
+    let checkRemoveInput = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
         if( !canvasBackgroundRef.current ) return;
@@ -63,7 +59,7 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement}){
         if( !ctxForegroundRef.current ) return;
 
         const ctx = setup(ctxBackgroundRef.current, ctxForegroundRef.current, props.file.images[parseInt(props.imageElmt.dataset.imageId!)])
-        
+        boxes.current = props.file.images[parseInt(props.imageElmt.dataset.imageId!)].boxes
         const _draw = () => {
             draw(ctxBackgroundRef.current!, ctxForegroundRef.current!, ctx, boxStart.current, mousePos.current, boxes.current)
             animFrameRequest.current = requestAnimationFrame(_draw)
@@ -89,6 +85,12 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement}){
         let [mouseX, mouseY] = [evt.clientX-rect?.left, evt.clientY-rect?.top]
         mousePos.current = [mouseX, mouseY]
     }
+
+    const intersects: (r1: number[], r2: number[]) => boolean = (
+        [r1TopLeftX, r1TopLeftY, r1BottomRightX, r1BottomRightY],
+        [r2TopLeftX, r2TopLeftY, r2BottomRightX, r2BottomRightY],
+    ) => (r1TopLeftX < r2BottomRightX) && (r1BottomRightX > r2TopLeftX) && (r1TopLeftY < r2BottomRightY) && (r1BottomRightY > r2TopLeftY)
+
     const onMouseUp = (evt: React.MouseEvent) => {
         if( !canvasForegroundRef.current ) return;
         let rect = canvasForegroundRef.current?.getBoundingClientRect();
@@ -96,18 +98,25 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement}){
         mousePos.current = [mouseX, mouseY]
         if( !boxStart.current ) return;
         let [initialX, initialY] = boxStart.current;
+        if( checkRemoveInput.current?.checked ){
+            boxes.current = boxes.current.filter(([x0,y0,x1,y1]) => !intersects([Math.min(mouseX, initialX),Math.min(mouseY, initialY),Math.max(mouseX,initialX),Math.max(mouseY, initialY)],[Math.min(x0, x1),Math.min(y0, y1),Math.max(x0,x1),Math.max(y0, y1)]));
+        }
+        else{
+            boxes.current.push([initialX,initialY,mouseX,mouseY]);
+        }
         boxStart.current = null;
-        boxes.current.push([initialX,initialY,mouseX,mouseY]);
     }
 
     const onClickSave = () => {
         props.file.images[parseInt(props.imageElmt.dataset.imageId!)].anonimizedSrc = canvasBackgroundRef.current?.toDataURL()
+        props.file.images[parseInt(props.imageElmt.dataset.imageId!)].boxes = boxes.current
         props.file.notifyImages()
     }
 
     const onClickRestore = () => {
-        props.file.images[parseInt(props.imageElmt.dataset.imageId!)].anonimizedSrc = undefined
         boxes.current = []
+        props.file.images[parseInt(props.imageElmt.dataset.imageId!)].anonimizedSrc = undefined
+        props.file.images[parseInt(props.imageElmt.dataset.imageId!)].boxes = []
         props.file.notifyImages()
     }
 
@@ -118,27 +127,26 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement}){
         await worker.initialize("por");
         let {data: {words}} = await worker.recognize(canvasBackgroundRef.current!)
         boxes.current = (props.file.pool.entities.length > 0 ? words.filter(({text}:any) => props.file.pool.entities.some(e => e.offsets.some(o => normalizeEntityString(o.preview).includes(normalizeEntityString(text)) ))) : words).filter(({text}: any) => text.length > 3).map(({bbox}: any) => [bbox.x0, bbox.y0, bbox.x1, bbox.y1])
-        console.log(words) // arry use bbox
-    }
-
-    const onMouseClick = (evt: React.MouseEvent) => {
-        if( !canvasForegroundRef.current ) return;
-        let rect = canvasForegroundRef.current?.getBoundingClientRect();
-        let [mouseX, mouseY] = [evt.clientX-rect?.left, evt.clientY-rect?.top]
-        mousePos.current = [mouseX, mouseY]
-        boxes.current = boxes.current.filter(([x0,y0,x1,y1]) => mouseX < Math.min(x0, x1) || mouseX > Math.max(x0,x1) || mouseY < Math.min(y0, y1) || mouseY > Math.max(y0,y1));
     }
 
 
     return <>
+        <div className="d-flex align-items-center justify-content-center">
+            <Button className="btn btn-primary" i="search" text="Encontrar texto" onClick={onClickRecognize}/>
+            <span className="mx-1">Modo:</span>
+            <input type="radio" className="btn-check" name="options-outlined" id="success-outlined" autoComplete="off" checked />
+            <label className="btn btn-outline-success" htmlFor="success-outlined"><Bicon n="pencil"/> Adicionar caixa</label>
+            <input ref={checkRemoveInput} type="radio" className="btn-check" name="options-outlined" id="danger-outlined" autoComplete="off"/>
+            <label className="btn btn-outline-danger" htmlFor="danger-outlined"><Bicon n="eraser"/> Apagar caixa</label>
+        </div>
         <div style={{position: "relative", display: "flex", alignItems: "center", justifyContent: "center", height: "500px", margin: "10px"}}>
             <canvas ref={canvasBackgroundRef} style={{position: "absolute", border: "2px solid var(--secondary-gold)"}}/>
-            <canvas ref={canvasForegroundRef} style={{position: "absolute", border: "2px solid var(--secondary-gold)"}} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp} onClick={onMouseClick}/>
+            <canvas ref={canvasForegroundRef} style={{position: "absolute", border: "2px solid var(--secondary-gold)"}} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp}/>
         </div>
-        <div className="w-100">
-            <Button className="btn btn-primary" i="search" text="Encontrar texto" onClick={onClickRecognize}/>
-            <Button className="btn btn-success" i="save" text="Guardar" onClick={onClickSave}/>
-            <Button className="btn btn-danger" i="arrow-counterclockwise" text="Recomeçar" onClick={onClickRestore}/>
+        <div className="d-flex">
+            <div className="flex-grow-1"></div>
+            <Button className="btn btn-danger mx-1" i="arrow-counterclockwise" text="Recomeçar" onClick={onClickRestore}/>
+            <Button className="btn btn-success mx-1" i="save" text="Guardar e fechar" data-bs-dismiss="modal" onClick={onClickSave}/>
         </div>
 
     </>
@@ -162,28 +170,37 @@ function setup(backCtx: CanvasRenderingContext2D, foreCtx: CanvasRenderingContex
         foreCtx.canvas.width = originalImage.width*c
         foreCtx.canvas.height = originalImage.height*c
     }
-    return {originalImage, anonimizedImage}
+    return originalImage
 }
 
-function draw(backCtx: CanvasRenderingContext2D, foreCtx: CanvasRenderingContext2D, {originalImage, anonimizedImage}:{originalImage: HTMLImageElement, anonimizedImage: HTMLImageElement | null}, boxStart: number[]|null, mousePos: number[]|null, boxes: number[][]){
+function draw(backCtx: CanvasRenderingContext2D, foreCtx: CanvasRenderingContext2D, originalImage: HTMLImageElement, boxStart: number[]|null, mousePos: number[]|null, boxes: number[][]){
     backCtx.clearRect(0,0,backCtx.canvas.width,backCtx.canvas.height)
+    backCtx.fillStyle = "#ffffff"
+    foreCtx.clearRect(0,0,foreCtx.canvas.width,foreCtx.canvas.height)
+    foreCtx.strokeStyle = "#aaaaaa"
     let c = 1;
     if( originalImage.height > 500 ){
         c = 500 / originalImage.height
     }
-    backCtx.drawImage(anonimizedImage || originalImage, 0, 0, originalImage.width*c, originalImage.height*c)
-
+    backCtx.drawImage(originalImage, 0, 0, originalImage.width*c, originalImage.height*c)
+    
     for( let box of boxes){
         backCtx.beginPath();
+        foreCtx.beginPath();
         backCtx.moveTo(box[0], box[1])
+        foreCtx.moveTo(box[0], box[1])
         backCtx.lineTo(box[0], box[3])
+        foreCtx.lineTo(box[0], box[3])
         backCtx.lineTo(box[2], box[3])
+        foreCtx.lineTo(box[2], box[3])
         backCtx.lineTo(box[2], box[1])
+        foreCtx.lineTo(box[2], box[1])
         backCtx.fill();
+        foreCtx.lineTo(box[0], box[1])
+        foreCtx.stroke();
     }
 
     if( boxStart && mousePos ){
-        foreCtx.clearRect(0,0,foreCtx.canvas.width,foreCtx.canvas.height)
         foreCtx.beginPath();
         foreCtx.moveTo(boxStart[0], boxStart[1])
         foreCtx.lineTo(mousePos[0], boxStart[1])

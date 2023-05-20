@@ -55,7 +55,11 @@ export class UserFile {
 
         this.images = {};
         images.forEach((img, i) => {
-            this.images[i] = {originalSrc: img.src, anonimizedSrc: obj.images[i]?obj.images[i].anonimizedSrc:undefined}
+            this.images[i] = {
+                originalSrc: img.src,
+                anonimizedSrc: obj.images[i]?obj.images[i].anonimizedSrc:undefined,
+                boxes: obj.images[i]? obj.images[i].boxes: []
+            }
         })
 
         this.imagesListeners = []
@@ -67,7 +71,7 @@ export class UserFile {
 
     toSavedFile(): SavedUserFile{
         let savedImages = {} as Record<number, SaveAnonimizeImage>;
-        Object.entries(this.images).forEach(([key, img]) => savedImages[parseInt(key)] = {anonimizedSrc: img.anonimizedSrc});
+        Object.entries(this.images).forEach(([key, img]) => savedImages[parseInt(key)] = {anonimizedSrc: img.anonimizedSrc, boxes: img.boxes});
         return {
             name: this.name,
             html_contents: this.html_contents,
