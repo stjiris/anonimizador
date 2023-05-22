@@ -19,6 +19,7 @@ import { ExitButton } from "../../util/exitButton";
 import { EntitiesStyle } from "../../util/entitiesStyle";
 import { TypesModalContent } from "./TypesModalContent";
 import { ImageEditorModal } from "./ImageEditorModal";
+import { InfoModalContent } from "../../util/infoModalContent";
 
 interface AnonimizeProps{
     file: UserFile
@@ -57,7 +58,6 @@ export default function Anonimize({file, ...props}: AnonimizeProps){
                     <ExitButton file={file} setUserFile={props.setUserFile} />
                     <SavedBadge file={file} />
                     <Button title="Gerir tipos" i="file-earmark-font" text="Tipos" className="red-link btn m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types"/>
-                    <SuggestButton file={file} state={anonimizeState.state} setRequesting={setRequesting} requesting={requesting}/>
                     <Sep/>
                     <select title="Escolher modo" className="red-link btn m-1 p-1 text-start" onChange={(ev) => setAnonimizeSate(getAnonimizedStateCombined(ev.target.value as AnonimizeVisualState)) } defaultValue={AnonimizeVisualState.TYPES} style={{backgroundColor: "var(--secondary-gold)"}}>
                         <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
@@ -67,6 +67,7 @@ export default function Anonimize({file, ...props}: AnonimizeProps){
                     </select>
                     <Button className="red-link btn m-1 p-1" onClick={() => onClickDownload(anonimizeState.state, file, anonimizedHTML.current)} i="download" title="Download ficheiro"/>
                     <Sep/>
+                    <SuggestButton file={file} state={anonimizeState.state} setRequesting={setRequesting} requesting={requesting}/>
                     <HistoryCommands pool={file.pool}/>
                     <a className="red-link m-1 p-1 btn" href="https://docs.google.com/document/d/e/2PACX-1vTaR6kTasw0iGYSSMbJpq2wMgrBN5K37jg5ab_qMih_VpXRO5ZAAeeeDiRYzvyrD_VDxBM2ccW-VuBQ/pub" target="_blank" title="Abrir ajuda"><Bicon n="question-circle"/></a>
                 </div>
@@ -88,6 +89,9 @@ export default function Anonimize({file, ...props}: AnonimizeProps){
             <TypesModalContent file={file}/>
         </BootstrapModal>
         <ImageEditorModal file={file}/>
+        <BootstrapModal id="modal-info">
+            <InfoModalContent file={file}/>
+        </BootstrapModal>
     </>
 }
 

@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { UserFile } from "../../types/UserFile";
 import BootstrapModal from "../../util/BootstrapModal";
-import {ReactSketchCanvas} from "react-sketch-canvas"
 import { Bicon, Button } from "../../util/BootstrapIcons";
 import { AnonimizeImage } from "../../types/AnonimizeImage";
 import { normalizeEntityString } from "../../types/Entity";
@@ -125,6 +124,7 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement, worker
         props.file.images[parseInt(props.imageElmt.dataset.imageId!)].anonimizedSrc = canvasBackgroundRef.current?.toDataURL()
         props.file.images[parseInt(props.imageElmt.dataset.imageId!)].boxes = boxes.current
         props.file.notifyImages()
+        props.file.save()
     }
 
     const onClickRestore = () => {
@@ -132,6 +132,7 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement, worker
         props.file.images[parseInt(props.imageElmt.dataset.imageId!)].anonimizedSrc = undefined
         props.file.images[parseInt(props.imageElmt.dataset.imageId!)].boxes = []
         props.file.notifyImages()
+        props.file.save()
     }
 
     const onClickRecognize = async () => {

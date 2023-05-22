@@ -1,11 +1,13 @@
 import { useEffect } from "react"
 import { UserFile } from "../types/UserFile"
-import { Bicon } from "./BootstrapIcons"
+import { Bicon, Button } from "./BootstrapIcons"
 
 export function SavedBadge({file}: {file: UserFile}){
     const saved = file.useSave()();
 
     const title = saved ? "Guardado automaticamente." : "Não guardado"
+    const icon = saved ? "file-earmark-check-fill" : "file-earmark-x-fill"
+    const alertClass = saved ? "alert-success" : "alert-danger"
 
-    return <span title={title} className={`text-body text-nowrap alert alert-${saved ? "success" : "danger"} p-1 m-1`}><Bicon n={saved ? "file-earmark-check-fill" : "file-earmark-x-fill"}/> <small>{file.name}</small></span>
+    return <Button i={icon} text={file.name} title={title} className={`small text-body text-nowrap btn btn-sm ${alertClass} p-1 m-1`} data-bs-toggle="modal" data-bs-target="#modal-info"/>
 }

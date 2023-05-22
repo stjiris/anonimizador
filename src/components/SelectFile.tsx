@@ -7,12 +7,8 @@ import { EntityTypeColorDefaults } from "../types/EntityTypes";
 import { Bicon, Button } from "../util/BootstrapIcons";
 import { AUTO_ANONIMIZE } from "../util/anonimizeFunctions";
 
-type SelectFileProps = {
-    setUserFile: (file: UserFile) => void
-}
-
 // https://stackoverflow.com/a/18650828/2573422
-function formatBytes(a: number,b=2){if(!+a)return"0 Bytes";const c=0>b?0:b,d=Math.floor(Math.log(a)/Math.log(1024));return`${parseFloat((a/Math.pow(1024,d)).toFixed(c))} ${["Bytes","KiB","MiB","GiB","TiB","PiB","EiB","ZiB","YiB"][d]}`}
+export function formatBytes(a: number,b=2){if(!+a)return"0 Bytes";const c=0>b?0:b,d=Math.floor(Math.log(a)/Math.log(1024));return`${parseFloat((a/Math.pow(1024,d)).toFixed(c))} ${["Bytes","KiB","MiB","GiB","TiB","PiB","EiB","ZiB","YiB"][d]}`}
 
 const intl = new Intl.DateTimeFormat(["pt","en"], {dateStyle: "short", timeStyle: "medium"});
 
