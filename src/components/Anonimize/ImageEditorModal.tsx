@@ -188,6 +188,7 @@ function draw(backCtx: CanvasRenderingContext2D, foreCtx: CanvasRenderingContext
     backCtx.fillStyle = "#ffffff"
     foreCtx.clearRect(0,0,foreCtx.canvas.width,foreCtx.canvas.height)
     foreCtx.strokeStyle = "#aaaaaa"
+    foreCtx.fillStyle = "#aaaaaaaa"
     let c = 1;
     if( originalImage.height > 500 ){
         c = 500 / originalImage.height
@@ -216,6 +217,7 @@ function draw(backCtx: CanvasRenderingContext2D, foreCtx: CanvasRenderingContext
         foreCtx.lineTo(mousePos[0], boxStart[1])
         foreCtx.lineTo(mousePos[0], mousePos[1])
         foreCtx.lineTo(boxStart[0], mousePos[1])
+        foreCtx.stroke()
         foreCtx.fill()
     }
 }
