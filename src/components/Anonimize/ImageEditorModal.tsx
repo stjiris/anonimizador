@@ -59,11 +59,13 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement, worker
     let boxStart = useRef<number[]|null>(null)
     let mousePos = useRef<number[]|null>(null)
     let boxes = useRef<[number, number, number, number][]>([])
+    let colorInputRef = useRef<HTMLInputElement>(null)
     let checkRemoveInput = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
         if( !canvasBackgroundRef.current ) return;
         if( !canvasForegroundRef.current ) return;
+        if( !colorInputRef.current ) return;
 
         ctxBackgroundRef.current = canvasBackgroundRef.current.getContext("2d");
         ctxForegroundRef.current = canvasForegroundRef.current.getContext("2d");
@@ -73,8 +75,12 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement, worker
 
         const ctx = setup(ctxBackgroundRef.current, ctxForegroundRef.current, props.file.images[parseInt(props.imageElmt.dataset.imageId!)])
         boxes.current = props.file.images[parseInt(props.imageElmt.dataset.imageId!)].boxes
+        colorInputRef.current.value = props.file.images[parseInt(props.imageElmt.dataset.imageId!)].boxColor || "#00000"
+
+
         const _draw = () => {
-            draw(ctxBackgroundRef.current!, ctxForegroundRef.current!, ctx, boxStart.current, mousePos.current, boxes.current)
+            let color = colorInputRef.current?.value || "#ffffff"
+            draw(ctxBackgroundRef.current!, ctxForegroundRef.current!, ctx, boxStart.current, mousePos.current, boxes.current, color)
             animFrameRequest.current = requestAnimationFrame(_draw)
         }
         animFrameRequest.current = requestAnimationFrame(_draw)
@@ -123,6 +129,7 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement, worker
     const onClickSave = () => {
         props.file.images[parseInt(props.imageElmt.dataset.imageId!)].anonimizedSrc = canvasBackgroundRef.current?.toDataURL()
         props.file.images[parseInt(props.imageElmt.dataset.imageId!)].boxes = boxes.current
+        props.file.images[parseInt(props.imageElmt.dataset.imageId!)].boxColor = colorInputRef.current?.value || "#000000"
         props.file.notifyImages()
         props.file.save()
     }
@@ -131,6 +138,7 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement, worker
         boxes.current = []
         props.file.images[parseInt(props.imageElmt.dataset.imageId!)].anonimizedSrc = undefined
         props.file.images[parseInt(props.imageElmt.dataset.imageId!)].boxes = []
+        props.file.images[parseInt(props.imageElmt.dataset.imageId!)].boxColor = colorInputRef.current?.value || "#000000"
         props.file.notifyImages()
         props.file.save()
     }
@@ -144,11 +152,13 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement, worker
     return <>
         <div className="d-flex align-items-center justify-content-center">
             <Button className="btn btn-primary" i="search" text="Encontrar texto" onClick={onClickRecognize}/>
-            <span className="mx-1">Modo:</span>
+            <span className="mx-1"><Bicon n="dot"/></span>
             <input type="radio" className="btn-check" name="options-outlined" id="success-outlined" autoComplete="off" checked />
-            <label className="btn btn-outline-success" htmlFor="success-outlined"><Bicon n="pencil"/> Adicionar caixa</label>
+            <label className="btn btn-outline-success" htmlFor="success-outlined"><Bicon n="plus-square-dotted"/> Adicionar</label>
             <input ref={checkRemoveInput} type="radio" className="btn-check" name="options-outlined" id="danger-outlined" autoComplete="off"/>
-            <label className="btn btn-outline-danger" htmlFor="danger-outlined"><Bicon n="eraser"/> Apagar caixa</label>
+            <label className="btn btn-outline-danger" htmlFor="danger-outlined"><Bicon n="dash-square"/> Remover</label>
+            <span className="mx-1"><Bicon n="dot"/></span>
+            <input type="color" ref={colorInputRef} className="form-control form-control-color" title="Escolher cor"/>
         </div>
         <div style={{position: "relative", display: "flex", alignItems: "center", justifyContent: "center", height: "500px", margin: "10px"}}>
             <canvas ref={canvasBackgroundRef} style={{position: "absolute", border: "2px solid var(--secondary-gold)"}}/>
@@ -184,12 +194,12 @@ function setup(backCtx: CanvasRenderingContext2D, foreCtx: CanvasRenderingContex
     return originalImage
 }
 
-function draw(backCtx: CanvasRenderingContext2D, foreCtx: CanvasRenderingContext2D, originalImage: HTMLImageElement, boxStart: number[]|null, mousePos: number[]|null, boxes: number[][]){
+function draw(backCtx: CanvasRenderingContext2D, foreCtx: CanvasRenderingContext2D, originalImage: HTMLImageElement, boxStart: number[]|null, mousePos: number[]|null, boxes: number[][], color: string){
     backCtx.clearRect(0,0,backCtx.canvas.width,backCtx.canvas.height)
-    backCtx.fillStyle = "#ffffff"
+    backCtx.fillStyle = `${color}`
     foreCtx.clearRect(0,0,foreCtx.canvas.width,foreCtx.canvas.height)
-    foreCtx.strokeStyle = "#aaaaaa"
-    foreCtx.fillStyle = "#aaaaaaaa"
+    foreCtx.strokeStyle = `${color}`
+    foreCtx.fillStyle = `${color}aa`
     let c = 1;
     if( originalImage.height > 500 ){
         c = 500 / originalImage.height

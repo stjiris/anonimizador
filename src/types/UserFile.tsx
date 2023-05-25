@@ -58,7 +58,8 @@ export class UserFile {
             this.images[i] = {
                 originalSrc: img.src,
                 anonimizedSrc: obj.images[i]?obj.images[i].anonimizedSrc:undefined,
-                boxes: obj.images[i]? obj.images[i].boxes: []
+                boxes: obj.images[i]? obj.images[i].boxes : [],
+                boxColor: obj.images[i]? obj.images[i].boxColor : "#ffffff"
             }
         })
 
@@ -71,7 +72,7 @@ export class UserFile {
 
     toSavedFile(): SavedUserFile{
         let savedImages = {} as Record<number, SaveAnonimizeImage>;
-        Object.entries(this.images).forEach(([key, img]) => savedImages[parseInt(key)] = {anonimizedSrc: img.anonimizedSrc, boxes: img.boxes});
+        Object.entries(this.images).forEach(([key, img]) => savedImages[parseInt(key)] = {anonimizedSrc: img.anonimizedSrc, boxes: img.boxes, boxColor: img.boxColor});
         return {
             name: this.name,
             html_contents: this.html_contents,
