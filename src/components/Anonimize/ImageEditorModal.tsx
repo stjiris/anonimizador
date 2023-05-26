@@ -127,7 +127,12 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement, worker
     }
 
     const onClickSave = () => {
-        props.file.images[parseInt(props.imageElmt.dataset.imageId!)].anonimizedSrc = canvasBackgroundRef.current?.toDataURL()
+        if( boxes.current.length == 0){
+            props.file.images[parseInt(props.imageElmt.dataset.imageId!)].anonimizedSrc = undefined
+        }
+        else{
+            props.file.images[parseInt(props.imageElmt.dataset.imageId!)].anonimizedSrc = canvasBackgroundRef.current?.toDataURL()
+        }
         props.file.images[parseInt(props.imageElmt.dataset.imageId!)].boxes = boxes.current
         props.file.images[parseInt(props.imageElmt.dataset.imageId!)].boxColor = colorInputRef.current?.value || "#000000"
         props.file.notifyImages()
@@ -160,7 +165,7 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement, worker
             <span className="mx-1"><Bicon n="dot"/></span>
             <input type="color" ref={colorInputRef} className="form-control form-control-color" title="Escolher cor"/>
         </div>
-        <div style={{position: "relative", display: "flex", alignItems: "center", justifyContent: "center", height: "500px", margin: "10px"}}>
+        <div style={{position: "relative", display: "flex", alignItems: "center", justifyContent: "center", height: "800px", margin: "10px"}}>
             <canvas ref={canvasBackgroundRef} style={{position: "absolute", border: "2px solid var(--secondary-gold)"}}/>
             <canvas ref={canvasForegroundRef} style={{position: "absolute", border: "2px solid var(--secondary-gold)"}} onMouseDown={onMouseDown} onMouseMove={onMouseMove} onMouseUp={onMouseUp}/>
         </div>
@@ -183,8 +188,8 @@ function setup(backCtx: CanvasRenderingContext2D, foreCtx: CanvasRenderingContex
     }
     originalImage.onload = () => {
         let c = 1;
-        if( originalImage.height > 500 ){
-            c = 500 / originalImage.height
+        if( originalImage.height > 800 ){
+            c = 800 / originalImage.height
         }
         backCtx.canvas.width = originalImage.width*c
         backCtx.canvas.height = originalImage.height*c
@@ -201,8 +206,8 @@ function draw(backCtx: CanvasRenderingContext2D, foreCtx: CanvasRenderingContext
     foreCtx.strokeStyle = `${color}`
     foreCtx.fillStyle = `${color}aa`
     let c = 1;
-    if( originalImage.height > 500 ){
-        c = 500 / originalImage.height
+    if( originalImage.height > 800 ){
+        c = 800 / originalImage.height
     }
     backCtx.drawImage(originalImage, 0, 0, originalImage.width*c, originalImage.height*c)
     
