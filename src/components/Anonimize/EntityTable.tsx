@@ -28,9 +28,9 @@ export function EntityTable({file}: {file: UserFile}){
                 renderTopToolbarCustomActions={({table}) => {
                     let selectedeKeys = selectedIndexes(table).length
                     return <div className="d-flex w-100"> 
-                        <Button i="union" text="Juntar" className="btn btn-primary" disabled={selectedeKeys <= 1} onClick={() => joinSelectedEntities(table, file.pool)} />
-                        <Button i="exclude" text="Separar" className="btn btn-warning mx-2" disabled={selectedeKeys === 0} onClick={() => splitSelectedEntities(table, file.pool)} />
-                        <Button i="trash" text="Remover" className="btn btn-danger" disabled={selectedeKeys === 0} onClick={() => removeSelectedEntities(table, file.pool)} />
+                        <Button i="union" text="Juntar" className="btn btn-primary my-0 mx-1 p-1" disabled={selectedeKeys <= 1} onClick={() => joinSelectedEntities(table, file.pool)} />
+                        <Button i="exclude" text="Separar" className="btn btn-warning my-0 mx-1 p-1" disabled={selectedeKeys === 0} onClick={() => splitSelectedEntities(table, file.pool)} />
+                        <Button i="trash" text="Remover" className="btn btn-danger my-0 mx-1 p-1" disabled={selectedeKeys === 0} onClick={() => removeSelectedEntities(table, file.pool)} />
                     </div>
                 }}
                 muiTableBodyCellProps={{style: {

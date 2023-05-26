@@ -7,10 +7,10 @@ export function SuggestButton({setRequesting, file, requesting, state}: {setRequ
     let ents = file.pool.useEntities()();
 
     if( requesting ){
-        return <button className="red-link btn m-1 p-1" disabled><span className="spinner-border spinner-border-sm" role="status"></span> A sugerir...</button>
+        return <button className="btn btn-small btn-primary m-1 p-1" disabled><span className="spinner-border spinner-border-sm" role="status"></span> A sugerir...</button>
     }
 
-    return <Button i="file-earmark-play" text="Sugerir" className="red-link btn m-1 p-1" onClick={() => {setRequesting(true); runRemoteNlp(file).finally(() => setRequesting(false))}} disabled={ents.length > 0 || requesting || state !== AnonimizeStateState.TAGGED} />
+    return <Button i="file-earmark-play" text="Sugerir" className="btn btn-small btn-primary m-1 p-1" onClick={() => {setRequesting(true); runRemoteNlp(file).finally(() => setRequesting(false))}} disabled={ents.length > 0 || requesting || state !== AnonimizeStateState.TAGGED} />
 }
 
 

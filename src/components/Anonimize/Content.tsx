@@ -41,6 +41,9 @@ export default function AnonimizeContent(props: AnonimizeContentProps){
                 if( images[i] && images[i].anonimizedSrc ){
                     img.src = images[i].anonimizedSrc!
                 }
+                else{
+                    img.src = images[i].originalSrc
+                }
             }
             else{
                 img.src = images[i].originalSrc

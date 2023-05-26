@@ -153,10 +153,10 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement, worker
         <div className="d-flex align-items-center justify-content-center">
             <Button className="btn btn-primary" i="search" text="Encontrar texto" onClick={onClickRecognize}/>
             <span className="mx-1"><Bicon n="dot"/></span>
-            <input type="radio" className="btn-check" name="options-outlined" id="success-outlined" autoComplete="off" checked />
-            <label className="btn btn-outline-success" htmlFor="success-outlined"><Bicon n="plus-square-dotted"/> Adicionar</label>
-            <input ref={checkRemoveInput} type="radio" className="btn-check" name="options-outlined" id="danger-outlined" autoComplete="off"/>
-            <label className="btn btn-outline-danger" htmlFor="danger-outlined"><Bicon n="dash-square"/> Remover</label>
+            <input type="radio" className="btn-check" name="image-mode" id="add-box-button" autoComplete="off" defaultChecked={true} />
+            <label className="btn btn-outline-success" htmlFor="add-box-button"><Bicon n="plus-square-dotted"/> Adicionar</label>
+            <input ref={checkRemoveInput} type="radio" className="btn-check" name="image-mode" id="remove-box-button" autoComplete="off" defaultChecked={false}/>
+            <label className="btn btn-outline-danger" htmlFor="remove-box-button"><Bicon n="dash-square"/> Remover</label>
             <span className="mx-1"><Bicon n="dot"/></span>
             <input type="color" ref={colorInputRef} className="form-control form-control-color" title="Escolher cor"/>
         </div>

@@ -57,7 +57,7 @@ export default function Anonimize({file, ...props}: AnonimizeProps){
                 <div className="position-sticky top-0 bg-white p-0 m-0 d-flex" style={{borderBottom: "5px solid #161616",zIndex:1}}>
                     <ExitButton file={file} setUserFile={props.setUserFile} />
                     <SavedBadge file={file} />
-                    <Button title="Gerir tipos" i="file-earmark-font" text="Tipos" className="red-link btn m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types"/>
+                    <Button title="Gerir tipos" i="file-earmark-font" text="Tipos" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types"/>
                     <Sep/>
                     <select title="Escolher modo" className="red-link btn m-1 p-1 text-start" onChange={(ev) => setAnonimizeSate(getAnonimizedStateCombined(ev.target.value as AnonimizeVisualState)) } defaultValue={AnonimizeVisualState.TYPES} style={{backgroundColor: "var(--secondary-gold)"}}>
                         <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
@@ -65,7 +65,7 @@ export default function Anonimize({file, ...props}: AnonimizeProps){
                         <option value={AnonimizeVisualState.TYPES}>{AnonimizeVisualState.TYPES}</option>
                         <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
                     </select>
-                    <Button className="red-link btn m-1 p-1" onClick={() => onClickDownload(anonimizeState.state, file, anonimizedHTML.current)} i="download" title="Download ficheiro"/>
+                    <Button className="red-link btn m-1 p-1" onClick={() => onClickDownload(anonimizeState.state, file, anonimizedHTML.current)} i="download" title="Descarregar ficheiro"/>
                     <Sep/>
                     <SuggestButton file={file} state={anonimizeState.state} setRequesting={setRequesting} requesting={requesting}/>
                     <HistoryCommands pool={file.pool}/>
