@@ -5,6 +5,7 @@ import json
 import csv
 import datetime
 import click
+import unicodedata
 
 @click.command()
 @click.option('-i', '--input-file', help='text to find entities',type=click.File('r'),default=sys.stdin, show_default="STDIN")
@@ -13,7 +14,7 @@ import click
 @click.option('-m','--model', help="model to use", type=click.Choice(['model-best', 'spacy-pt', 'none']), default='model-best', show_default=True)
 def process(input_file, output_file, format, model):
     with input_file:
-        contents = input_file.read()
+        contents = unicodedata.normalize("NFKC", input_file.read())
     if model == 'model-best':
         model = spacy.load("./python-cli/model-best")
     if model == 'spacy-pt':

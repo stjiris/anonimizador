@@ -1,25 +1,18 @@
-import React, { useEffect, useRef, useState } from "react";
-import { UserFile } from "../../types/UserFile";
-import MaterialReactTable, { MRT_ColumnDef, MRT_Row, MRT_TableInstance } from "material-react-table";
-import AnonimizeContent from "./Content";
-import { MRT_Localization_PT } from "material-react-table/locales/pt";
-import { Entity, EntityI } from "../../types/Entity";
-import { runRemoteNlp, SuggestButton } from "../../util/runRemoteNlp";
-import { updateUserFile } from '../../util/UserFileCRUDL';
+import { useEffect, useRef, useState } from "react";
 import { AnonimizeStateCombined, AnonimizeStateState, AnonimizeVisualState, getAnonimizedStateCombined } from "../../types/AnonimizeState";
-import { EntityPool } from "../../types/EntityPool";
+import { UserFile } from "../../types/UserFile";
 import { Bicon, Button } from "../../util/BootstrapIcons";
-import { table } from "console";
-import { tab } from "@testing-library/user-event/dist/tab";
-import { HistoryCommands } from "./HistoryCommands";
-import { SavedBadge } from "../../util/savedBadge";
 import BootstrapModal from "../../util/BootstrapModal";
-import { EntityTable } from "./EntityTable";
-import { ExitButton } from "../../util/exitButton";
 import { EntitiesStyle } from "../../util/entitiesStyle";
-import { TypesModalContent } from "./TypesModalContent";
-import { ImageEditorModal } from "./ImageEditorModal";
+import { ExitButton } from "../../util/exitButton";
 import { InfoModalContent } from "../../util/infoModalContent";
+import { SuggestButton } from "../../util/runRemoteNlp";
+import { SavedBadge } from "../../util/savedBadge";
+import AnonimizeContent from "./Content";
+import { EntityTable } from "./EntityTable";
+import { HistoryCommands } from "./HistoryCommands";
+import { ImageEditorModal } from "./ImageEditorModal";
+import { TypesModalContent } from "./TypesModalContent";
 
 interface AnonimizeProps{
     file: UserFile
