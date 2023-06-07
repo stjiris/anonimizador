@@ -111,9 +111,7 @@ def new_line_segmenter(doc):
         
     return doc
 
-@Language.component("label_professions")
-def label_professions(doc):
-    
+def label_professions(doc, ents):
     #Create matcher
     matcher = Matcher(doc.vocab)
     
@@ -128,7 +126,8 @@ def label_professions(doc):
     new_professions = get_both_genders(professions)
     
     #Make each profession a pattern        
-    pattern=[{"LOWER": {"IN": new_professions}}]#, {"TEXT": {"REGEX": r"\b(\w+)(a|o|as|os)?\b"}}]
+    pattern=[{"LOWER": {"IN": new_professions}}]
+    
     #Add patterns to the matcher
     matcher.add("PROFESSIONS",[pattern])
     
@@ -136,7 +135,7 @@ def label_professions(doc):
     matches = matcher(doc)
     
     #Copy entities from doc to the new entity list
-    for ent in doc.ents:
+    for ent in ents:
         entities.append(ent)
         
     #Finds where match is on document and adds it to entity list
@@ -144,11 +143,8 @@ def label_professions(doc):
         span = doc[start:end]
         entities.append(FakeEntity("PROF", start, end, span.text))
         
-    #Sort entity list by their position in the doc
-    entities = sorted(entities,key=lambda x: x.start_char)
-    
-    #Return doc with new entities
-    return FakeDoc(entities, doc.text)
+    #Return new entities
+    return entities
 
 def get_both_genders(words):
     new_words=[]
@@ -224,44 +220,40 @@ def process_entities(ents):
 
 def add_missed_entities(nlp, doc, ents):
     # collect the text and label of entities recognized by the model
-    recognized_entities = {ent.text.lower(): ent.label_ for ent in ents}
+    recognized_entities = {ent.text: ent.label_ for ent in ents}
 
     # create a PhraseMatcher with attr LOWER to be case insensitive
-    matcher = PhraseMatcher(nlp.vocab, attr='LOWER')
+    matcher = PhraseMatcher(nlp.vocab)
     # create list of text to look for
     patterns = [nlp.make_doc(text) for text in recognized_entities.keys()]
     # add list to matcher
     matcher.add("MISSED_ENTITY", patterns)
     # run matcher and save matches
     matches = matcher(doc)
-    # copy ents
-    new_ents = ents
+
+    # sort the matches by length in descending order
+    matches = sorted(matches, key=lambda x: x[2] - x[1], reverse=True)
+
+    # to keep track of spans already added
+    added_spans = []
+
+    new_ents = []
     # loop matches to add with original label to new_ents list
     for match_id, start, end in matches:
         if nlp.vocab.strings[match_id] == "MISSED_ENTITY":
-            # assign the same label as the recognized entity
-            new_ent = Span(doc, start, end, label=recognized_entities[doc[start:end].text.lower()])
-            new_ents.append(new_ent)
+            # check if this span overlaps with any of the spans already added
+            if not any(start <= old_start < end or start < old_end <= end for old_start, old_end in added_spans):
+                # if not, add it to new_ents
+                new_ent = Span(doc, start, end, label=recognized_entities[doc[start:end].text])
+                new_ents.append(new_ent)
+                added_spans.append((start, end))
 
     return new_ents
 
-
-# def check_missed_entities(text, ents):
-
-    
-
-#     for ent in ents:
-#         start = text.find(ent.text)
-#         if start != ent.start_char:
-#             ents.append(FakeEntity(ent.label, start, start+len(ent.text),))
-            
-#     return ents
-        
     
 def nlp(text):
     snlp = spacy.load(spacy_model)
     snlp.add_pipe("new_line_segmenter", before="ner")
-    #snlp.add_pipe("label_professions", after="ner")
     snlp.add_pipe("remove_entities_with_excluded_words", last=True)
     print(snlp.pipe_names)
     
@@ -299,9 +291,10 @@ def nlp(text):
                 ent.end_char += position
                 ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
         
+    ents = label_professions(doc, ents)
     ents = process_entities(ents)
-    ents = sorted(ents,key=lambda x: x.start_char)
     ents = add_missed_entities(snlp, doc, ents)
+    ents = sorted(ents,key=lambda x: x.start_char)
     return FakeDoc(ents, doc.text)
 
 if __name__ == "__main__":

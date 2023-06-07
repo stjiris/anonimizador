@@ -4,12 +4,15 @@ import sys
 import csv
 from spacy.language import Language
 from spacy.matcher import Matcher
+from spacy.matcher import PhraseMatcher
+from spacy.tokens import Span
+
 
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
 PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A-Z0-9]*"
 PATTERN_DATA = r"\d{1,2}(-|\.|/)\d{1,2}(-|\.|/)\d{4}"
 EXCLUDE = ['Tribunal','Réu','Reu','Ré','Supremo Tribunal de Justiça',"STJ","Supremo Tribunal",
-            'Requerida','Autora','Instância','Relação','Supremo','Recorrente','Recorrida'
+            'Requerida','Autora','Instância','Relação','Supremo','Recorrente','Recorrida','Recorrido',
             'Tribunal da Relação','artº','Exª','Exº','Secção do Supremo Tribunal de Justiça']
 EXCLUDE = [x.lower() for x in EXCLUDE]
 
@@ -108,9 +111,7 @@ def new_line_segmenter(doc):
             doc[i+1].is_sent_start = True
     return doc
 
-@Language.component("label_professions")
-def label_professions(doc):
-    
+def label_professions(doc, ents):
     #Create matcher
     matcher = Matcher(doc.vocab)
     
@@ -133,7 +134,7 @@ def label_professions(doc):
     matches = matcher(doc)
     
     #Copy entities from doc to the new entity list
-    for ent in doc.ents:
+    for ent in ents:
         entities.append(ent)
         
     #Finds where match is on document and adds it to entity list
@@ -141,11 +142,8 @@ def label_professions(doc):
         span = doc[start:end]
         entities.append(FakeEntity("PROF", start, end, span.text))
         
-    #Sort entity list by their position in the doc
-    entities = sorted(entities,key=lambda x: x.start_char)
-    
-    #Return doc with new entities
-    return FakeDoc(entities, doc.text)
+    #Return new entities
+    return entities
 
 def process_entities(ents, text):
     with open('patterns.csv', 'r') as csvfd:
@@ -198,10 +196,40 @@ def split_into_chunks(text, tokenizer, max_length=512):
 
     return chunks, positions
 
+def add_missing_entities(model, doc, entities):
+    # collect the text and label of entities recognized by the model
+    recognized_entities = {ent.text: ent.label_ for ent in entities}
+    # create a PhraseMatcher with attr LOWER to be case insensitive
+    matcher = PhraseMatcher(model.vocab)
+    # create list of text to look for
+    patterns = [model.make_doc(text) for text in recognized_entities.keys()]
+    # add list to matcher
+    matcher.add("MISSED_ENTITY", patterns)
+    # run matcher and save matches
+    matches = matcher(doc)
+    
+    # sort the matches by length (end-start) in descending order (reverse=True)
+    matches = sorted(matches, key=lambda x: x[2] - x[1], reverse=True)
+
+    # to keep track of spans already added
+    added_spans = []
+    
+    new_ents = []
+    # loop matches to add with original label to new_ents list    
+    for match_id, start, end in matches:
+        if model.vocab.strings[match_id] == "MISSED_ENTITY":
+            # check if this span overlaps with any of the spans already added
+            if not any(start <= old_start < end or start < old_end <= end for old_start, old_end in added_spans):
+                # if not, add it to new_ents
+                new_ent = Span(doc, start, end, label=recognized_entities[doc[start:end].text])
+                new_ents.append(new_ent)
+                added_spans.append((start, end))
+            
+    return new_ents
+
 def nlp(text, model):
     model.add_pipe("new_line_segmenter", before="ner")
-    model.add_pipe("label_professions", after="ner")
-    
+
     #Create entity list
     ents = []
     
@@ -232,6 +260,8 @@ def nlp(text, model):
                 ent.end_char += position
                 ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
         
-    ents = process_entities(ents, text)   
+    ents = label_professions(doc, ents)
+    ents = process_entities(ents, text)
+    ents = add_missing_entities(model,doc,ents)
     ents = sorted(ents,key=lambda x: x.start_char)
     return FakeDoc(ents, doc.text)
