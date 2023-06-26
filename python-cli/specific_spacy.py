@@ -105,9 +105,9 @@ def get_both_genders(words):
 @Language.component("new_line_segmenter")
 def new_line_segmenter(doc):
     for i, token in enumerate(doc[:-1]):
-        # Check if the current token is a newline character
+        #Check if the current token is a newline character
         if token.text == "\n" or token.text =="\n\n" or token.text.endswith("."):
-            # If it is, treat the next token as the start of a new sentence
+            #If it is, treat the next token as the start of a new sentence
             doc[i+1].is_sent_start = True
     return doc
 
@@ -197,31 +197,31 @@ def split_into_chunks(text, tokenizer, max_length=512):
     return chunks, positions
 
 def add_missing_entities(model, doc, entities):
-    # collect the text and label of entities recognized by the model
-    recognized_entities = {ent.text: ent.label_ for ent in entities}
-    # create a PhraseMatcher with attr LOWER to be case insensitive
-    matcher = PhraseMatcher(model.vocab)
-    # create list of text to look for
+    #Collect the text and label of entities recognized by the model
+    recognized_entities = {ent.text.lower(): ent.label_ for ent in entities}
+    #Create matcher with attr LOWER to be case insensitive
+    matcher = PhraseMatcher(model.vocab, attr='LOWER')
+    #Create list of text to look for (needed in order for matcher to work)
     patterns = [model.make_doc(text) for text in recognized_entities.keys()]
-    # add list to matcher
+    #Add list to matcher
     matcher.add("MISSED_ENTITY", patterns)
-    # run matcher and save matches
+    #Run matcher and save matches
     matches = matcher(doc)
     
-    # sort the matches by length (end-start) in descending order (reverse=True)
+    #Sort the matches by length (end_char - start_char) in descending order (reverse=True)
     matches = sorted(matches, key=lambda x: x[2] - x[1], reverse=True)
 
-    # to keep track of spans already added
+    #To keep track of spans already added. List of tuples (start_char,end_char)
     added_spans = []
-    
+    #New entity list
     new_ents = []
-    # loop matches to add with original label to new_ents list    
+    #Loop matches to add with original label to new_ents list    
     for match_id, start, end in matches:
         if model.vocab.strings[match_id] == "MISSED_ENTITY":
-            # check if this span overlaps with any of the spans already added
+            #Check if this span overlaps with any of the spans already added (needed because of repeated smaller entities)
             if not any(start <= old_start < end or start < old_end <= end for old_start, old_end in added_spans):
-                # if not, add it to new_ents
-                new_ent = Span(doc, start, end, label=recognized_entities[doc[start:end].text])
+                #If not, add it to new_ents
+                new_ent = Span(doc, start, end, label=recognized_entities[doc[start:end].text.lower()])
                 new_ents.append(new_ent)
                 added_spans.append((start, end))
             

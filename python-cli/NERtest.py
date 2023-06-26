@@ -220,10 +220,9 @@ def process_entities(ents):
 
 def add_missed_entities(nlp, doc, ents):
     # collect the text and label of entities recognized by the model
-    recognized_entities = {ent.text: ent.label_ for ent in ents}
+    recognized_entities = {ent.text.lower(): ent.label_ for ent in ents}
 
-    # create a PhraseMatcher with attr LOWER to be case insensitive
-    matcher = PhraseMatcher(nlp.vocab)
+    matcher = PhraseMatcher(nlp.vocab, attr='LOWER')
     # create list of text to look for
     patterns = [nlp.make_doc(text) for text in recognized_entities.keys()]
     # add list to matcher
@@ -244,7 +243,7 @@ def add_missed_entities(nlp, doc, ents):
             # check if this span overlaps with any of the spans already added
             if not any(start <= old_start < end or start < old_end <= end for old_start, old_end in added_spans):
                 # if not, add it to new_ents
-                new_ent = Span(doc, start, end, label=recognized_entities[doc[start:end].text])
+                new_ent = Span(doc, start, end, label=recognized_entities[doc[start:end].text.lower()])
                 new_ents.append(new_ent)
                 added_spans.append((start, end))
 
