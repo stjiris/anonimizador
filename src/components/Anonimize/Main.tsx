@@ -4,7 +4,7 @@ import { UserFile } from "../../types/UserFile";
 import { Bicon, Button } from "../../util/BootstrapIcons";
 import BootstrapModal from "../../util/BootstrapModal";
 import { EntitiesStyle } from "../../util/entitiesStyle";
-import { ExitButton } from "../../util/exitButton";
+import { ExitButton, ForceExitButton } from "../../util/exitButton";
 import { InfoModalContent } from "../../util/infoModalContent";
 import { SuggestButton } from "../../util/runRemoteNlp";
 import { SavedBadge } from "../../util/savedBadge";
@@ -34,6 +34,10 @@ export default function Anonimize({file, ...props}: AnonimizeProps){
             evt.preventDefault();
             evt.returnValue = "Trabalho em progresso não guardado automaticamente. Confirma que pertende sair?"
         }
+        if( requesting ){
+            evt.preventDefault();
+            evt.returnValue = "A anonimização automática será cancelada. Confirma que pertende sair?"
+        }
     }
 
     useEffect(() => {
@@ -41,14 +45,14 @@ export default function Anonimize({file, ...props}: AnonimizeProps){
         return () => {
             window.removeEventListener("beforeunload", onExit)
         }
-    },[])
+    },[requesting, saved])
     
     return <>
         <div className="row container-fluid bg-dark m-0 p-0">
             <EntitiesStyle file={file}/>
             <div className="col-8">
                 <div className="position-sticky top-0 bg-white p-0 m-0 d-flex" style={{borderBottom: "5px solid #161616",zIndex:1}}>
-                    <ExitButton file={file} setUserFile={props.setUserFile} />
+                    {requesting ? <ForceExitButton setUserFile={props.setUserFile}/> : <ExitButton file={file} setUserFile={props.setUserFile} />}
                     <SavedBadge file={file} />
                     <Button title="Gerir tipos" i="file-earmark-font" text="Tipos" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types"/>
                     <Sep/>

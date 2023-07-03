@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { AnonimizeStateState } from "../types/AnonimizeState";
 import { Entity, normalizeEntityString } from "../types/Entity";
 import { UserFile } from "../types/UserFile";
@@ -5,12 +6,21 @@ import { Button } from "./BootstrapIcons";
 
 export function SuggestButton({setRequesting, file, requesting, state}: {setRequesting: (b: boolean) => void, file: UserFile, requesting: boolean, state: AnonimizeStateState}){
     let ents = file.pool.useEntities()();
+    const disabled = ents.length > 0 || requesting || state !== AnonimizeStateState.TAGGED;
+    const signal = useRef<AbortController>()
+
+    useEffect(() => {
+        signal.current = new AbortController();
+        return () => {
+            signal.current?.abort()
+        }
+    }, [])
 
     if( requesting ){
         return <button className="btn btn-small btn-primary m-1 p-1" disabled><span className="spinner-border spinner-border-sm" role="status"></span> A sugerir...</button>
     }
 
-    return <Button i="file-earmark-play" text="Sugerir" className="btn btn-small btn-primary m-1 p-1" onClick={() => {setRequesting(true); runRemoteNlp(file).finally(() => setRequesting(false))}} disabled={ents.length > 0 || requesting || state !== AnonimizeStateState.TAGGED} />
+    return <Button i="file-earmark-play" text="Sugerir" className={`btn btn-small btn-primary m-1 p-1 ${disabled ? "border-0 bg-white text-muted" : ""}`} onClick={() => {setRequesting(true); runRemoteNlp(file, signal.current?.signal).finally(() => setRequesting(false))}} disabled={disabled} />
 }
 
 
@@ -32,7 +42,7 @@ function textFrom(html: Element): string{
 }
 
 let runRemoteNlpRequesting = false;
-export async function runRemoteNlp(file: UserFile){
+export async function runRemoteNlp(file: UserFile, abort?: AbortSignal){
     if( runRemoteNlpRequesting ) return;
     runRemoteNlpRequesting = true;
 
@@ -45,16 +55,23 @@ export async function runRemoteNlp(file: UserFile){
 
     let resArray: RemoteEntity[] = await fetch("./from-text", {
         method: "POST",
-        body: fd
+        body: fd,
+        signal: abort
     }).then( r => {
         if( r.status === 200 )
             return r.json();
         alert( `Servidor respondeu: ${r.status} (${r.statusText})` )
         return [];
     }).catch( e => {
+        if( e instanceof DOMException && e.name === "AbortError") return []; 
         alert( e );
         return [];
     })
+
+    if( resArray.length === 0 ) {
+        runRemoteNlpRequesting = false;
+        return;
+    }
     
     let entities: {[key: string]: Entity} = {};
     let usedIndexes: {[key: number]: boolean} = {};

@@ -14,7 +14,7 @@ import unicodedata
 @click.option('-m','--model', help="model to use", type=click.Choice(['model-best', 'spacy-pt', 'none']), default='model-best', show_default=True)
 def process(input_file, output_file, format, model):
     with input_file:
-        contents = unicodedata.normalize("NFKC", input_file.read())
+        contents = input_file.read()
     if model == 'model-best':
         model = spacy.load("./python-cli/model-best")
     if model == 'spacy-pt':
