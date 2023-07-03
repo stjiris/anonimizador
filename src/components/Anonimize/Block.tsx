@@ -19,7 +19,7 @@ export default function AnonimizeBlock(props: AnonimizeBlockProps){
     let elmt = props.element;
 
     if( elmt.nodeType === Node.TEXT_NODE ){
-        let elmtStr = elmt.nodeValue?.normalize("NFKC") || ""; // should never be null tho...
+        let elmtStr = elmt.nodeValue || ""; // should never be null tho...
         let tokensElems = [];
         var reg = /([0-9]+)|([A-Za-zÀ-ÖØ-öø-ÿ]+)|([^A-Za-zÀ-ÖØ-öø-ÿ0-9])/g;
         var token;
