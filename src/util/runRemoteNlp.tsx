@@ -23,12 +23,12 @@ interface RemoteEntity {
 
 function textFrom(html: Element): string{
     if( html.tagName == "P" ){
-        return (html.textContent?.normalize("NFKC") || "") + "\n";
+        return (html.textContent || "") + "\n";
     }
     if( html.nodeType === document.TEXT_NODE ){
-        return (html.textContent?.normalize("NFKC") || "");
+        return (html.textContent || "");
     }
-    return Array.from(html.children).map( el => textFrom(el)).join("").normalize("NFKC");
+    return Array.from(html.children).map( el => textFrom(el)).join("");
 }
 
 let runRemoteNlpRequesting = false;

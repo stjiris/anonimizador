@@ -45,7 +45,7 @@ export class UserFile {
         let dom = new DOMParser().parseFromString(this.html_contents, "text/html");
         this.doc = dom.body; 
 
-        const text = this.doc.textContent?.normalize("NFKC");
+        const text = this.doc.textContent;
         this.pool = new EntityPool(text || "", obj.ents.map((e,i) => Entity.makeEntity(e, i)))
         this.pool.onChange(() => this.save());
 

@@ -24,7 +24,7 @@ export default function AnonimizeContent(props: AnonimizeContentProps){
     
     for(let i=0; i < props.file.doc.childNodes.length; i++){
         listItems.push(<AnonimizeBlock key={i} element={props.file.doc.childNodes[i]} offset={offset} types={entityTypes} ents={ents} anonimizeState={props.anonimizeState}/>)
-        offset += (props.file.doc.childNodes[i].textContent?.normalize("NFKC") || "").length;
+        offset += (props.file.doc.childNodes[i].textContent || "").length;
     }
 
     useEffect(() => {

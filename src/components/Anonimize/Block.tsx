@@ -37,7 +37,7 @@ export default function AnonimizeBlock(props: AnonimizeBlockProps){
     let suboffset = 0;
     for(let i = 0; i < elmt.childNodes.length; i++){
         r.push(<AnonimizeBlock key={i} element={elmt.childNodes[i]} offset={props.offset + suboffset} ents={props.ents} types={props.types} anonimizeState={props.anonimizeState}/>)
-        suboffset += (elmt.childNodes[i].textContent?.normalize("NFKC") || "").length
+        suboffset += (elmt.childNodes[i].textContent || "").length
     }
     
     let attrs: any  = {};
