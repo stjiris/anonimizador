@@ -21,6 +21,16 @@ interface RemoteEntity {
     end_char: number
 }
 
+function textFrom(html: Element): string{
+    if( html.tagName == "P" ){
+        return (html.textContent?.normalize("NFKC") || "") + "\n";
+    }
+    if( html.nodeType === document.TEXT_NODE ){
+        return (html.textContent?.normalize("NFKC") || "");
+    }
+    return Array.from(html.children).map( el => textFrom(el)).join("").normalize("NFKC");
+}
+
 let runRemoteNlpRequesting = false;
 export async function runRemoteNlp(file: UserFile){
     if( runRemoteNlpRequesting ) return;
@@ -29,8 +39,7 @@ export async function runRemoteNlp(file: UserFile){
     let doc = file.doc;
     let pool = file.pool;
     
-    let text = Array.from(doc.children).map(h => h.textContent).join("\n").normalize("NFKC")
-
+    let text = textFrom(doc);
     let fd = new FormData()
     fd.append("file", new Blob([text]), "input.txt")
 
