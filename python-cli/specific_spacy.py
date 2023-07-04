@@ -219,7 +219,7 @@ def add_missing_entities(model, doc, entities):
     for match_id, start, end in matches:
         if model.vocab.strings[match_id] == "MISSED_ENTITY":
             #Check if this span overlaps with any of the spans already added (needed because of repeated smaller entities)
-            if not any(start <= old_start < end or start < old_end <= end for old_start, old_end in added_spans):
+            if not any(old_start <= start <= old_end or old_start <= end <= old_end for old_start, old_end in added_spans):
                 #If not, add it to new_ents
                 new_ent = Span(doc, start, end, label=recognized_entities[doc[start:end].text.lower()])
                 new_ents.append(new_ent)

@@ -241,7 +241,7 @@ def add_missed_entities(nlp, doc, ents):
     for match_id, start, end in matches:
         if nlp.vocab.strings[match_id] == "MISSED_ENTITY":
             # check if this span overlaps with any of the spans already added
-            if not any(start <= old_start < end or start < old_end <= end for old_start, old_end in added_spans):
+            if not any(old_start <= start <= old_end or old_start <= end <= old_end for old_start, old_end in added_spans):
                 # if not, add it to new_ents
                 new_ent = Span(doc, start, end, label=recognized_entities[doc[start:end].text.lower()])
                 new_ents.append(new_ent)
