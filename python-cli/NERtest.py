@@ -249,6 +249,45 @@ def add_missed_entities(nlp, doc, ents):
 
     return new_ents
 
+def merge(ents, text):
+    # Initialize an empty list to store the merged entities
+    merged = []
+    # Initialize a variable to store the last entity processed
+    last_ent = None
+
+    # Loop over each entity in the provided list
+    for ent in ents:
+        # If there is no last entity (this is the first iteration), copy the current entity to last_ent
+        if not last_ent:
+            last_ent = FakeEntity(ent.label_, ent.start_char, ent.end_char, ent.text)
+        else:
+            # If the label of the last entity is not the same as the label of the current entity
+            if str(last_ent.label_) != str(ent.label_):
+                # Add the last entity to the merged list
+                merged.append(last_ent)
+                # And replace the last entity with the current one
+                last_ent = FakeEntity(ent.label_, ent.start_char, ent.end_char, ent.text)
+            else:
+                # If the label is the same and there are no alphanumeric or newline characters between the last entity and the current one
+                if all(not s.isalnum() and not s == "\n" for s in text[last_ent.end_char:ent.start_char]):
+                    # Update the end_char of the last entity to the maximum end_char of the last entity and the current one
+                    last_ent.end_char = max(ent.end_char, last_ent.end_char)
+                    # Update the text of the last entity to cover the entire span from start_char to end_char in the original text
+                    last_ent.text = text[last_ent.start_char:last_ent.end_char]
+                else:
+                    # If there are alphanumeric or newline characters between the last entity and the current one, add the last entity to the merged list
+                    merged.append(last_ent)
+                    # And replace the last entity with the current one
+                    last_ent = FakeEntity(ent.label_, ent.start_char, ent.end_char, ent.text)
+
+    # If there is a last entity after the loop (this will always be the case unless the input list was empty), add it to the merged list
+    if last_ent:
+        merged.append(last_ent)
+
+    # Return the list of merged entities
+    return merged
+
+
     
 def nlp(text):
     snlp = spacy.load(spacy_model)
@@ -294,6 +333,7 @@ def nlp(text):
     ents = process_entities(ents)
     ents = add_missed_entities(snlp, doc, ents)
     ents = sorted(ents,key=lambda x: x.start_char)
+    ents = merge(ents, text)
     return FakeDoc(ents, doc.text)
 
 if __name__ == "__main__":
