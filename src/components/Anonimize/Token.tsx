@@ -7,7 +7,7 @@ type AnonimizeTokenProps = {
     string: string
     offset: number
     entityTypes: EntityTypeI[]
-    ents: Entity[]
+    ent?: Entity
     anonimizeState: AnonimizeStateState
 }
 
@@ -15,17 +15,14 @@ export default function AnonimizeToken(props: AnonimizeTokenProps){
     // Token Anonimized
     let isPartAnonimize: Entity | null = null; 
     let isPartAnonimizeOffset = null;
-    for( let ent of props.ents ){
-        for(let offset of ent.offsets){
+    if( props.ent ){
+        for(let offset of props.ent.offsets){
             if(offset.start <= props.offset && props.offset + props.string.length-1 <= offset.end){
                 isPartAnonimizeOffset = offset;
-                isPartAnonimize = ent;
+                isPartAnonimize = props.ent;
                 break;
             }
             if( offset.start > props.offset ) break;
-        }
-        if( isPartAnonimize ){
-            break
         }
     }
 
@@ -35,7 +32,7 @@ export default function AnonimizeToken(props: AnonimizeTokenProps){
 
     
     if( isPartAnonimize && isPartAnonimizeOffset ){
-        let type: EntityTypeI = props.entityTypes.find( c => c.name == isPartAnonimize!.type) || {name: `${isPartAnonimize!.type}*`, functionIndex: FULL_ANONIMIZE, color: "red"};
+        let type: EntityTypeI = props.entityTypes.find( c => c.name === isPartAnonimize!.type) || {name: `${isPartAnonimize!.type}*`, functionIndex: FULL_ANONIMIZE, color: "red"};
         dataAttrs['data-anonimize-cod'] = isPartAnonimize.anonimizingFunction(props.entityTypes)(isPartAnonimize.offsets[0].preview, isPartAnonimize.type, isPartAnonimize.index, isPartAnonimize.typeIndex, isPartAnonimize.funcIndex);
         dataAttrs['data-anonimize-type'] = type.name;
         dataAttrs['data-anonimize-color'] = type.color;

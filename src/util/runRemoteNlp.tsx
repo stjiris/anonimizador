@@ -3,9 +3,10 @@ import { AnonimizeStateState } from "../types/AnonimizeState";
 import { Entity, normalizeEntityString } from "../types/Entity";
 import { UserFile } from "../types/UserFile";
 import { Button } from "./BootstrapIcons";
+import { useEntities } from "./uses";
 
 export function SuggestButton({setRequesting, file, requesting, state}: {setRequesting: (b: boolean) => void, file: UserFile, requesting: boolean, state: AnonimizeStateState}){
-    let ents = file.pool.useEntities()();
+    let ents = useEntities(file.pool)
     const disabled = ents.length > 0 || requesting || state !== AnonimizeStateState.TAGGED;
     const signal = useRef<AbortController>()
 

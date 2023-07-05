@@ -6,11 +6,12 @@ import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { UserFile } from "../../types/UserFile";
 import { EntityTypeI } from "../../types/EntityTypes";
 import { FULL_ANONIMIZE } from "../../util/anonimizeFunctions";
+import { useEntities, useTypes } from "../../util/uses";
 
 
 export function EntityTable({file}: {file: UserFile}){
-    const ents = file.pool.useEntities()();
-    const types = file.useTypes()();
+    const ents = useEntities(file.pool);
+    const types = useTypes(file);
     
     return <MaterialReactTable
             key="ent-table"

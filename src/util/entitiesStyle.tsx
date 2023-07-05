@@ -1,7 +1,8 @@
 import { UserFile } from "../types/UserFile";
+import { useTypes } from "./uses";
 
 export function EntitiesStyle({file}:{file: UserFile}){
-    const entityTypes = file.useTypes()();
+    const entityTypes = useTypes(file)
     return <style>
         {/* Generate type colors */}
         {`[data-anonimize-type$="*"]{

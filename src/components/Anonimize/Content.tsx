@@ -3,6 +3,7 @@ import { AnonimizeStateState } from '../../types/AnonimizeState'
 import AnonimizeBlock from './Block';
 import AnonimizeTooltip from './Tooltip';
 import { UserFile } from '../../types/UserFile';
+import { useEntities, useImages, useTypes } from '../../util/uses';
 
 interface AnonimizeContentProps {
     file: UserFile
@@ -18,13 +19,15 @@ export default function AnonimizeContent(props: AnonimizeContentProps){
     let listItems: JSX.Element[] = [];
     let offset = 0;
 
-    const ents = props.file.pool.useEntities()();
-    const entityTypes = props.file.useTypes()();
-    const images = props.file.useImages()();
+    const ents = useEntities(props.file.pool)
+    const entityTypes = useTypes(props.file);
+    const images = useImages(props.file)
     
     for(let i=0; i < props.file.doc.childNodes.length; i++){
-        listItems.push(<AnonimizeBlock key={i} element={props.file.doc.childNodes[i]} offset={offset} types={entityTypes} ents={ents} anonimizeState={props.anonimizeState}/>)
-        offset += (props.file.doc.childNodes[i].textContent || "").length;
+        let size = (props.file.doc.childNodes[i].textContent || "").length;
+        let cents = ents.filter( e => e.offsets.some( o => o.start >= offset && o.end <= offset+size))
+        listItems.push(<AnonimizeBlock key={i} element={props.file.doc.childNodes[i]} offset={offset} types={entityTypes} ents={cents} anonimizeState={props.anonimizeState}/>)
+        offset += size;
     }
 
     useEffect(() => {

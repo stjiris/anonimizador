@@ -194,20 +194,6 @@ export class UserFile {
 
     }
 
-    useTypes(){
-        return () => {
-            const [types, setTypes] = useState<EntityTypeI[]>([...this.types])
-            const update = () => setTypes([...this.types])
-            useEffect(() => {
-                this.onTypes(update)
-                return () => {
-                    this.offTypes(update)
-                }
-            })
-            return types
-        }
-    }
-
     onImages( cb: (images: Record<number,AnonimizeImage>) => void ){
         this.imagesListeners.push(cb);
     }
@@ -223,20 +209,6 @@ export class UserFile {
     notifyImages(){
         for (let cb of this.imagesListeners) {
             cb({...this.images});
-        }
-    }
-
-    useImages(){
-        return () => {
-            const [images, setImages] = useState<Record<number,AnonimizeImage>>({...this.images})
-            const update = () => setImages({...this.images})
-            useEffect(() => {
-                this.onImages(update)
-                return () => {
-                    this.offImages(update)
-                }
-            })
-            return images
         }
     }
 }

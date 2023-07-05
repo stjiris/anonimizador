@@ -1,4 +1,4 @@
-import React, { useId } from "react"
+import React, { useId, useMemo } from "react"
 import { AnonimizeImage } from "../../types/AnonimizeImage"
 import { AnonimizeStateState } from "../../types/AnonimizeState"
 import { Entity } from "../../types/Entity"
@@ -22,10 +22,10 @@ export default function AnonimizeBlock(props: AnonimizeBlockProps){
         let elmtStr = elmt.nodeValue || ""; // should never be null tho...
         let tokensElems = [];
         var reg = /([0-9]+)|([A-Za-zÀ-ÖØ-öø-ÿ]+)|([^A-Za-zÀ-ÖØ-öø-ÿ0-9])/g;
-        var token;
+        var token: RegExpExecArray | null;
         while((token = reg.exec(elmtStr)) !== null) {
-            
-            tokensElems.push(<AnonimizeToken entityTypes={props.types} key={token.index} string={token[0]} offset={props.offset+token.index} ents={props.ents} anonimizeState={props.anonimizeState} />);
+            let ent = props.ents.find( e => e.offsets.some( o => o.start <= props.offset+token!.index && o.end+1 >= props.offset+token!.index+token![0].length))
+            tokensElems.push(<AnonimizeToken entityTypes={props.types} key={token.index} string={token[0]} offset={props.offset+token.index} ent={ent} anonimizeState={props.anonimizeState} />);
         }
         return <>{tokensElems}</>
     }
@@ -36,7 +36,9 @@ export default function AnonimizeBlock(props: AnonimizeBlockProps){
     let r = [];
     let suboffset = 0;
     for(let i = 0; i < elmt.childNodes.length; i++){
-        r.push(<AnonimizeBlock key={i} element={elmt.childNodes[i]} offset={props.offset + suboffset} ents={props.ents} types={props.types} anonimizeState={props.anonimizeState}/>)
+        let size = (elmt.childNodes[i].textContent || "").length;
+        let cents = props.ents.filter( e => e.offsets.some( o => o.start >= props.offset+suboffset && o.end <= props.offset+suboffset+size))
+        r.push(<AnonimizeBlock key={i} element={elmt.childNodes[i]} offset={props.offset + suboffset} ents={cents} types={props.types} anonimizeState={props.anonimizeState}/>)
         suboffset += (elmt.childNodes[i].textContent || "").length
     }
     

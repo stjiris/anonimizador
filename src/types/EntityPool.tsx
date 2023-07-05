@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Entity, EntityI, normalizeEntityString, OffsetRange } from "./Entity";
 
 export enum AddEntityDryRun {
@@ -248,20 +248,5 @@ export class EntityPool {
 
         // sort by start offset
         this.updateOrder("Adicionar ocurrência");
-    }
-
-    // shortcut to manage state
-    useEntities(){
-        return () => {
-                const [ents, setEnts] = useState<Entity[]>([...this.entities])
-                const update = () => setEnts([...this.entities])
-                useEffect(() => {
-                    this.onChange(update);
-                    return () => {
-                        this.offChange(update);
-                    }
-                }, [])
-                return ents;
-        }
     }
 }

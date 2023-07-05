@@ -4,9 +4,10 @@ import { functionsWithDescriptionArray } from "../../util/anonimizeFunctions";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { EntityTypeColorDefaults, EntityTypeI } from "../../types/EntityTypes";
 import { Bicon, Button } from "../../util/BootstrapIcons";
+import { useTypes } from "../../util/uses";
 
 export function TypesModalContent({file}:{file: UserFile}){
-    let types = file.useTypes()()
+    let types = useTypes(file);
     return <>
         <div className="modal-header">
             <div><h5 className="modal-title" id="modal-types-label">Gerir tipos de entidades</h5></div>
