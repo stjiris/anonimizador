@@ -13,7 +13,7 @@ PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A
 PATTERN_DATA = r"\d{1,2}(-|\.|/)\d{1,2}(-|\.|/)\d{4}"
 EXCLUDE = ['Tribunal','Réu','Reu','Ré','Supremo Tribunal de Justiça',"STJ","Supremo Tribunal",
             'Requerida','Autora','Instância','Relação','Supremo','Recorrente','Recorrida','Recorrido',
-            'Tribunal da Relação','artº','Exª','Exº','Secção do Supremo Tribunal de Justiça']
+            'Tribunal da Relação','artº','Exª','Exº','Secção do Supremo Tribunal de Justiça','A.A.']
 EXCLUDE = [x.lower() for x in EXCLUDE]
 
 class FakeEntity:
@@ -246,6 +246,10 @@ def merge(ents, text):
 
         # Merge LOCs if there are no alnum or \n between them
         if str(last_ent.label_) == "LOC" and all(not s.isalnum() and not s == "\n" for s in text[last_ent.end_char:ent.start_char]):
+            last_ent.end_char = max(ent.end_char, last_ent.end_char)
+            last_ent.text = text[last_ent.start_char:last_ent.end_char]
+        # Merge ORGs if they are separated by "-" or whitespace
+        elif str(last_ent.label_) == "ORG" and all(s.isspace() or s == "-" and not s == "\n" for s in text[last_ent.end_char:ent.start_char]):
             last_ent.end_char = max(ent.end_char, last_ent.end_char)
             last_ent.text = text[last_ent.start_char:last_ent.end_char]
         # Merge other labels if separated only by whitespace
