@@ -198,9 +198,9 @@ def split_into_chunks(text, tokenizer, max_length=512):
 
 def add_missing_entities(model, doc, entities):
     #Collect the text and label of entities recognized by the model
-    recognized_entities = {ent.text.lower(): ent.label_ for ent in entities}
+    recognized_entities = {ent.text: ent.label_ for ent in entities}
     #Create matcher with attr LOWER to be case insensitive
-    matcher = PhraseMatcher(model.vocab, attr='LOWER')
+    matcher = PhraseMatcher(model.vocab)
     #Create list of text to look for (needed in order for matcher to work)
     patterns = [model.make_doc(text) for text in recognized_entities.keys()]
     #Add list to matcher
@@ -221,11 +221,46 @@ def add_missing_entities(model, doc, entities):
             #Check if this span overlaps with any of the spans already added (needed because of repeated smaller entities)
             if not any(old_start <= start <= old_end or old_start <= end <= old_end for old_start, old_end in added_spans):
                 #If not, add it to new_ents
-                new_ent = Span(doc, start, end, label=recognized_entities[doc[start:end].text.lower()])
+                new_ent = Span(doc, start, end, label=recognized_entities[doc[start:end].text])
                 new_ents.append(new_ent)
                 added_spans.append((start, end))
             
     return new_ents
+
+def merge(ents, text):
+    # Store merged list
+    merged = []
+    # Variable that stores the last entity processed
+    last_ent = None
+    for ent in ents:
+        # If it's the first entity in the list, simply copy it to last_ent
+        if not last_ent:
+            last_ent = FakeEntity(ent.label_, ent.start_char, ent.end_char, ent.text)
+            continue
+
+        # If the current entity's label is different from the last entity's label, append to merged list 
+        if str(last_ent.label_) != str(ent.label_):
+            merged.append(last_ent)
+            last_ent = FakeEntity(ent.label_, ent.start_char, ent.end_char, ent.text)
+            continue
+
+        # Merge LOCs if there are no alnum or \n between them
+        if str(last_ent.label_) == "LOC" and all(not s.isalnum() and not s == "\n" for s in text[last_ent.end_char:ent.start_char]):
+            last_ent.end_char = max(ent.end_char, last_ent.end_char)
+            last_ent.text = text[last_ent.start_char:last_ent.end_char]
+        # Merge other labels if separated only by whitespace
+        elif all(s.isspace() and not s == "\n" for s in text[last_ent.end_char:ent.start_char]):
+            last_ent.end_char = max(ent.end_char, last_ent.end_char)
+            last_ent.text = text[last_ent.start_char:last_ent.end_char]
+        # Otherwise, add entity to merged list
+        else:
+            merged.append(last_ent)
+            last_ent = FakeEntity(ent.label_, ent.start_char, ent.end_char, ent.text)
+
+    # Append final entity
+    if last_ent:
+        merged.append(last_ent)
+    return merged
 
 def nlp(text, model):
     model.add_pipe("new_line_segmenter", before="ner")
@@ -264,4 +299,5 @@ def nlp(text, model):
     ents = process_entities(ents, text)
     ents = add_missing_entities(model,doc,ents)
     ents = sorted(ents,key=lambda x: x.start_char)
+    ents = merge(ents, text)
     return FakeDoc(ents, doc.text)
