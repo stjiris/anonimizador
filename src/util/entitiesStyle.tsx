@@ -8,6 +8,6 @@ export function EntitiesStyle({file}:{file: UserFile}){
         {`[data-anonimize-type$="*"]{
             background: red;
         }`}
-        {entityTypes.map( ({name, color}) => `[data-anonimize-type="${name}"]{background:${color}}`)}
+        {Object.values(entityTypes).map( ({name, color}) => `[data-anonimize-type="${name}"]{background:${color}}`)}
     </style>
 }

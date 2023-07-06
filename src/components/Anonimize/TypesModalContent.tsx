@@ -87,9 +87,10 @@ const ANON_COLUMN: (file: UserFile) => MRT_ColumnDef<EntityTypeI> = (file) => ({
     enableEditing: true,
     muiTableBodyCellEditTextFieldProps: ({row,table}) => ({
         select: true,
-        children: functionsWithDescriptionArray.map( (desc,i) => <option key={i} label={desc.name} value={i} selected={row.original.functionIndex == i}>{desc.name}</option>),
+        children: functionsWithDescriptionArray.map( (desc,i) => <option key={i} label={desc.name} value={i}>{desc.name}</option>),
         SelectProps: {
-            native: true
+            native: true,
+            defaultValue: row.original.functionIndex
         },
         onChange: (evt) => file.updateType(row.original.name, row.original.color, parseInt(evt.target.value))
     })

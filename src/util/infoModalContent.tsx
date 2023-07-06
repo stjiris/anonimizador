@@ -3,12 +3,12 @@ import { UserFile } from "../types/UserFile";
 import { functionsWithDescriptionArray } from "./anonimizeFunctions";
 import MaterialReactTable from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
-import { useEntities, useImages, useTypes } from "./uses";
+import { useEntities, useImages, useSave, useTypes } from "./uses";
 
 const intl = new Intl.DateTimeFormat(["pt","en"], {dateStyle: "short", timeStyle: "medium"});
 
 export function InfoModalContent({file}: {file:UserFile}){
-    let saved = file.useSave()();
+    let saved = useSave(file);
     let types = useTypes(file);
     let images = useImages(file);
     let entities = useEntities(file.pool);

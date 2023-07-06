@@ -111,20 +111,6 @@ export class UserFile {
         }
     }
 
-    useSave(){
-        return () => {
-            const [saved, setSaved] = useState<boolean>(this.saved)
-            const update = () => setSaved(this.saved)
-            useEffect(() => {
-                this.onSave(update);
-                return () => {
-                    this.offSave(update);
-                }
-            }, [this.saved])
-            return saved;  
-        }
-    }
-
     addType(key: string, color: string, funcIndex: number){
         if( this.types.some( t => t.name === key ) ){
             return this.updateType(key, color, funcIndex)

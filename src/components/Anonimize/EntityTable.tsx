@@ -6,12 +6,14 @@ import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { UserFile } from "../../types/UserFile";
 import { EntityTypeI } from "../../types/EntityTypes";
 import { FULL_ANONIMIZE } from "../../util/anonimizeFunctions";
-import { useEntities, useTypes } from "../../util/uses";
+import { useEntities, useTypesDict } from "../../util/uses";
+import { useMemo } from "react";
 
 
 export function EntityTable({file}: {file: UserFile}){
     const ents = useEntities(file.pool);
-    const types = useTypes(file);
+    const types = useTypesDict(file);
+    const typesList = useMemo(() => Object.values(types), [types])
     
     return <MaterialReactTable
             key="ent-table"
@@ -47,7 +49,7 @@ export function EntityTable({file}: {file: UserFile}){
                 initialState={{
                     density: 'compact'
                 }}
-                columns={[HEADER,ENTITY,TYPE(file.pool,types),ANONIMIZE(file.pool,types)]} 
+                columns={[HEADER,ENTITY,TYPE(file.pool,typesList),ANONIMIZE(file.pool,types)]} 
                 data={ents}
                 localization={{...MRT_Localization_PT, noRecordsToDisplay: "Sem ocurrências de entidades"}}/>
 }
@@ -129,19 +131,19 @@ const TYPE: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<Entity> = 
 })
 
 
-const ANONIMIZE: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (pool, types) => ({
+const ANONIMIZE: (pool: EntityPool, types: Record<string, EntityTypeI>) => MRT_ColumnDef<Entity> = (pool, types) => ({
     header: "Anonimização",
     accessorKey: "overwriteAnonimization",
     enableColumnFilter: false,
     enableColumnDragging: false,
     enableColumnActions: false,
     size: 40,
-    Cell: ({row}) => row.original.overwriteAnonimization ? row.original.overwriteAnonimization : <span className="text-muted">{row.original.anonimizingFunction(types)(row.original.offsets[0].preview, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex)}</span>,
+    Cell: ({row}) => row.original.overwriteAnonimization ? row.original.overwriteAnonimization : <span className="text-muted">{row.original.anonimizingFunction(types[row.original.type])(row.original.offsets[0].preview, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex)}</span>,
     muiTableBodyCellProps: ({cell, table}) => ({
         onClick: () => table.setEditingCell(cell)
     }),
     muiTableBodyCellEditTextFieldProps: ({row}) => ({
-        placeholder: row.original.anonimizingFunction(types)(row.original.offsets[0].preview, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex),
+        placeholder: row.original.anonimizingFunction(types[row.original.type])(row.original.offsets[0].preview, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex),
         onBlur: (event) => {
             let o = row.original.overwriteAnonimization;
             row.original.overwriteAnonimization = event.target.value;

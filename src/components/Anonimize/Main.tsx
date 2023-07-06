@@ -8,6 +8,7 @@ import { ExitButton, ForceExitButton } from "../../util/exitButton";
 import { InfoModalContent } from "../../util/infoModalContent";
 import { SuggestButton } from "../../util/runRemoteNlp";
 import { SavedBadge } from "../../util/savedBadge";
+import { useSave } from "../../util/uses";
 import AnonimizeContent from "./Content";
 import { EntityTable } from "./EntityTable";
 import { HistoryCommands } from "./HistoryCommands";
@@ -24,7 +25,7 @@ const Sep = () => <small className="text-white text-nowrap p-1 m-1 flex-grow-1 t
 export default function Anonimize({file, ...props}: AnonimizeProps){
     // States
     const [anonimizeState, setAnonimizeSate] = useState<AnonimizeStateCombined>(getAnonimizedStateCombined(AnonimizeVisualState.TYPES));
-    const saved = file.useSave()();
+    const saved = useSave(file);
     const [requesting, setRequesting] = useState<boolean>(false);
 
     const anonimizedHTML = useRef<string>("");    

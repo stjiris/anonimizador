@@ -3,14 +3,15 @@ import { AnonimizeImage } from "../../types/AnonimizeImage"
 import { AnonimizeStateState } from "../../types/AnonimizeState"
 import { Entity } from "../../types/Entity"
 import { EntityTypeI } from "../../types/EntityTypes"
+import { SpecificOffsetRange } from "../../util/uses"
 import AnonimizeToken from "./Token"
 
 
 interface AnonimizeBlockProps{
     element: ChildNode
     offset: number
-    ents: Entity[]
-    types: EntityTypeI[]
+    specificOffsets: SpecificOffsetRange[]
+    types: Record<string,EntityTypeI>
     anonimizeState: AnonimizeStateState
 }
 
@@ -23,9 +24,19 @@ export default function AnonimizeBlock(props: AnonimizeBlockProps){
         let tokensElems = [];
         var reg = /([0-9]+)|([A-Za-zÀ-ÖØ-öø-ÿ]+)|([^A-Za-zÀ-ÖØ-öø-ÿ0-9])/g;
         var token: RegExpExecArray | null;
+        let remaining = props.specificOffsets;
         while((token = reg.exec(elmtStr)) !== null) {
-            let ent = props.ents.find( e => e.offsets.some( o => o.start <= props.offset+token!.index && o.end+1 >= props.offset+token!.index+token![0].length))
-            tokensElems.push(<AnonimizeToken entityTypes={props.types} key={token.index} string={token[0]} offset={props.offset+token.index} ent={ent} anonimizeState={props.anonimizeState} />);
+            let current = remaining.at(0);
+            if( current && current.end < props.offset+token.index+token[0].length ){
+                remaining = remaining.slice(1); // current token ends after current
+            }
+            if( current && current.start > props.offset+token.index ){
+                // we dont want to use it yet
+                tokensElems.push(<AnonimizeToken  key={token.index} string={token[0]} offset={props.offset+token.index} anonimizeState={props.anonimizeState} />);
+            }
+            else if(current){
+                tokensElems.push(<AnonimizeToken  type={current.ent.type ? props.types[current.ent.type] : undefined} key={token.index} string={token[0]} offset={props.offset+token.index} specificOffset={current} anonimizeState={props.anonimizeState} />);
+            }
         }
         return <>{tokensElems}</>
     }
@@ -35,10 +46,19 @@ export default function AnonimizeBlock(props: AnonimizeBlockProps){
 
     let r = [];
     let suboffset = 0;
+    let remaining = props.specificOffsets;
     for(let i = 0; i < elmt.childNodes.length; i++){
         let size = (elmt.childNodes[i].textContent || "").length;
-        let cents = props.ents.filter( e => e.offsets.some( o => o.start >= props.offset+suboffset && o.end <= props.offset+suboffset+size))
-        r.push(<AnonimizeBlock key={i} element={elmt.childNodes[i]} offset={props.offset + suboffset} ents={cents} types={props.types} anonimizeState={props.anonimizeState}/>)
+        let lastIndex = remaining.findIndex( o => o.start > props.offset+suboffset+size );
+        let cents = lastIndex === -1 ? remaining : remaining.slice(0, lastIndex)
+        // If the last offset is also on the next block keep it
+        if( remaining[cents.length-1] && remaining[cents.length-1].end > props.offset+suboffset+size ){
+            remaining = remaining.slice(cents.length-1)
+        }
+        else{
+            remaining = remaining.slice(cents.length)
+        }
+        r.push(<AnonimizeBlock key={i} element={elmt.childNodes[i]} offset={props.offset + suboffset} specificOffsets={cents} types={props.types} anonimizeState={props.anonimizeState}/>)
         suboffset += (elmt.childNodes[i].textContent || "").length
     }
     

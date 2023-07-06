@@ -1,5 +1,4 @@
-import { identity } from "lodash";
-import { AnonimizeFunction, AnonimizeFunctionDescription, functionsWithDescriptionArray } from "../util/anonimizeFunctions";
+import { AnonimizeFunction, AnonimizeFunctionDescription, functionsWithDescriptionArray, DONT_ANONIMIZE } from "../util/anonimizeFunctions";
 import { EntityTypeFunction } from "./EntityTypes";
 
 export const normalizeEntityString = (str: string): string => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]/g, "");
@@ -42,26 +41,14 @@ export class Entity implements EntityI {
         this.offsetsLength = this.offsets.length;
     }
 
-    anonimizingFunction(entityTypes: EntityTypeFunction[]): AnonimizeFunction{
-        if( this.overwriteAnonimization ){
-            return () => this.overwriteAnonimization!;
-        }
-        else{
-            let type = entityTypes.find( t => t.name == this.type );
-            if( !type ) return identity;
-            return functionsWithDescriptionArray[type.functionIndex].fun;
-        }
+    anonimizingFunction(entityType: EntityTypeFunction): AnonimizeFunction{
+        return this.anonimizingFunctionDescription(entityType).fun;
     }
 
-    anonimizingFunctionDescription(entityTypes: EntityTypeFunction[]): AnonimizeFunctionDescription{
-        if( this.overwriteAnonimization ){
-            return {name: "Valor exato", description:"", fun: () => this.overwriteAnonimization! };
-        }
-        else{
-            let type = entityTypes.find( t => t.name == this.type );
-            if( !type ) return {name: "Valor exato", description:"", fun: () => this.overwriteAnonimization! }
-            return functionsWithDescriptionArray[type.functionIndex];
-        }
+    anonimizingFunctionDescription(entityType: EntityTypeFunction): AnonimizeFunctionDescription{
+        return this.overwriteAnonimization ? 
+            {name: "Valor exato", description:"", fun: () => this.overwriteAnonimization! } :
+            functionsWithDescriptionArray[entityType.functionIndex];
     }
 
     toStub(): EntityI {

@@ -1,9 +1,9 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { AnonimizeStateState } from '../../types/AnonimizeState'
 import AnonimizeBlock from './Block';
 import AnonimizeTooltip from './Tooltip';
 import { UserFile } from '../../types/UserFile';
-import { useEntities, useImages, useTypes } from '../../util/uses';
+import { useEntities, useImages, useSpecificOffsets, useTypes, useTypesDict } from '../../util/uses';
 
 interface AnonimizeContentProps {
     file: UserFile
@@ -16,19 +16,9 @@ export default function AnonimizeContent(props: AnonimizeContentProps){
     const contentRef = useRef<HTMLDivElement>(null);
     const nodesRef = useRef<HTMLElement[]>([]);
 
-    let listItems: JSX.Element[] = [];
-    let offset = 0;
-
-    const ents = useEntities(props.file.pool)
-    const entityTypes = useTypes(props.file);
+    const offsets = useSpecificOffsets(props.file.pool)
+    const entityTypes = useTypesDict(props.file);
     const images = useImages(props.file)
-    
-    for(let i=0; i < props.file.doc.childNodes.length; i++){
-        let size = (props.file.doc.childNodes[i].textContent || "").length;
-        let cents = ents.filter( e => e.offsets.some( o => o.start >= offset && o.end <= offset+size))
-        listItems.push(<AnonimizeBlock key={i} element={props.file.doc.childNodes[i]} offset={offset} types={entityTypes} ents={cents} anonimizeState={props.anonimizeState}/>)
-        offset += size;
-    }
 
     useEffect(() => {
         nodesRef.current = Array.from(contentRef.current?.querySelectorAll(`[data-offset]`) as NodeListOf<HTMLElement>)
@@ -58,8 +48,8 @@ export default function AnonimizeContent(props: AnonimizeContentProps){
     
     return <>
         <div id="content" className={props.showTypes ? 'show-type' : 'show-cod'} ref={contentRef}>
-            {listItems}
+            <AnonimizeBlock element={props.file.doc} offset={0} types={entityTypes} specificOffsets={offsets} anonimizeState={props.anonimizeState}/>
         </div>
-        <AnonimizeTooltip entityTypes={entityTypes} pool={props.file.pool} contentRef={contentRef} nodesRef={nodesRef} />
+        <AnonimizeTooltip entityTypes={Object.values(entityTypes)} pool={props.file.pool} contentRef={contentRef} nodesRef={nodesRef} />
     </>
 }

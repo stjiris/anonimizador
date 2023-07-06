@@ -1,9 +1,10 @@
 import { useEffect } from "react"
 import { UserFile } from "../types/UserFile"
 import { Bicon, Button } from "./BootstrapIcons"
+import { useSave } from "./uses";
 
 export function SavedBadge({file}: {file: UserFile}){
-    const saved = file.useSave()();
+    const saved = useSave(file);
 
     const title = saved ? "Guardado automaticamente." : "Não guardado"
     const icon = saved ? "file-earmark-check-fill" : "file-earmark-x-fill"
