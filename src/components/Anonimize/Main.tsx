@@ -13,6 +13,7 @@ import AnonimizeContent from "./Content";
 import { EntityTable } from "./EntityTable";
 import { HistoryCommands } from "./HistoryCommands";
 import { ImageEditorModal } from "./ImageEditorModal";
+import { SearchModalContent } from "./SearchModalContent";
 import { TypesModalContent } from "./TypesModalContent";
 
 interface AnonimizeProps{
@@ -65,6 +66,7 @@ export default function Anonimize({file, ...props}: AnonimizeProps){
                     </select>
                     <Button className="red-link btn m-1 p-1" onClick={() => onClickDownload(anonimizeState.state, file, anonimizedHTML.current)} i="download" title="Descarregar ficheiro"/>
                     <Sep/>
+                    <Button title="Pesquisar" i="search" text="Pesquisar" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-search"/>
                     <SuggestButton file={file} state={anonimizeState.state} setRequesting={setRequesting} requesting={requesting}/>
                     <HistoryCommands pool={file.pool}/>
                     <a className="red-link m-1 p-1 btn" href="https://docs.google.com/document/d/e/2PACX-1vTaR6kTasw0iGYSSMbJpq2wMgrBN5K37jg5ab_qMih_VpXRO5ZAAeeeDiRYzvyrD_VDxBM2ccW-VuBQ/pub" target="_blank" title="Abrir ajuda"><Bicon n="question-circle"/></a>
@@ -89,6 +91,9 @@ export default function Anonimize({file, ...props}: AnonimizeProps){
         <ImageEditorModal file={file}/>
         <BootstrapModal id="modal-info">
             <InfoModalContent file={file}/>
+        </BootstrapModal>
+        <BootstrapModal id="modal-search">
+            <SearchModalContent file={file}/>
         </BootstrapModal>
     </>
 }

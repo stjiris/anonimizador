@@ -219,7 +219,7 @@ export class EntityPool {
         return [AddEntityDryRun.CHANGE_ARRAY, affected];
     }
 
-    addEntity(startOffset: number, endOffset: number, text: string, label: string){
+    addEntity(startOffset: number, endOffset: number, text: string, label: string, update: boolean=true){
         let used = false;
         // Loop to remove "colisions"
         for(let ent of this.entitiesAt(startOffset, endOffset)){
@@ -246,7 +246,9 @@ export class EntityPool {
             this.entities.push(ent)
         }
 
-        // sort by start offset
-        this.updateOrder("Adicionar ocurrência");
+        if( update ){
+            // sort by start offset
+            this.updateOrder("Adicionar ocurrência");
+        } 
     }
 }

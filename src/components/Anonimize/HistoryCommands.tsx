@@ -1,5 +1,6 @@
+import { useMemo } from "react";
 import { useState } from "react";
-import { useEffect, useRef } from "react";
+import { useEffect } from "react";
 import { Entity, EntityI } from "../../types/Entity";
 import { EntityPool } from "../../types/EntityPool";
 import { Button } from "../../util/BootstrapIcons";
@@ -11,21 +12,15 @@ interface HistoryCommandsProps {
 
 export function HistoryCommands({pool}: HistoryCommandsProps){
     const [{canGoBack, canGoFoward}, setCanGo] = useState<{canGoBack: string | null, canGoFoward: string | null}>({canGoBack: null, canGoFoward: null})
-    const historyRef = useRef<EntityHistory>();
-    if( !historyRef.current ){
-        historyRef.current = new EntityHistory(pool, setCanGo)
-    }
-    const history = historyRef.current!;
+    const history = useMemo(() => new EntityHistory(pool, setCanGo), [pool, setCanGo])
     
     useEffect(() => {
         const keyDownEventHandler = (ev: KeyboardEvent) => handleKeyDown(ev, history)
         window.addEventListener("keydown", keyDownEventHandler)
         return () => {
             window.removeEventListener("keydown", keyDownEventHandler)
-            history.close();
-            historyRef.current = undefined;
         }
-    }, [pool])
+    }, [pool, history])
 
 
     return <>
@@ -59,7 +54,7 @@ class EntityHistory {
     }
 
     onChangePool(ch: string){
-        if( ch != EntityHistory.BACK && ch != EntityHistory.FORWARD ){
+        if( ch !== EntityHistory.BACK && ch !== EntityHistory.FORWARD ){
             this.push(ch)
         }
     }
