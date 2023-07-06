@@ -7,13 +7,17 @@ import { UserFile } from "../../types/UserFile";
 import { EntityTypeI } from "../../types/EntityTypes";
 import { FULL_ANONIMIZE } from "../../util/anonimizeFunctions";
 import { useEntities, useTypesDict } from "../../util/uses";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 
 export function EntityTable({file}: {file: UserFile}){
     const ents = useEntities(file.pool);
     const types = useTypesDict(file);
-    const typesList = useMemo(() => Object.values(types), [types])
+
+    const typesList = useMemo(() => Object.values(types), [types]);
+    const columns = useMemo(() => [HEADER,ENTITY,TYPE(file.pool,typesList),ANONIMIZE(file.pool,types)], [file.pool,types, typesList])
+    const details = useMemo(() => entityDetails(file.pool), [file.pool])
+    const bar = useMemo(() => toolbar(file.pool),[file.pool])
     
     return <MaterialReactTable
             key="ent-table"
@@ -27,15 +31,8 @@ export function EntityTable({file}: {file: UserFile}){
                 enableStickyHeader
                 enablePagination={false}
                 enableFullScreenToggle={false}
-                renderDetailPanel={entityDetails(file.pool)}
-                renderTopToolbarCustomActions={({table}) => {
-                    let selectedeKeys = selectedIndexes(table).length
-                    return <div className="d-flex w-100"> 
-                        <Button i="union" text="Juntar" className="btn btn-primary my-0 mx-1 p-1" disabled={selectedeKeys <= 1} onClick={() => joinSelectedEntities(table, file.pool)} />
-                        <Button i="exclude" text="Separar" className="btn btn-warning my-0 mx-1 p-1" disabled={selectedeKeys === 0} onClick={() => splitSelectedEntities(table, file.pool)} />
-                        <Button i="trash" text="Remover" className="btn btn-danger my-0 mx-1 p-1" disabled={selectedeKeys === 0} onClick={() => removeSelectedEntities(table, file.pool)} />
-                    </div>
-                }}
+                renderDetailPanel={details}
+                renderTopToolbarCustomActions={bar}
                 muiTableBodyCellProps={{style: {
                     whiteSpace: "normal",
                     wordWrap:"break-word" 
@@ -49,9 +46,18 @@ export function EntityTable({file}: {file: UserFile}){
                 initialState={{
                     density: 'compact'
                 }}
-                columns={[HEADER,ENTITY,TYPE(file.pool,typesList),ANONIMIZE(file.pool,types)]} 
+                columns={columns} 
                 data={ents}
                 localization={{...MRT_Localization_PT, noRecordsToDisplay: "Sem ocurrências de entidades"}}/>
+}
+
+const toolbar = (pool: EntityPool) => ({table}: {table: MRT_TableInstance<Entity>}) => {
+    let selectedeKeys = selectedIndexes(table).length
+    return <div className="d-flex w-100"> 
+        <Button i="union" text="Juntar" className="btn btn-primary my-0 mx-1 p-1" disabled={selectedeKeys <= 1} onClick={() => joinSelectedEntities(table, pool)} />
+        <Button i="exclude" text="Separar" className="btn btn-warning my-0 mx-1 p-1" disabled={selectedeKeys === 0} onClick={() => splitSelectedEntities(table, pool)} />
+        <Button i="trash" text="Remover" className="btn btn-danger my-0 mx-1 p-1" disabled={selectedeKeys === 0} onClick={() => removeSelectedEntities(table, pool)} />
+    </div>
 }
 
 const entityDetails = (pool: EntityPool) => ({row}:{row: MRT_Row<Entity>}) => row.original.offsets.map((off,i) => <div key={i} className="d-flex align-items-center border-bottom">

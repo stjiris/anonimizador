@@ -1,7 +1,5 @@
 import React, { useId, useMemo } from "react"
-import { AnonimizeImage } from "../../types/AnonimizeImage"
 import { AnonimizeStateState } from "../../types/AnonimizeState"
-import { Entity } from "../../types/Entity"
 import { EntityTypeI } from "../../types/EntityTypes"
 import { SpecificOffsetRange } from "../../util/uses"
 import AnonimizeToken from "./Token"
@@ -27,15 +25,19 @@ export default function AnonimizeBlock(props: AnonimizeBlockProps){
         let remaining = props.specificOffsets;
         while((token = reg.exec(elmtStr)) !== null) {
             let current = remaining.at(0);
-            if( current && current.end < props.offset+token.index+token[0].length ){
+            if( !current ) {
+                tokensElems.push(<AnonimizeToken key={token.index} string={token[0]} offset={props.offset+token.index} anonimizeState={props.anonimizeState} />);
+                continue
+            }
+            if( current.end < props.offset+token.index+token[0].length ){
                 remaining = remaining.slice(1); // current token ends after current
             }
-            if( current && current.start > props.offset+token.index ){
+            if( current.start > props.offset+token.index ){
                 // we dont want to use it yet
                 tokensElems.push(<AnonimizeToken  key={token.index} string={token[0]} offset={props.offset+token.index} anonimizeState={props.anonimizeState} />);
             }
-            else if(current){
-                tokensElems.push(<AnonimizeToken  type={current.ent.type ? props.types[current.ent.type] : undefined} key={token.index} string={token[0]} offset={props.offset+token.index} specificOffset={current} anonimizeState={props.anonimizeState} />);
+            else{
+                tokensElems.push(<AnonimizeToken  type={props.types[current.ent.type]} key={token.index} string={token[0]} offset={props.offset+token.index} specificOffset={current} anonimizeState={props.anonimizeState} />);
             }
         }
         return <>{tokensElems}</>
