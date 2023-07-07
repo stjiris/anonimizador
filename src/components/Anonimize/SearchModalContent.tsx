@@ -79,6 +79,7 @@ export function SearchModalContent({file}: {file:UserFile}){
 function Preview({text, r, type}: {text: string, r: RegExpExecArray, type: string}){
     let first = text.substring(0, r.index).match(/\b.*$/);
     let last  = text.substring(r.index+r[0].length).match(/^.*\b/);
-    return <>{first}<span data-anonimize-type={type} data-anonimize-first="true" data-anonimize-last="true">{r[0]}</span>{last}</>
+
+    return <>{first}<span data-anonimize-type={type || "SEL*"} data-anonimize-first="true" data-anonimize-last="true">{r[0]}</span>{last}</>
     
 }
