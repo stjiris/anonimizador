@@ -68,15 +68,16 @@ app.post("*/html", upload.single('file'), (req, res) => {
         let tmp = path.join(os.tmpdir(), `${name}.docx`)
         subproc = spawnSync("lowriter", ["--headless","--convert-to","docx",req.file.path,"--outdir",os.tmpdir()]);
         if( subproc.status == 0 ){
-            subproc = spawnSync("pandoc",[tmp, "-t","html","-o",out,"--self-contained","--wrap","none"])
+            subproc = spawnSync("pandoc",[tmp, "-t","html","-o",out,"--self-contained","--wrap","none","--lua-filter","xemf-to-png.lua"])
         }
         rmSync(tmp);
     }
     else{
-        subproc = spawnSync("pandoc",[req.file.path,"-t","html","-o",out,"--self-contained","--wrap","none"]);
+        subproc = spawnSync("pandoc",[req.file.path,"-t","html","-o",out,"--self-contained","--wrap","none","--lua-filter","xemf-to-png.lua"]);
     }
     console.error("spawn: Exited with",subproc.status);
     console.error(subproc.stderr.toString())
+    console.error(subproc.stdout.toString())
     
     if( subproc.status !== 0 ){
         res.status(500).send(subproc.error);
