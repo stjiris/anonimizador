@@ -1,22 +1,26 @@
 import { useMemo, useState } from "react";
 import { UserFile } from "../../types/UserFile";
 import { useTypes } from "../../util/uses";
+import { AddEntityDryRun } from "../../types/EntityPool";
 
 export function SearchModalContent({file}: {file:UserFile}){
     let text = useMemo(() => file.doc.textContent || "", [file])
     let types = useTypes(file);
     let [search, setSearch] = useState<string>("")
     let [type, setType] = useState<string>("");
+    let [ignore, setIgnore] = useState<boolean>(false)
     let results = useMemo(() => {
         if(!search || search.length < 3 ) return null;
         let regx = new RegExp(`${search}`, "ig");
         let rs: RegExpExecArray[] = [];
         let match: RegExpExecArray | null;
         while((match = regx.exec(text)) !== null){
-            rs.push(match);
+            if( ignore || file.pool.addEntityDryRun(match.index, match.index+match[0].length-1, match[0])[0] === AddEntityDryRun.CHANGE_ARRAY ){
+                rs.push(match);
+            }
         }
         return rs
-    }, [search, text]) || []
+    }, [file, search, text, ignore]) || []
 
     const applySearch = () => {
         for( let r of results ){
@@ -34,11 +38,23 @@ export function SearchModalContent({file}: {file:UserFile}){
         <div className="modal-body">
             <label htmlFor="modal-search-input" className="form-label">Pesquisa <small>(mínimimo 3 caracteres)</small></label>
             <input id="modal-search-input" className="form-control" pattern="...+" placeholder="Texto a identificar..." name="search" type="text" defaultValue={search} onInput={(e)=>setSearch(e.currentTarget.value)}/>
-            <label htmlFor="modal-search-select" className="form-label">Identificar como:</label>
-            <select id="modal-search-select" className="form-select" defaultValue={type} onInput={(e) => setType(e.currentTarget.value)}>
-                <option value="">Selecionar tipo...</option>
-                {types.map( (t,i) => <option key={i} value={t.name}>{t.name}</option>)}
-            </select>
+            <div className="row">
+                <div className="col-6">
+                    <label htmlFor="modal-search-select" className="form-label">Identificar como:</label>
+                </div>
+                <div className="col-6">
+                    <div className="form-check">
+                        <input className="form-check-input" type="checkbox" value="" id="modal-search-check" defaultChecked={ignore} onInput={(e) => setIgnore(e.currentTarget.checked)}/>
+                        <label className="form-check-label" htmlFor="modal-search-check">
+                            Ignorar entidades já identificadas
+                        </label>
+                    </div>
+                </div>
+                <select id="modal-search-select" className="form-select" defaultValue={type} onInput={(e) => setType(e.currentTarget.value)}>
+                    <option value="">Selecionar tipo...</option>
+                    {types.map( (t,i) => <option key={i} value={t.name}>{t.name}</option>)}
+                </select>
+            </div>
             <label className="form-label">Pré-visualização dos primeiros <b>{Math.min(10, results.length)}</b> de <b>{results.length}</b> resultados:</label>
             <ul className="show-type">
                 {results.slice(0, Math.min(10, results.length)).map( (r,i) => <li key={i}><Preview type={type} r={r} text={text}/></li>)}
