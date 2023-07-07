@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { UserFile } from "../../types/UserFile";
 import { useTypes } from "../../util/uses";
 import { AddEntityDryRun } from "../../types/EntityPool";
@@ -8,14 +8,16 @@ export function SearchModalContent({file}: {file:UserFile}){
     let types = useTypes(file);
     let [search, setSearch] = useState<string>("")
     let [type, setType] = useState<string>("");
-    let [ignore, setIgnore] = useState<boolean>(false)
+    let [ignore, setIgnore] = useState<boolean>(true);
+    let inputRef = useRef<HTMLInputElement>(null);
+    let selectRef = useRef<HTMLSelectElement>(null);
     let results = useMemo(() => {
         if(!search || search.length < 3 ) return null;
         let regx = new RegExp(`${search}`, "ig");
         let rs: RegExpExecArray[] = [];
         let match: RegExpExecArray | null;
         while((match = regx.exec(text)) !== null){
-            if( ignore || file.pool.addEntityDryRun(match.index, match.index+match[0].length-1, match[0])[0] === AddEntityDryRun.CHANGE_ARRAY ){
+            if( ignore || file.pool.addEntityDryRun(match.index, match.index+match[0].length-1, match[0])[0] !== AddEntityDryRun.CHANGE_TYPE ){
                 rs.push(match);
             }
         }
@@ -28,6 +30,12 @@ export function SearchModalContent({file}: {file:UserFile}){
             file.pool.addEntity(r.index, r.index+r[0].length-1, r[0], type, false)
         }
         file.pool.updateOrder("Aplicar pesquisa")
+        if(inputRef.current){
+            inputRef.current.value = "";
+        }
+        if(selectRef.current){
+            selectRef.current.value = "";
+        }
     }
 
     
@@ -44,13 +52,13 @@ export function SearchModalContent({file}: {file:UserFile}){
                 </div>
                 <div className="col-6">
                     <div className="form-check">
-                        <input className="form-check-input" type="checkbox" value="" id="modal-search-check" defaultChecked={ignore} onInput={(e) => setIgnore(e.currentTarget.checked)}/>
+                        <input ref={inputRef} className="form-check-input" type="checkbox" value="" id="modal-search-check" defaultChecked={ignore} onInput={(e) => setIgnore(e.currentTarget.checked)}/>
                         <label className="form-check-label" htmlFor="modal-search-check">
                             Ignorar entidades já identificadas
                         </label>
                     </div>
                 </div>
-                <select id="modal-search-select" className="form-select" defaultValue={type} onInput={(e) => setType(e.currentTarget.value)}>
+                <select ref={selectRef} id="modal-search-select" className="form-select" defaultValue={type} onInput={(e) => setType(e.currentTarget.value)}>
                     <option value="">Selecionar tipo...</option>
                     {types.map( (t,i) => <option key={i} value={t.name}>{t.name}</option>)}
                 </select>
