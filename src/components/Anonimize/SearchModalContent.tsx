@@ -30,9 +30,11 @@ export function SearchModalContent({file}: {file:UserFile}){
             file.pool.addEntity(r.index, r.index+r[0].length-1, r[0], type, false)
         }
         file.pool.updateOrder("Aplicar pesquisa")
+        setSearch("");
         if(inputRef.current){
             inputRef.current.value = "";
         }
+        setType("");
         if(selectRef.current){
             selectRef.current.value = "";
         }
@@ -45,14 +47,14 @@ export function SearchModalContent({file}: {file:UserFile}){
         </div>
         <div className="modal-body">
             <label htmlFor="modal-search-input" className="form-label">Pesquisa <small>(mínimimo 3 caracteres)</small></label>
-            <input id="modal-search-input" className="form-control" pattern="...+" placeholder="Texto a identificar..." name="search" type="text" defaultValue={search} onInput={(e)=>setSearch(e.currentTarget.value)}/>
+            <input ref={inputRef} id="modal-search-input" className="form-control" pattern="...+" placeholder="Texto a identificar..." name="search" type="text" defaultValue={search} onInput={(e)=>setSearch(e.currentTarget.value)}/>
             <div className="row">
                 <div className="col-6">
                     <label htmlFor="modal-search-select" className="form-label">Identificar como:</label>
                 </div>
                 <div className="col-6">
                     <div className="form-check">
-                        <input ref={inputRef} className="form-check-input" type="checkbox" value="" id="modal-search-check" defaultChecked={ignore} onInput={(e) => setIgnore(e.currentTarget.checked)}/>
+                        <input className="form-check-input" type="checkbox" value="" id="modal-search-check" defaultChecked={ignore} onInput={(e) => setIgnore(e.currentTarget.checked)}/>
                         <label className="form-check-label" htmlFor="modal-search-check">
                             Ignorar entidades já identificadas
                         </label>
