@@ -3,6 +3,12 @@ import { UserFile } from "../../types/UserFile";
 import { useTypes } from "../../util/uses";
 import { AddEntityDryRun } from "../../types/EntityPool";
 
+// We want exact matches
+// https://stackoverflow.com/a/3561711/2573422
+function escapeRegex(string: string) {
+    return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
+}
+
 export function SearchModalContent({file}: {file:UserFile}){
     let text = useMemo(() => file.doc.textContent || "", [file])
     let types = useTypes(file);
@@ -13,7 +19,7 @@ export function SearchModalContent({file}: {file:UserFile}){
     let selectRef = useRef<HTMLSelectElement>(null);
     let results = useMemo(() => {
         if(!search || search.length < 3 ) return null;
-        let regx = new RegExp(`${search}`, "ig");
+        let regx = new RegExp(escapeRegex(search), "ig");
         let rs: RegExpExecArray[] = [];
         let match: RegExpExecArray | null;
         while((match = regx.exec(text)) !== null){
