@@ -64,7 +64,7 @@ export function renderBlock(doc: ChildNode, entityTypes: Record<string, EntityTy
         attrs.push(`${attr}="${elmtElmt.getAttribute(attr)}"`)
     }
 
-    if( Tag === 'a' && localHref ){
+    if( Tag === 'a' && !localHref ){
         attrs.push('target="_blank"'); // prevent user to exit page
     }
     
