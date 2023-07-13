@@ -60,10 +60,10 @@ app.post("*/html", upload.single('file'), (req, res) => {
     let out = path.join(os.tmpdir(), `${Date.now()}.html`)
     let ext = path.extname(req.file.path);
     let subproc;
-    if( ext == ".txt" ){
+    if( ext.toLowerCase() == ".txt" ){
         subproc = spawnSync("pandoc",[req.file.path, "-f", "markdown","-t","html","-o",out,"--self-contained","--wrap","none"]);
     }
-    else if( ext == ".doc" ){
+    else if( ext.toLowerCase() == ".doc" ){
         let name = path.basename(req.file.path, ".doc")
         let tmp = path.join(os.tmpdir(), `${name}.docx`)
         subproc = spawnSync("lowriter", ["--headless","--convert-to","docx",req.file.path,"--outdir",os.tmpdir()]);
