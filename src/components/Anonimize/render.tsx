@@ -1,13 +1,10 @@
+import { AnonimizeImage } from "../../types/AnonimizeImage";
 import { AnonimizeStateState } from "../../types/AnonimizeState";
 import { EntityTypeI } from "../../types/EntityTypes";
 import { SpecificOffsetRange } from "../../util/uses";
 
 
-export function Render(){
-
-}
-
-export function renderBlock(doc: ChildNode, entityTypes: Record<string, EntityTypeI>, offsets: SpecificOffsetRange[], anonimizeState: AnonimizeStateState, offset: number) {
+export function renderBlock(doc: ChildNode, entityTypes: Record<string, EntityTypeI>, offsets: SpecificOffsetRange[], anonimizeState: AnonimizeStateState, offset: number, images: Record<number,AnonimizeImage>, imageIndex: {current: number}) {
     let elmt = doc;
 
     if( elmt.nodeType === Node.TEXT_NODE ){
@@ -53,7 +50,7 @@ export function renderBlock(doc: ChildNode, entityTypes: Record<string, EntityTy
         else{
             remaining = remaining.slice(cents.length)
         }
-        ht += renderBlock(elmt.childNodes[i], entityTypes, cents, anonimizeState, offset + suboffset)
+        ht += renderBlock(elmt.childNodes[i], entityTypes, cents, anonimizeState, offset + suboffset, images, imageIndex)
         suboffset += (elmt.childNodes[i].textContent || "").length
     }
 
@@ -66,6 +63,19 @@ export function renderBlock(doc: ChildNode, entityTypes: Record<string, EntityTy
 
     if( Tag === 'a' && !localHref ){
         attrs.push('target="_blank"'); // prevent user to exit page
+    }
+
+    if( Tag === "img" ){
+        attrs.push(`data-image-id="${imageIndex.current.toString()}"`)
+        attrs.push(`data-bs-toggle="modal"`)
+        attrs.push(`data-bs-target="#modal-image-editor"`)
+        if( anonimizeState !== AnonimizeStateState.ORIGINAL){
+            if( images[imageIndex.current] && images[imageIndex.current].anonimizedSrc ){
+                attrs.splice(attrs.findIndex(v => v.startsWith("src=")), 1)
+                attrs.push(`src="${images[imageIndex.current].anonimizedSrc!}"`)
+            }
+        }
+        imageIndex.current++;
     }
     
     return `<${Tag} ${attrs.join(" ")}>${ht}</${Tag}>`;

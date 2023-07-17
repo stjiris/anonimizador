@@ -21,35 +21,12 @@ export default function AnonimizeContent(props: AnonimizeContentProps){
     const entityTypes = useTypesDict(props.file);
     const images = useImages(props.file)
 
-    const html = useMemo( () => renderBlock(props.file.doc, entityTypes, offsets, props.anonimizeState, 0), [props.file.doc, props.anonimizeState, entityTypes, offsets])
-    const {accessHtml, anonimizeState} = props;
+    const html = useMemo( () => renderBlock(props.file.doc, entityTypes, offsets, props.anonimizeState, 0, images, {current: 0}), [props.file.doc, images, props.anonimizeState, entityTypes, offsets])
     
     useEffect(() => {
-        accessHtml(html)
         nodesRef.current = Array.from(contentRef.current?.querySelectorAll(`[data-offset]`) as NodeListOf<HTMLElement>)
-    },[html, accessHtml])
-
-    useEffect(() => {
-        let imagesElm = Array.from(contentRef.current?.getElementsByTagName("img") as HTMLCollectionOf<HTMLImageElement>)
-
-        imagesElm.forEach((img,i) =>{
-            img.dataset.imageId = i.toString()
-            img.dataset.bsToggle = "modal"
-            img.dataset.bsTarget = "#modal-image-editor"
-            if( anonimizeState !== AnonimizeStateState.ORIGINAL){
-                if( images[i] && images[i].anonimizedSrc ){
-                    img.src = images[i].anonimizedSrc!
-                }
-                else{
-                    img.src = images[i].originalSrc
-                }
-            }
-            else{
-                img.src = images[i].originalSrc
-            }
-        })
-    }, [anonimizeState, images])
-
+        props.accessHtml(html);
+    },[html])
 
     return <>
         <div id="content" className={props.showTypes ? 'show-type' : 'show-cod'} ref={contentRef} dangerouslySetInnerHTML={{__html: html}}></div>
