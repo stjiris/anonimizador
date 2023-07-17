@@ -7,13 +7,14 @@ from spacy.language import Language
 from spacy.matcher import PhraseMatcher
 from spacy.matcher import Matcher
 from spacy.tokens import Span
+import json
 
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
 PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A-Z0-9]*"
 PATTERN_DATA = r"\d{1,2}(-|\.|/)\d{1,2}(-|\.|/)\d{4}"
 EXCLUDE = ['Tribunal','Réu','Reu','Ré','Supremo Tribunal de Justiça',"STJ","Supremo Tribunal",
-            'Requerida','Autora','Instância','Relação','Supremo','Recorrente','Recorrida'
-            'Tribunal da Relação','artº','Exª','Exº','nº']
+            'Requerida','Autora','Instância','Relação','Supremo','Recorrente','Recorrida','Recorrido',
+            'Tribunal da Relação','artº','Exª','Exº','nº','Secção do Supremo Tribunal de Justiça']
 EXCLUDE = [x.lower() for x in EXCLUDE]
 
 class FakeEntity:
@@ -87,7 +88,8 @@ def remove_pattern(p, ents):
 
 @Language.component("remove_entities_with_excluded_words")
 def remove_entities_with_excluded_words(doc):
-    excluded_words = ["john richard", "frigocar"]
+    excluded_words = ["Recorrida"]
+    excluded_words = [x.lower() for x in excluded_words]
     entities = []
     n=0
     for ent in doc.ents:
@@ -210,19 +212,19 @@ def process_entities(ents):
             add_ent_by_pattern(ents, text, r['Pattern'], r['Label'])
     
     ents = correct_ent(ents)
-    with open('../exclude.csv', 'r') as csvfd:
-        reader = csv.DictReader(csvfd, delimiter="\t")
-        for r in reader:
-            p = re.compile(r['Pattern'])
-            ents = remove_pattern(p, ents)
+    # with open('../exclude.csv', 'r') as csvfd:
+    #     reader = csv.DictReader(csvfd, delimiter="\t")
+    #     for r in reader:
+    #         p = re.compile(r['Pattern'])
+    #         ents = remove_pattern(p, ents)
     
     return ents
 
 def add_missed_entities(nlp, doc, ents):
     # collect the text and label of entities recognized by the model
-    recognized_entities = {ent.text.lower(): ent.label_ for ent in ents}
+    recognized_entities = {ent.text: ent.label_ for ent in ents}
 
-    matcher = PhraseMatcher(nlp.vocab, attr='LOWER')
+    matcher = PhraseMatcher(nlp.vocab)
     # create list of text to look for
     patterns = [nlp.make_doc(text) for text in recognized_entities.keys()]
     # add list to matcher
@@ -243,64 +245,60 @@ def add_missed_entities(nlp, doc, ents):
             # check if this span overlaps with any of the spans already added
             if not any(old_start <= start <= old_end or old_start <= end <= old_end for old_start, old_end in added_spans):
                 # if not, add it to new_ents
-                new_ent = Span(doc, start, end, label=recognized_entities[doc[start:end].text.lower()])
+                new_ent = Span(doc, start, end, label=recognized_entities[doc[start:end].text])
                 new_ents.append(new_ent)
                 added_spans.append((start, end))
 
     return new_ents
 
 def merge(ents, text):
-    # Initialize an empty list to store the merged entities
+    # Store merged list
     merged = []
-    # Initialize a variable to store the last entity processed
+    # Variable that stores the last entity processed
     last_ent = None
-
-    # Loop over each entity in the provided list
     for ent in ents:
-        # If there is no last entity (this is the first iteration), copy the current entity to last_ent
+        # If it's the first entity in the list, simply copy it to last_ent
         if not last_ent:
             last_ent = FakeEntity(ent.label_, ent.start_char, ent.end_char, ent.text)
-        else:
-            # If the label of the last entity is not the same as the label of the current entity
-            if str(last_ent.label_) != str(ent.label_):
-                # Add the last entity to the merged list
-                merged.append(last_ent)
-                # And replace the last entity with the current one
-                last_ent = FakeEntity(ent.label_, ent.start_char, ent.end_char, ent.text)
-            else:
-                # If the label is the same and there are no alphanumeric or newline characters between the last entity and the current one
-                if all(not s.isalnum() and not s == "\n" for s in text[last_ent.end_char:ent.start_char]):
-                    # Update the end_char of the last entity to the maximum end_char of the last entity and the current one
-                    last_ent.end_char = max(ent.end_char, last_ent.end_char)
-                    # Update the text of the last entity to cover the entire span from start_char to end_char in the original text
-                    last_ent.text = text[last_ent.start_char:last_ent.end_char]
-                else:
-                    # If there are alphanumeric or newline characters between the last entity and the current one, add the last entity to the merged list
-                    merged.append(last_ent)
-                    # And replace the last entity with the current one
-                    last_ent = FakeEntity(ent.label_, ent.start_char, ent.end_char, ent.text)
+            continue
 
-    # If there is a last entity after the loop (this will always be the case unless the input list was empty), add it to the merged list
+        # If the current entity's label is different from the last entity's label, append to merged list 
+        if str(last_ent.label_) != str(ent.label_):
+            merged.append(last_ent)
+            last_ent = FakeEntity(ent.label_, ent.start_char, ent.end_char, ent.text)
+            continue
+
+        # Merge LOCs if there are no alnum or \n between them
+        if str(last_ent.label_) == "LOC" and all(not s.isalnum() and not s == "\n" for s in text[last_ent.end_char:ent.start_char]):
+            last_ent.end_char = max(ent.end_char, last_ent.end_char)
+            last_ent.text = text[last_ent.start_char:last_ent.end_char]
+        # Merge ORGs if they are separated by "-" or whitespace
+        elif str(last_ent.label_) == "ORG" and all(s.isspace() or s == "-" and not s == "\n" for s in text[last_ent.end_char:ent.start_char]):
+            last_ent.end_char = max(ent.end_char, last_ent.end_char)
+            last_ent.text = text[last_ent.start_char:last_ent.end_char]
+        # Merge other labels if separated only by whitespace
+        elif all(s.isspace() and not s == "\n" for s in text[last_ent.end_char:ent.start_char]):
+            last_ent.end_char = max(ent.end_char, last_ent.end_char)
+            last_ent.text = text[last_ent.start_char:last_ent.end_char]
+        # Otherwise, add entity to merged list
+        else:
+            merged.append(last_ent)
+            last_ent = FakeEntity(ent.label_, ent.start_char, ent.end_char, ent.text)
+
+    # Append final entity
     if last_ent:
         merged.append(last_ent)
-
-    # Return the list of merged entities
     return merged
 
-
-    
 def nlp(text):
     snlp = spacy.load(spacy_model)
     snlp.add_pipe("new_line_segmenter", before="ner")
     snlp.add_pipe("remove_entities_with_excluded_words", last=True)
-    print(snlp.pipe_names)
+    #print(snlp.pipe_names)
     
     #Create entity list
     ents = []
 
-    #Run the model 
-    #doc = snlp("\n".join(text.split("."))) #solves \n problems but creates "." problems
-    
     try:
         doc = snlp(text) #runs the model on the full text (for num_tokens<512)
         print("Good token size. Text will be processed normally.")
@@ -331,7 +329,11 @@ def nlp(text):
         
     ents = label_professions(doc, ents)
     ents = process_entities(ents)
+    # for ent in ents:
+    #     print("entidade before add_missed:",ent.text, ent.label_, ent.start_char)
     ents = add_missed_entities(snlp, doc, ents)
+    # for ent in ents:
+    #     print("entidade AFTER add_missed:",ent.text, ent.label_, ent.start_char)
     ents = sorted(ents,key=lambda x: x.start_char)
     ents = merge(ents, text)
     return FakeDoc(ents, doc.text)
@@ -342,4 +344,13 @@ if __name__ == "__main__":
     doc = nlp(text)
     for ent in doc.ents:
         print(ent.text, ent.label_, ent.start_char, ent.end_char)
+    
+    # with open("/mnt/c/Users/jrfsi/Desktop/openai_test/test.jsonl", 'r') as f_in, open("/mnt/c/Users/jrfsi/Desktop/openai_test/mergeResult.jsonl", 'w') as f_out:
+    #     for i, line in enumerate(f_in):
+    #         print("ANOTHER ONE:",i)
+    #         data = json.loads(line)
+    #         text = data.get('text', '')
+    #         doc = nlp(text)
+    #         result = {"text":text, "label": [[ent.text,ent.label_] for ent in doc.ents]}
+    #         f_out.write(json.dumps(result, ensure_ascii=False) + '\n')
     
