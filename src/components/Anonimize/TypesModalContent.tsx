@@ -2,7 +2,7 @@ import { UserFile } from "../../types/UserFile";
 import MaterialReactTable, { MRT_ColumnDef } from "material-react-table";
 import { functionsWithDescriptionArray } from "../../util/anonimizeFunctions";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
-import { EntityTypeColorDefaults, EntityTypeI } from "../../types/EntityTypes";
+import { EntityTypeIDefaults, EntityTypeI } from "../../types/EntityTypes";
 import { Bicon, Button } from "../../util/BootstrapIcons";
 import { useTypes } from "../../util/uses";
 
@@ -39,7 +39,7 @@ export function TypesModalContent({file}:{file: UserFile}){
                         onClick: () => {table.setEditingCell(cell);}
                     })}
                     enableRowActions={true}
-                    renderRowActions={({row}) => EntityTypeColorDefaults[row.original.name] ? <></> : <Button className="btn text-danger" onClick={() => {file.deleteType(row.original.name)}} i='trash' title="Eliminar"/>}
+                    renderRowActions={({row}) => EntityTypeIDefaults[row.original.name] ? <></> : <Button className="btn text-danger" onClick={() => {file.deleteType(row.original.name)}} i='trash' title="Eliminar"/>}
                 />
             <form className="d-flex m-2" onSubmit={(evt) => {
                 evt.preventDefault(); 

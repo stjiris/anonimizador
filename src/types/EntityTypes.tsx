@@ -1,3 +1,4 @@
+import { AUTO_ANONIMIZE, isAnonimizeFunctionIndex } from "../util/anonimizeFunctions"
 
 export interface EntityTypeI extends EntityTypeColor, EntityTypeFunction{}
 
@@ -11,39 +12,40 @@ export interface EntityTypeColor{
     color: string
 }
 
-const EntityTypeColorVersion = "EntityTypeColor.v0.1"
+const EntityTypeIVersion = "EntityTypeI.v0.1"
 
-export const EntityTypeColorDefaults: {[key: string]: EntityTypeColor} = {
-    PES: {name: "PES", color: "#00e2ff"},
-    DAT: {name: "DAT", color: "#b7ff63"},
-    ORG: {name: "ORG", color: "#00dbc6"},
-    LOC: {name: "LOC", color: "#e238ff"},
-    PRO: {name: "PRO", color: "#ff9800"},
-    MAT: {name: "MAT", color: "#526cff"},
-    CEP: {name: "CEP", color: "#ff4133"},
-    TEL: {name: "TEL", color: "#ff5f95"},
-    ["E-MAIL"]: {name: "E-MAIL", color: "#ffeb3b"},
-    IDP: {name: "IDP", color: "#69bcff"},
-    INST: {name: "INST", color: "#71ff77"},
-    PROF: {name: "PROF", color: "#F7C4D8"}
+export const EntityTypeIDefaults: {[key: string]: EntityTypeI} = {
+    PES: {name: "PES", color: "#00e2ff", functionIndex: AUTO_ANONIMIZE},
+    DAT: {name: "DAT", color: "#b7ff63", functionIndex: AUTO_ANONIMIZE},
+    ORG: {name: "ORG", color: "#00dbc6", functionIndex: AUTO_ANONIMIZE},
+    LOC: {name: "LOC", color: "#e238ff", functionIndex: AUTO_ANONIMIZE},
+    PRO: {name: "PRO", color: "#ff9800", functionIndex: AUTO_ANONIMIZE},
+    MAT: {name: "MAT", color: "#526cff", functionIndex: AUTO_ANONIMIZE},
+    CEP: {name: "CEP", color: "#ff4133", functionIndex: AUTO_ANONIMIZE},
+    TEL: {name: "TEL", color: "#ff5f95", functionIndex: AUTO_ANONIMIZE},
+    ["E-MAIL"]: {name: "E-MAIL", color: "#ffeb3b", functionIndex: AUTO_ANONIMIZE},
+    IDP: {name: "IDP", color: "#69bcff", functionIndex: AUTO_ANONIMIZE},
+    INST: {name: "INST", color: "#71ff77", functionIndex: AUTO_ANONIMIZE},
+    PROF: {name: "PROF", color: "#F7C4D8", functionIndex: AUTO_ANONIMIZE}
 }
 
-const _type_color_cache: {[key: string]: EntityTypeColor | undefined } = {}
+const _type_color_cache: {[key: string]: EntityTypeI | undefined } = {}
 
-export function getEntityTypeColor(label: string): EntityTypeColor{
+export function getEntityTypeI(label: string): EntityTypeI{
     if( _type_color_cache[label] ){
         return _type_color_cache[label]!;
     }
-    let types = getEntityTypeColors();
+    let types = getEntityTypeIs();
     for( let t of types ){
         _type_color_cache[t.name] = t;
     }
 
     if( _type_color_cache[label] ) return _type_color_cache[label]!;
 
-    const color = randBrightColor()
-    addEntityTypeColor(label, color)
-    return {name: `${label}`, color: color}
+    const color = randBrightColor();
+    const functionIndex = AUTO_ANONIMIZE;
+    addEntityTypeI(label, color, functionIndex)
+    return {name: `${label}`, color, functionIndex}
 }
 
 // https://stackoverflow.com/a/43195379/2573422
@@ -58,76 +60,80 @@ function randBrightColor(){
     return `#${parseFloat(r).toString(16).padStart(2,"0")}${parseFloat(g).toString(16).padStart(2,"0")}${parseFloat(b).toString(16).padStart(2,"0")}`;
 }
 
-export function getEntityTypeColors(): EntityTypeColor[]{
-    let EntityTypesStored = JSON.parse( localStorage.getItem(EntityTypeColorVersion) || "null" );
+export function getEntityTypeIs(): EntityTypeI[]{
+    let EntityTypesStored = JSON.parse( localStorage.getItem(EntityTypeIVersion) || "null" );
     if( !EntityTypesStored ){
-        localStorage.setItem(EntityTypeColorVersion, JSON.stringify(EntityTypeColorDefaults))
-        return Object.values(EntityTypeColorDefaults);
+        localStorage.setItem(EntityTypeIVersion, JSON.stringify(EntityTypeIDefaults))
+        return Object.values(EntityTypeIDefaults);
     }
 
-    for( let key in EntityTypeColorDefaults ){
+    for( let key in EntityTypeIDefaults ){
         if( !(key in EntityTypesStored) ){
             EntityTypesStored[key] = {
                 name: key,
-                color: EntityTypeColorDefaults[key].color
+                color: EntityTypeIDefaults[key].color,
+                functionIndex: EntityTypeIDefaults[key].functionIndex
             }
         }
         else{
             EntityTypesStored[key].name = key
-            EntityTypesStored[key].color = isColor( EntityTypesStored[key].color, EntityTypeColorDefaults[key].color )
+            EntityTypesStored[key].color = isColor( EntityTypesStored[key].color, EntityTypeIDefaults[key].color )
+            EntityTypesStored[key].functionIndex = isAnonimizeFunctionIndex(EntityTypesStored[key].functionIndex, AUTO_ANONIMIZE)
         }
     }
 
     return Object.values(EntityTypesStored);
 }
 
-export function addEntityTypeColor(key: string, color: string): EntityTypeColor[]{
-    let EntityTypesStored = JSON.parse( localStorage.getItem(EntityTypeColorVersion) || "null" );
+export function addEntityTypeI(key: string, color: string, functionIndex: number): EntityTypeI[]{
+    let EntityTypesStored = JSON.parse( localStorage.getItem(EntityTypeIVersion) || "null" );
     if( !EntityTypesStored ){
-        EntityTypesStored = JSON.parse(JSON.stringify(EntityTypeColorDefaults));
+        EntityTypesStored = JSON.parse(JSON.stringify(EntityTypeIDefaults));
     }
     
     EntityTypesStored[key] = {
         name: key,
-        color: color
+        color: color,
+        functionIndex: functionIndex
     }
 
-    localStorage.setItem(EntityTypeColorVersion, JSON.stringify(EntityTypesStored));
+    localStorage.setItem(EntityTypeIVersion, JSON.stringify(EntityTypesStored));
     return Object.values(EntityTypesStored);   
 }
 
-export function updateEntityTypeColor(key: string, color: string): EntityTypeColor[]{
-    let EntityTypesStored = JSON.parse( localStorage.getItem(EntityTypeColorVersion) || "null" );
+export function updateEntityTypeI(key: string, color: string, functionIndex: number): EntityTypeI[]{
+    let EntityTypesStored = JSON.parse( localStorage.getItem(EntityTypeIVersion) || "null" );
     if( !EntityTypesStored ){
-        EntityTypesStored = JSON.parse(JSON.stringify(EntityTypeColorDefaults));
+        EntityTypesStored = JSON.parse(JSON.stringify(EntityTypeIDefaults));
     }
     
     EntityTypesStored[key].color = color
+    EntityTypesStored[key].functionIndex = functionIndex
     delete _type_color_cache[key];
 
-    localStorage.setItem(EntityTypeColorVersion, JSON.stringify(EntityTypesStored));
+    localStorage.setItem(EntityTypeIVersion, JSON.stringify(EntityTypesStored));
     return Object.values(EntityTypesStored);
 }
 
-export function deleteEntityTypeColor(key: string): EntityTypeColor[]{
-    let EntityTypesStored = JSON.parse( localStorage.getItem(EntityTypeColorVersion) || "null" );
+export function deleteEntityTypeI(key: string): EntityTypeI[]{
+    let EntityTypesStored = JSON.parse( localStorage.getItem(EntityTypeIVersion) || "null" );
     if( !EntityTypesStored ){
-        EntityTypesStored = JSON.parse(JSON.stringify(EntityTypeColorDefaults));
+        EntityTypesStored = JSON.parse(JSON.stringify(EntityTypeIDefaults));
     }
     
     delete EntityTypesStored[key];
     delete _type_color_cache[key];
 
-    localStorage.setItem(EntityTypeColorVersion, JSON.stringify(EntityTypesStored));
+    localStorage.setItem(EntityTypeIVersion, JSON.stringify(EntityTypesStored));
     return Object.values(EntityTypesStored);
 }
 
-export function restoreEntityTypesColors(): EntityTypeColor[]{
-    localStorage.removeItem(EntityTypeColorVersion);
+export function restoreEntityTypesColors(): EntityTypeI[]{
+    localStorage.removeItem(EntityTypeIVersion);
     for(let key in _type_color_cache){
         delete _type_color_cache[key]
     }
-    return getEntityTypeColors();
+    return getEntityTypeIs();
 }
 
 // https://stackoverflow.com/a/56266358 (adapted)

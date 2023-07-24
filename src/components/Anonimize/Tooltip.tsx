@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react"
 import { AddEntityDryRun, EntityPool } from "../../types/EntityPool"
-import { EntityTypeColor, getEntityTypeColor } from "../../types/EntityTypes"
+import { EntityTypeColor } from "../../types/EntityTypes"
 import { TokenSelection } from "../../types/Selection"
 
 interface AnonimizeTooltipProps {
