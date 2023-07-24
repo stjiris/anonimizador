@@ -200,7 +200,7 @@ function setup(backCtx: CanvasRenderingContext2D, foreCtx: CanvasRenderingContex
     return originalImage
 }
 
-function drawFinal(image: HTMLImageElement, boxes: number[][], color: string){
+function drawFinal(image: HTMLImageElement, boxes: [number,number,number,number][], color: string){
     let {width, height} = image;
     let canvas = document.createElement("canvas");
     canvas.width = width;
@@ -226,7 +226,7 @@ function drawFinal(image: HTMLImageElement, boxes: number[][], color: string){
 
 }
 
-function draw(backCtx: CanvasRenderingContext2D, foreCtx: CanvasRenderingContext2D, originalImage: HTMLImageElement, boxStart: number[]|null, mousePos: number[]|null, boxes: number[][], color: string){
+function draw(backCtx: CanvasRenderingContext2D, foreCtx: CanvasRenderingContext2D, originalImage: HTMLImageElement, boxStart: number[]|null, mousePos: number[]|null, boxes: [number,number,number,number][], color: string){
     backCtx.clearRect(0,0,backCtx.canvas.width,backCtx.canvas.height)
     backCtx.fillStyle = `${color}aa`
     foreCtx.clearRect(0,0,foreCtx.canvas.width,foreCtx.canvas.height)
@@ -261,6 +261,7 @@ function draw(backCtx: CanvasRenderingContext2D, foreCtx: CanvasRenderingContext
         foreCtx.lineTo(mousePos[0], boxStart[1])
         foreCtx.lineTo(mousePos[0], mousePos[1])
         foreCtx.lineTo(boxStart[0], mousePos[1])
+        foreCtx.lineTo(boxStart[0], boxStart[1])
         foreCtx.stroke()
         foreCtx.fill()
     }
