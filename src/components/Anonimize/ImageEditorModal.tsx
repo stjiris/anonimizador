@@ -55,6 +55,7 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement, worker
     let canvasForegroundRef = useRef<HTMLCanvasElement>(null)
     let ctxBackgroundRef = useRef<CanvasRenderingContext2D|null>(null)
     let ctxForegroundRef = useRef<CanvasRenderingContext2D|null>(null)
+    let originalImage = useRef<HTMLImageElement|null>(null)
     let animFrameRequest = useRef<number>()
     let boxStart = useRef<number[]|null>(null)
     let mousePos = useRef<number[]|null>(null)
@@ -73,14 +74,14 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement, worker
         if( !ctxBackgroundRef.current ) return;
         if( !ctxForegroundRef.current ) return;
 
-        const ctx = setup(ctxBackgroundRef.current, ctxForegroundRef.current, props.file.images[parseInt(props.imageElmt.dataset.imageId!)])
+        originalImage.current = setup(ctxBackgroundRef.current, ctxForegroundRef.current, props.file.images[parseInt(props.imageElmt.dataset.imageId!)])
         boxes.current = props.file.images[parseInt(props.imageElmt.dataset.imageId!)].boxes
         colorInputRef.current.value = props.file.images[parseInt(props.imageElmt.dataset.imageId!)].boxColor || "#00000"
 
 
         const _draw = () => {
             let color = colorInputRef.current?.value || "#ffffff"
-            draw(ctxBackgroundRef.current!, ctxForegroundRef.current!, ctx, boxStart.current, mousePos.current, boxes.current, color)
+            draw(ctxBackgroundRef.current!, ctxForegroundRef.current!, originalImage.current!, boxStart.current, mousePos.current, boxes.current, color)
             animFrameRequest.current = requestAnimationFrame(_draw)
         }
         animFrameRequest.current = requestAnimationFrame(_draw)
@@ -131,7 +132,7 @@ function ImageEditor(props: {file: UserFile, imageElmt: HTMLImageElement, worker
             props.file.images[parseInt(props.imageElmt.dataset.imageId!)].anonimizedSrc = undefined
         }
         else{
-            props.file.images[parseInt(props.imageElmt.dataset.imageId!)].anonimizedSrc = canvasBackgroundRef.current?.toDataURL()
+            props.file.images[parseInt(props.imageElmt.dataset.imageId!)].anonimizedSrc = drawFinal(originalImage.current!, boxes.current, colorInputRef.current?.value || "#000000")
         }
         props.file.images[parseInt(props.imageElmt.dataset.imageId!)].boxes = boxes.current
         props.file.images[parseInt(props.imageElmt.dataset.imageId!)].boxColor = colorInputRef.current?.value || "#000000"
@@ -199,11 +200,38 @@ function setup(backCtx: CanvasRenderingContext2D, foreCtx: CanvasRenderingContex
     return originalImage
 }
 
+function drawFinal(image: HTMLImageElement, boxes: number[][], color: string){
+    let {width, height} = image;
+    let canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    let c = 1;
+    if( height > 800 ){
+        c = 800 / height
+    }
+    let ctx = canvas.getContext("2d");
+    if( !ctx ) return undefined;
+    ctx.drawImage(image, 0, 0, width*c, height*c);
+    ctx.fillStyle = color;
+    for( let box of boxes){
+        ctx.beginPath();
+        ctx.moveTo(box[0], box[1])
+        ctx.lineTo(box[0], box[3])
+        ctx.lineTo(box[2], box[3])
+        ctx.lineTo(box[2], box[1])
+        ctx.fill();
+    }
+
+    return canvas.toDataURL();
+
+}
+
 function draw(backCtx: CanvasRenderingContext2D, foreCtx: CanvasRenderingContext2D, originalImage: HTMLImageElement, boxStart: number[]|null, mousePos: number[]|null, boxes: number[][], color: string){
     backCtx.clearRect(0,0,backCtx.canvas.width,backCtx.canvas.height)
-    backCtx.fillStyle = `${color}`
+    backCtx.fillStyle = `${color}aa`
     foreCtx.clearRect(0,0,foreCtx.canvas.width,foreCtx.canvas.height)
-    foreCtx.strokeStyle = `${color}`
+    foreCtx.strokeStyle = `#000000aa`
+    foreCtx.lineWidth = 1
     foreCtx.fillStyle = `${color}aa`
     let c = 1;
     if( originalImage.height > 800 ){
