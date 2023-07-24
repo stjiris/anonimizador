@@ -13,7 +13,7 @@ PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A
 PATTERN_DATA = r"\b\d{1,2}(-|\.|/)\d{1,2}(-|\.|/)\d{2,4}\b"
 EXCLUDE = ['Tribunal','Réu','Reu','Ré','Supremo Tribunal de Justiça',"STJ","Supremo Tribunal",
             'Requerida','Autora','Instância','Relação','Supremo','Recorrente','Recorrida','Recorrido',
-            'Tribunal da Relação','artº','Exª','Exº','Secção do Supremo Tribunal de Justiça','A.A.']
+            'Tribunal da Relação','artº','Exª','Exº','Secção do Supremo Tribunal de Justiça','A.A.','nºs']
 EXCLUDE = [x.lower() for x in EXCLUDE]
 
 class FakeEntity:

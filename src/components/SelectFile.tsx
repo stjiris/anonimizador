@@ -3,9 +3,7 @@ import { createUserFile, deleteUserFile, readSavedUserFile, listUserFile } from 
 import { isSavedUserFile, SavedUserFile, UserFile } from "../types/UserFile";
 import MaterialReactTable, { MRT_ColumnDef } from "material-react-table";
 import {MRT_Localization_PT} from "material-react-table/locales/pt";
-import { EntityTypeColorDefaults } from "../types/EntityTypes";
 import { Bicon, Button } from "../util/BootstrapIcons";
-import { AUTO_ANONIMIZE } from "../util/anonimizeFunctions";
 
 // https://stackoverflow.com/a/18650828/2573422
 export function formatBytes(a: number,b=2){if(!+a)return"0 Bytes";const c=0>b?0:b,d=Math.floor(Math.log(a)/Math.log(1024));return`${parseFloat((a/Math.pow(1024,d)).toFixed(c))} ${["Bytes","KiB","MiB","GiB","TiB","PiB","EiB","ZiB","YiB"][d]}`}
@@ -135,17 +133,7 @@ async function onFile(event: React.ChangeEvent<HTMLInputElement>): Promise<UserF
 
         let documentDom = new DOMParser().parseFromString(content, "text/html");
         
-        let userFile: SavedUserFile = {
-            html_contents: documentDom.body.innerHTML,
-            name: file.name,
-            functions: Object.keys(EntityTypeColorDefaults).map(k => ({name: k, functionIndex: AUTO_ANONIMIZE})),
-            ents: [],
-            images: {},
-            imported: new Date().toString(),
-            modified: new Date().toString()
-        };
-        
-        return new UserFile(userFile);
+        return UserFile.newFrom(file.name, documentDom.body.innerHTML);
         
     }).catch(e => {
         console.error(e);

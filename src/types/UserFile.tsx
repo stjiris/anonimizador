@@ -4,7 +4,7 @@ import { updateUserFile } from "../util/UserFileCRUDL";
 import { AnonimizeImage, SaveAnonimizeImage } from "./AnonimizeImage";
 import { Entity, EntityI } from "./Entity";
 import { EntityPool } from "./EntityPool";
-import { addEntityTypeColor, EntityTypeFunction, EntityTypeI, getEntityTypeColor, restoreEntityTypesColors, updateEntityTypeColor } from "./EntityTypes";
+import { EntityTypeFunction, EntityTypeI, getEntityTypeI, getEntityTypeIs, restoreEntityTypesColors, addEntityTypeI, updateEntityTypeI} from "./EntityTypes";
 
 
 export interface SavedUserFile {
@@ -15,6 +15,7 @@ export interface SavedUserFile {
     imported: string
     modified: string
     images: Record<number,SaveAnonimizeImage>
+    lastTopPosition?: number
 }
 
 export class UserFile {
@@ -25,6 +26,7 @@ export class UserFile {
     images: Record<number,AnonimizeImage>
     imported: Date
     modified: Date
+    lastTopPosition: number
     
     typesListeners: ((types: EntityTypeI[]) => void)[]
 
@@ -38,7 +40,7 @@ export class UserFile {
     constructor(obj: SavedUserFile){
         this.name = obj.name
         this.html_contents = obj.html_contents
-        this.types = obj.functions.map( f => ({color: getEntityTypeColor(f.name).color, name: f.name, functionIndex: f.functionIndex}) )
+        this.types = obj.functions.map( f => ({color: getEntityTypeI(f.name).color, name: f.name, functionIndex: f.functionIndex}) )
         this.imported = new Date(obj.imported)
         this.modified = new Date(obj.modified)
 
@@ -68,6 +70,8 @@ export class UserFile {
         this.savedListeners = []
         this.saved = false
         this.save()
+
+        this.lastTopPosition = obj.lastTopPosition || 0;
     }
 
     toSavedFile(): SavedUserFile{
@@ -80,7 +84,8 @@ export class UserFile {
             ents: this.pool.entities.map(e => e.toStub()),
             imported: this.imported.toString(),
             modified: this.modified.toString(),
-            images: savedImages
+            images: savedImages,
+            lastTopPosition: this.lastTopPosition
         }
     }
 
@@ -116,7 +121,7 @@ export class UserFile {
             return this.updateType(key, color, funcIndex)
         }
 
-        addEntityTypeColor(key, color)
+        addEntityTypeI(key, color, funcIndex)
         this.types.push({name: key,color: color,functionIndex: funcIndex})
         this.notifyType()
         this.save()
@@ -133,7 +138,7 @@ export class UserFile {
             }
         }
         if( updated ){
-            updateEntityTypeColor(key, color)
+            updateEntityTypeI(key, color, funcIndex)
             this.notifyType()
             this.save()
         }
@@ -157,7 +162,7 @@ export class UserFile {
         for( let c of colors ){
             types[c.name] = true
         }
-        this.types = Object.keys(types).map(k => ({color: getEntityTypeColor(k).color, name: k, functionIndex: AUTO_ANONIMIZE}))
+        this.types = Object.keys(types).map(k => getEntityTypeI(k)) // if there is a personalized type getEntityTypeIs alone will be incompleted
         this.notifyType()
         this.save()
     }
@@ -196,6 +201,18 @@ export class UserFile {
         for (let cb of this.imagesListeners) {
             cb({...this.images});
         }
+    }
+
+    static newFrom(name: string, innerHTML: string){
+        return new UserFile({
+            html_contents: innerHTML,
+            name: name,
+            functions: getEntityTypeIs().map(k => ({name: k.name, functionIndex: k.functionIndex})),
+            ents: [],
+            images: {},
+            imported: new Date().toString(),
+            modified: new Date().toString()
+        })
     }
 }
 

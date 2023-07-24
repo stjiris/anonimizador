@@ -91,27 +91,18 @@ app.post("*/html", upload.single('file'), (req, res) => {
 app.post("*/docx", upload.single('file'), (req, res) => {
     let start = new Date();
     let out = path.join(os.tmpdir(), `${Date.now()}.docx`)
-    let subproc = spawn(PYTHON_COMMAND,["python-cli/inverse-pandoc.py", req.file.path, out])
-    subproc.on("error", (err) => {
-        console.log(err);  
-    })
-    subproc.stderr.on('data', (err) => {
-        process.stderr.write(`ERROR: spawn: ${subproc.spawnargs.join(' ')}: ${err.toString()}`)
-    });
-    subproc.on('close', (code) => {
-        let end = new Date();
-        console.log("spawn: Exited with",code)
-        if( code != 0 ){
-            res.status(500).end();
-        }
-        else{
-            res.sendFile(out, () => {
-                rmSync(out);
-            });
-        }
-        rmSync(req.file.path);
-        logProcess("/docx", start, end, req.file.size, req.file.mimetype, code);
-    })
+    let subproc = spawnSync("pandoc",[req.file.path,"-t","docx","-o",out,"--reference-doc=./reference.docx"]);
+    console.error("spawn: Exited with",subproc.status);
+    console.error(subproc.stderr.toString())
+    console.error(subproc.stdout.toString())
+    
+    if( subproc.status !== 0 ){
+        res.status(500).send(subproc.error);
+    }
+    else{
+        res.sendFile(out, () => rmSync(out));
+    }
+    logProcess("/docx", start, new Date(), req.file.size, req.file.mimetype, subproc.status);
 })
 
 app.post("*/from-text", upload.single('file'), (req, res) => {
