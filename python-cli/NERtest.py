@@ -11,7 +11,7 @@ import json
 
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
 PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A-Z0-9]*"
-PATTERN_DATA = r"\d{1,2}(-|\.|/)\d{1,2}(-|\.|/)\d{4}"
+PATTERN_DATA = r"\b\d{1,2}(-|\.|/)\d{1,2}(-|\.|/)\d{2,4}\b"
 EXCLUDE = ['Tribunal','Réu','Reu','Ré','Supremo Tribunal de Justiça',"STJ","Supremo Tribunal",
             'Requerida','Autora','Instância','Relação','Supremo','Recorrente','Recorrida','Recorrido',
             'Tribunal da Relação','artº','Exª','Exº','nº','Secção do Supremo Tribunal de Justiça']
@@ -41,7 +41,9 @@ def exclude_manual(ents):
             continue
         elif re.match(r"^\d+(º|ª)$",text):
             continue
+        # aqui ele pega em datas e se houver alguma data com o padrao la dentro, ele da prioridade ao padrao
         elif label == 'DAT' and re.match(PATTERN_DATA,text):
+            #print("exclude", text)
             text = re.match(PATTERN_DATA,text).group()
             end = start+len(text)
             new_list.append(FakeEntity(label,start,end,text))
@@ -64,6 +66,7 @@ def correct_ent(ents):
             new_list.append(FakeEntity(label,start,end,text))
     return new_list
 
+# adiciona ents por pattern se não houverem já ents overlapped
 def add_ent_by_pattern(ents, text, pattern, label):
     p = re.compile(pattern)
     for m in p.finditer(text):
@@ -204,7 +207,7 @@ def split_into_chunks(text, tokenizer, max_length=512):
 
     return chunks, positions
     
-def process_entities(ents):
+def process_entities(ents, text):
     #Include entities by their pattern
     with open('../patterns.csv', 'r') as csvfd:
         reader = csv.DictReader(csvfd, delimiter="\t")
@@ -220,6 +223,8 @@ def process_entities(ents):
     
     return ents
 
+# this function goes over the text to find entities on the ents list that might have been missed
+# it gives preference to longer entities in case of overlaps
 def add_missed_entities(nlp, doc, ents):
     # collect the text and label of entities recognized by the model
     recognized_entities = {ent.text: ent.label_ for ent in ents}
@@ -328,7 +333,7 @@ def nlp(text):
                 ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
         
     ents = label_professions(doc, ents)
-    ents = process_entities(ents)
+    ents = process_entities(ents, text)
     # for ent in ents:
     #     print("entidade before add_missed:",ent.text, ent.label_, ent.start_char)
     ents = add_missed_entities(snlp, doc, ents)
