@@ -93,7 +93,6 @@ export async function runRemoteNlp(file: UserFile, abort?: AbortSignal){
                 minDist = Math.abs((m.value.index|| 0)-ent.start_char)
                 minIndex = m.value.index || 0
             }
-            minDist = Math.min(Math.abs((m.value.index|| 0)-ent.start_char), minDist);
             m = allMatches.next();
         }
         if( minIndex != Infinity ){
