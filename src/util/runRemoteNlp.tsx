@@ -96,7 +96,7 @@ export async function runRemoteNlp(file: UserFile, abort?: AbortSignal){
             minDist = Math.min(Math.abs((m.value.index|| 0)-ent.start_char), minDist);
             m = allMatches.next();
         }
-        if( minDist != Infinity ){
+        if( minIndex != Infinity ){
             usedIndexes[minIndex] = true;
             entities[id].addOffset([{start: minIndex, end: minIndex+ent.text.length-1, preview: ent.text}])
         }
