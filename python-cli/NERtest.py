@@ -8,6 +8,7 @@ from spacy.matcher import PhraseMatcher
 from spacy.matcher import Matcher
 from spacy.tokens import Span
 import json
+from flashtext import KeywordProcessor
 
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
 PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A-Z0-9]*"
@@ -225,34 +226,34 @@ def process_entities(ents, text):
 
 # this function goes over the text to find entities on the ents list that might have been missed
 # it gives preference to longer entities in case of overlaps
-def add_missed_entities(nlp, doc, ents):
-    # collect the text and label of entities recognized by the model
+def add_missed_entities(ents, text):
+    # Collect the text and label of entities recognized by the model
     recognized_entities = {ent.text: ent.label_ for ent in ents}
 
-    matcher = PhraseMatcher(nlp.vocab)
-    # create list of text to look for
-    patterns = [nlp.make_doc(text) for text in recognized_entities.keys()]
-    # add list to matcher
-    matcher.add("MISSED_ENTITY", patterns)
-    # run matcher and save matches
-    matches = matcher(doc)
+    keyword_processor = KeywordProcessor(case_sensitive=True)
+    # Add recognized entities to keyword_processor
+    for keyword, label in recognized_entities.items():
+        keyword_processor.add_keyword(keyword, (label, keyword))
 
-    # sort the matches by length in descending order
+    # Run keyword_processor and save matches
+    matches = keyword_processor.extract_keywords(text, span_info=True)
+
+    # Sort the matches by length in descending order
     matches = sorted(matches, key=lambda x: x[2] - x[1], reverse=True)
 
-    # to keep track of spans already added
+    # To keep track of spans already added
     added_spans = []
 
     new_ents = []
-    # loop matches to add with original label to new_ents list
-    for match_id, start, end in matches:
-        if nlp.vocab.strings[match_id] == "MISSED_ENTITY":
-            # check if this span overlaps with any of the spans already added
-            if not any(old_start <= start <= old_end or old_start <= end <= old_end for old_start, old_end in added_spans):
-                # if not, add it to new_ents
-                new_ent = Span(doc, start, end, label=recognized_entities[doc[start:end].text])
-                new_ents.append(new_ent)
-                added_spans.append((start, end))
+    # Loop matches to add with original label to new_ents list
+    for match in matches:
+        label_keyword, start, end = match
+        label, keyword = label_keyword
+        # Check if this span overlaps with any of the spans already added
+        if not any(old_start <= start <= old_end or old_start <= end <= old_end for old_start, old_end in added_spans):
+            # If not, add it to new_ents
+            new_ents.append(FakeEntity(label, start, end, keyword))
+            added_spans.append((start, end))
 
     return new_ents
 
@@ -336,7 +337,7 @@ def nlp(text):
     ents = process_entities(ents, text)
     # for ent in ents:
     #     print("entidade before add_missed:",ent.text, ent.label_, ent.start_char)
-    ents = add_missed_entities(snlp, doc, ents)
+    ents = add_missed_entities(ents, text)
     # for ent in ents:
     #     print("entidade AFTER add_missed:",ent.text, ent.label_, ent.start_char)
     ents = sorted(ents,key=lambda x: x.start_char)
@@ -359,3 +360,16 @@ if __name__ == "__main__":
     #         result = {"text":text, "label": [[ent.text,ent.label_] for ent in doc.ents]}
     #         f_out.write(json.dumps(result, ensure_ascii=False) + '\n')
     
+    #run ner on a json file with a text camp
+    # labels = ["PER","ORG","LOC","DAT"]
+    # i=1
+    # with open("/mnt/c/Users/João/Desktop/dataset/test.jsonl", 'r') as f_in, open("/mnt/c/Users/João/Desktop/dataset/testNEW.jsonl", 'w') as f_out:
+    #     for line in f_in:
+    #         data = json.loads(line)
+    #         text = data["text"]
+    #         doc = nlp(text)
+    #         new_data = {"text": text, "label": [[ent.text,ent.label_] for ent in doc.ents if ent.label_ in labels]}
+    #         f_out.write(json.dumps(new_data, ensure_ascii=False))
+    #         f_out.write("\n")
+    #         print("Another One:",i)
+    #         i+=1

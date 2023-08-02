@@ -6,7 +6,7 @@ from spacy.language import Language
 from spacy.matcher import Matcher
 from spacy.matcher import PhraseMatcher
 from spacy.tokens import Span
-
+from flashtext import KeywordProcessor
 
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
 PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A-Z0-9]*"
@@ -196,35 +196,35 @@ def split_into_chunks(text, tokenizer, max_length=512):
 
     return chunks, positions
 
-def add_missing_entities(model, doc, entities):
-    #Collect the text and label of entities recognized by the model
-    recognized_entities = {ent.text: ent.label_ for ent in entities}
-    #Create matcher with attr LOWER to be case insensitive
-    matcher = PhraseMatcher(model.vocab)
-    #Create list of text to look for (needed in order for matcher to work)
-    patterns = [model.make_doc(text) for text in recognized_entities.keys()]
-    #Add list to matcher
-    matcher.add("MISSED_ENTITY", patterns)
-    #Run matcher and save matches
-    matches = matcher(doc)
-    
-    #Sort the matches by length (end_char - start_char) in descending order (reverse=True)
+def add_missed_entities(ents, text):
+    # Collect the text and label of entities recognized by the model
+    recognized_entities = {ent.text: ent.label_ for ent in ents}
+
+    keyword_processor = KeywordProcessor(case_sensitive=True)
+    # Add recognized entities to keyword_processor
+    for keyword, label in recognized_entities.items():
+        keyword_processor.add_keyword(keyword, (label, keyword))
+
+    # Run keyword_processor and save matches
+    matches = keyword_processor.extract_keywords(text, span_info=True)
+
+    # Sort the matches by length in descending order
     matches = sorted(matches, key=lambda x: x[2] - x[1], reverse=True)
 
-    #To keep track of spans already added. List of tuples (start_char,end_char)
+    # To keep track of spans already added
     added_spans = []
-    #New entity list
+
     new_ents = []
-    #Loop matches to add with original label to new_ents list    
-    for match_id, start, end in matches:
-        if model.vocab.strings[match_id] == "MISSED_ENTITY":
-            #Check if this span overlaps with any of the spans already added (needed because of repeated smaller entities)
-            if not any(old_start <= start <= old_end or old_start <= end <= old_end for old_start, old_end in added_spans):
-                #If not, add it to new_ents
-                new_ent = Span(doc, start, end, label=recognized_entities[doc[start:end].text])
-                new_ents.append(new_ent)
-                added_spans.append((start, end))
-            
+    # Loop matches to add with original label to new_ents list
+    for match in matches:
+        label_keyword, start, end = match
+        label, keyword = label_keyword
+        # Check if this span overlaps with any of the spans already added
+        if not any(old_start <= start <= old_end or old_start <= end <= old_end for old_start, old_end in added_spans):
+            # If not, add it to new_ents
+            new_ents.append(FakeEntity(label, start, end, keyword))
+            added_spans.append((start, end))
+
     return new_ents
 
 def merge(ents, text):
@@ -301,7 +301,7 @@ def nlp(text, model):
         
     ents = label_professions(doc, ents)
     ents = process_entities(ents, text)
-    ents = add_missing_entities(model,doc,ents)
+    ents = add_missed_entities(ents, text)
     ents = sorted(ents,key=lambda x: x.start_char)
     ents = merge(ents, text)
     return FakeDoc(ents, doc.text)
