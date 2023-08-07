@@ -1,11 +1,7 @@
-import spacy
 import re
-import sys
 import csv
 from spacy.language import Language
 from spacy.matcher import Matcher
-from spacy.matcher import PhraseMatcher
-from spacy.tokens import Span
 from flashtext import KeywordProcessor
 
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
@@ -109,6 +105,30 @@ def new_line_segmenter(doc):
         if token.text == "\n" or token.text =="\n\n" or token.text.endswith("."):
             #If it is, treat the next token as the start of a new sentence
             doc[i+1].is_sent_start = True
+    return doc
+
+@Language.component("remove_entities_with_excluded_words")
+def remove_entities_with_excluded_words(doc):
+    # List of words that should trigger exclusion
+    excluded_words = ["Recorrida"]
+    excluded_words = [x.lower() for x in excluded_words]
+    
+    # A list to hold entities that are not excluded
+    entities = []
+    
+    for ent in doc.ents:
+        # Check if the entity text contains any of the excluded words
+        word_exclusion_condition = any(word in ent.text.lower() for word in excluded_words)
+        
+        # Check if the entity contains the symbol "º" and is not labeled as "LOC"
+        symbol_exclusion_condition = "º" in ent.text.lower() and ent.label_ != "LOC"
+        
+        if not (word_exclusion_condition or symbol_exclusion_condition):
+            # If the entity does not meet either exclusion condition, append it to the list
+            entities.append(ent)
+    
+    # Assign the non-excluded entities back to the document
+    doc.ents = entities
     return doc
 
 def label_professions(doc, ents):
@@ -268,7 +288,7 @@ def merge(ents, text):
 
 def nlp(text, model):
     model.add_pipe("new_line_segmenter", before="ner")
-
+    model.add_pipe("remove_entities_with_excluded_words", last=True)
     #Create entity list
     ents = []
     

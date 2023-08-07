@@ -4,9 +4,7 @@ import sys
 import csv
 spacy_model = "./model-best"
 from spacy.language import Language
-from spacy.matcher import PhraseMatcher
 from spacy.matcher import Matcher
-from spacy.tokens import Span
 import json
 from flashtext import KeywordProcessor
 
@@ -92,19 +90,37 @@ def remove_pattern(p, ents):
 
 @Language.component("remove_entities_with_excluded_words")
 def remove_entities_with_excluded_words(doc):
+    # List of words that should trigger exclusion
     excluded_words = ["Recorrida"]
     excluded_words = [x.lower() for x in excluded_words]
+    
+    # A list to hold entities that are not excluded
     entities = []
-    n=0
+    
+    # A count of the excluded entities
+    n = 0
+    
     for ent in doc.ents:
-        if not any(word in ent.text.lower() for word in excluded_words):
+        # Check if the entity text contains any of the excluded words
+        word_exclusion_condition = any(word in ent.text.lower() for word in excluded_words)
+        
+        # Check if the entity contains the symbol "º" and is not labeled as "LOC"
+        symbol_exclusion_condition = "º" in ent.text.lower() and ent.label_ != "LOC"
+        
+        if not (word_exclusion_condition or symbol_exclusion_condition):
+            # If the entity does not meet either exclusion condition, append it to the list
             entities.append(ent)
         else:
-            n+=1
-    if n>=1:
-        print("Excluded Entities:",n)
+            # If either exclusion condition is met, increment the counter
+            n += 1
+    
+    if n >= 1:
+        print("Excluded Entities:", n)
+    
+    # Assign the non-excluded entities back to the document
     doc.ents = entities
     return doc
+
 
 @Language.component("new_line_segmenter")
 def new_line_segmenter(doc):
