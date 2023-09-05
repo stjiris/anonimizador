@@ -4,6 +4,7 @@ import Anonimize from './components/Anonimize/Main';
 import Header from './components/Header';
 import SelectFile from './components/SelectFile';
 import { UserFile } from './types/UserFile';
+import { Banner } from './components/Banner';
 
 
 
@@ -39,6 +40,7 @@ export default function App(props: {}){
 					: 
 					<SelectFile setUserFile={setUserFileProxy} />
 				}
+				<Banner />
 			</>
 		}
 	</div>
