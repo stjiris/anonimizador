@@ -24,5 +24,6 @@ yarn-error.log*
 
 env/
 model-best/
+model-gpt/
 __pycache__/
 logs/
