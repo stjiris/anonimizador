@@ -2,7 +2,7 @@ import spacy
 import re
 import sys
 import csv
-spacy_model = "./model-best"
+spacy_model = "../../ner_fine_tuning/model-gpt/model-best"
 from spacy.language import Language
 from spacy.matcher import Matcher
 import json
@@ -13,7 +13,7 @@ PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A
 PATTERN_DATA = r"\b\d{1,2}(-|\.|/)\d{1,2}(-|\.|/)\d{2,4}\b"
 EXCLUDE = ['Tribunal','Réu','Reu','Ré','Supremo Tribunal de Justiça',"STJ","Supremo Tribunal",
             'Requerida','Autora','Instância','Relação','Supremo','Recorrente','Recorrida','Recorrido',
-            'Tribunal da Relação','artº','Exª','Exº','nº','Secção do Supremo Tribunal de Justiça']
+            'Tribunal da Relação','artº','Exª','Exº','Secção do Supremo Tribunal de Justiça','A.A.','nºs']
 EXCLUDE = [x.lower() for x in EXCLUDE]
 
 class FakeEntity:
@@ -361,11 +361,11 @@ def nlp(text):
     return FakeDoc(ents, doc.text)
 
 if __name__ == "__main__":
-    f=open("teste.txt","r")
-    text = f.read()
-    doc = nlp(text)
-    for ent in doc.ents:
-        print(ent.text, ent.label_, ent.start_char, ent.end_char)
+    # f=open("teste.txt","r")
+    # text = f.read()
+    # doc = nlp(text)
+    # for ent in doc.ents:
+    #     print(ent.text, ent.label_, ent.start_char, ent.end_char)
     
     # with open("/mnt/c/Users/jrfsi/Desktop/openai_test/test.jsonl", 'r') as f_in, open("/mnt/c/Users/jrfsi/Desktop/openai_test/mergeResult.jsonl", 'w') as f_out:
     #     for i, line in enumerate(f_in):
@@ -377,15 +377,15 @@ if __name__ == "__main__":
     #         f_out.write(json.dumps(result, ensure_ascii=False) + '\n')
     
     #run ner on a json file with a text camp
-    # labels = ["PER","ORG","LOC","DAT"]
-    # i=1
-    # with open("/mnt/c/Users/João/Desktop/dataset/test.jsonl", 'r') as f_in, open("/mnt/c/Users/João/Desktop/dataset/testNEW.jsonl", 'w') as f_out:
-    #     for line in f_in:
-    #         data = json.loads(line)
-    #         text = data["text"]
-    #         doc = nlp(text)
-    #         new_data = {"text": text, "label": [[ent.text,ent.label_] for ent in doc.ents if ent.label_ in labels]}
-    #         f_out.write(json.dumps(new_data, ensure_ascii=False))
-    #         f_out.write("\n")
-    #         print("Another One:",i)
-    #         i+=1
+    labels = ["PER","ORG","LOC","DAT"]
+    i=1
+    with open("../../ner_fine_tuning/data/testNoAnnotations.jsonl", 'r') as f_in, open("../../ner_fine_tuning/data/testModelGPT.jsonl", 'w') as f_out:
+        for line in f_in:
+            data = json.loads(line)
+            text = data["text"]
+            doc = nlp(text)
+            new_data = {"text": text, "label": [[ent.text,ent.label_] for ent in doc.ents if ent.label_ in labels]}
+            f_out.write(json.dumps(new_data, ensure_ascii=False))
+            f_out.write("\n")
+            print("Another One:",i)
+            i+=1
