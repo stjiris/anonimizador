@@ -35,6 +35,7 @@ COPY . .
 RUN REACT_APP_VERSION_DATE=${VERSION_DATE} REACT_APP_VERSION_COMMIT=${VERSION_COMMIT} npm run build
 
 RUN mv iris-lfs-storage/model-best/ ./python-cli/
+RUN mv iris-lfs-storage/model-gpt/ ./python-cli/
 
 EXPOSE 7998
 
