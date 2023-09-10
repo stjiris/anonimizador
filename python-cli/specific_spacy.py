@@ -253,6 +253,9 @@ def merge(ents, text):
     # Variable that stores the last entity processed
     last_ent = None
     for ent in ents:
+        # Quick fix for IBANs being identified as ORG
+        if ent.text.startswith("IBAN"):
+            ent.label_ = "IDP"
         # If it's the first entity in the list, simply copy it to last_ent
         if not last_ent:
             last_ent = FakeEntity(ent.label_, ent.start_char, ent.end_char, ent.text)
