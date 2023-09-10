@@ -5,7 +5,7 @@ export default function Header() {
         <a className="align-items-center d-flex flex-wrap text-decoration-none nav-link" href="./">
             <img src="./stj-logo.png" style={{maxHeight: 70}} alt="Logotipo Supremo Tribunal de Justiça"/>
             <div className="ps-2 d-flex flex-column align-items-center">
-                <h5 className="m-0 fancy-font">Absconditus (GPT)</h5>
+                <h5 className="m-0 fancy-font">Absconditus</h5>
             </div>
         </a>
         <pre className="m-0">Versão: {process.env.REACT_APP_VERSION_COMMIT} ({process.env.REACT_APP_VERSION_DATE})</pre>
