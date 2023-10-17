@@ -7,7 +7,7 @@ from flashtext import KeywordProcessor
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
 PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A-Z0-9]*"
 PATTERN_DATA = r"\b\d{1,2}(-|\.|/)\d{1,2}(-|\.|/)\d{2,4}\b"
-EXCLUDE = ['Tribunal','Réu','Reu','Ré','Supremo Tribunal de Justiça',"STJ","Supremo Tribunal",
+EXCLUDE = ['Tribunal','Réu','Reu','Ré','Rés','Autores','Supremo Tribunal de Justiça',"STJ","Supremo Tribunal",
             'Requerida','Autora','Instância','Relação','Supremo','Recorrente','Recorrida','Recorrido',
             'Tribunal da Relação','artº','Exª','Exº','Secção do Supremo Tribunal de Justiça','A.A.','nºs']
 EXCLUDE = [x.lower() for x in EXCLUDE]
@@ -296,6 +296,10 @@ def nlp(text, model):
     ents = []
     
     try:
+        
+        if len(text) > 999999:
+            raise RuntimeError
+        
         #Runs the model
         doc = model(text)
         
