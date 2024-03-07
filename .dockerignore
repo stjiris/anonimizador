@@ -6,3 +6,4 @@ python-cli/model-best/
 python-cli/__pycache__/
 Dockerfile
 .dockerignore
+*.tar
