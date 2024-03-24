@@ -6,42 +6,47 @@ import SelectFile from './components/SelectFile';
 import { UserFile } from './types/UserFile';
 import { Banner } from './components/Banner';
 
+declare global {
+	interface Window {
+		currentFile: UserFile;
+	}
+}
 
-
-export default function App(props: {}){
+export default function App(props: {}) {
 	const [userFile, setUserFile] = useState<UserFile>();
 	const [loading, setLoading] = useState<boolean>();
 
 	const setUserFileProxy = (file: UserFile | undefined) => {
-		if( !file ){
+		if (!file) {
 			setUserFile(undefined)
 			setLoading(false)
 		}
-		else{
+		else {
 			setLoading(true)
 			setTimeout(() => {
 				setUserFile(file)
 			}, 200)
+			window.currentFile = file;
 		}
 
 	}
-	
+
 	return <div className="App vh-100">
 		{
 			userFile ?
 				<CatchError userFile={userFile} setUserFile={setUserFileProxy}>
-					<Anonimize setUserFile={setUserFileProxy} file={userFile}/>
+					<Anonimize setUserFile={setUserFileProxy} file={userFile} />
 				</CatchError>
-			: 
-			<>
-				<Header />
-				{loading ?
-					<div className='container alert alert-info'><span className="spinner-border spinner-border-sm" role="status"></span> A preparar a aplicação...</div>
-					: 
-					<SelectFile setUserFile={setUserFileProxy} />
-				}
-				<Banner />
-			</>
+				:
+				<>
+					<Header />
+					{loading ?
+						<div className='container alert alert-info'><span className="spinner-border spinner-border-sm" role="status"></span> A preparar a aplicação...</div>
+						:
+						<SelectFile setUserFile={setUserFileProxy} />
+					}
+					<Banner />
+				</>
 		}
 	</div>
 

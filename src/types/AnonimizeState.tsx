@@ -4,22 +4,22 @@ export const enum AnonimizeStateState {
     ANONIMIZED = "Anonimizado" // Shows file without entities
 }
 
-export interface AnonimizeStateCombined{
+export interface AnonimizeStateCombined {
     state: AnonimizeStateState,
     showTypes: boolean
 }
 
 export const enum AnonimizeVisualState {
-    ORIGINAL   = "Ver - Forma inicial", // Shows original file without any marks
-    TYPES      = "Editar - Tipos", // Shows entities highlights
-    REPLACE    = "Editar - Subsituições", // Shows entities highlights
+    ORIGINAL = "Ver - Forma inicial", // Shows original file without any marks
+    TYPES = "Editar - Tipos", // Shows entities highlights
+    REPLACE = "Editar - Subsituições", // Shows entities highlights
     ANONIMIZED = "Ver - Anonimização" // Shows file without entities
 }
 
-export function getAnonimizedStateCombined(from: AnonimizeVisualState): AnonimizeStateCombined{
+export function getAnonimizedStateCombined(from: AnonimizeVisualState): AnonimizeStateCombined {
     let showTypes: boolean = false;
     let anonimizeState: AnonimizeStateState = AnonimizeStateState.TAGGED;
-    switch(from){
+    switch (from) {
         case AnonimizeVisualState.ANONIMIZED:
             anonimizeState = AnonimizeStateState.ANONIMIZED;
             break;
@@ -28,8 +28,11 @@ export function getAnonimizedStateCombined(from: AnonimizeVisualState): Anonimiz
             break;
         case AnonimizeVisualState.TYPES:
             showTypes = true;
+            anonimizeState = AnonimizeStateState.TAGGED;
+            break;
         case AnonimizeVisualState.REPLACE:
             anonimizeState = AnonimizeStateState.TAGGED;
+            break;
     }
     return {
         showTypes: showTypes,
