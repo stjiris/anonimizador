@@ -57,7 +57,8 @@ app.get("*/types", (req, res) => {
 
 app.post("*/html", upload.single('file'), (req, res) => {
     let start = new Date();
-    let out = path.join(os.tmpdir(), `${Date.now()}.html`)
+    let filenameDate = Date.now();
+    let out = path.join(os.tmpdir(), `${filenameDate}.html`)
     let ext = path.extname(req.file.path);
     let subproc;
     if (ext.toLowerCase() == ".txt") {
@@ -71,6 +72,10 @@ app.post("*/html", upload.single('file'), (req, res) => {
             subproc = spawnSync("pandoc", [tmp, "-t", "html", "-o", out, "--self-contained", "--wrap", "none", "--lua-filter", "xemf-to-png.lua"])
         }
         rmSync(tmp);
+    }
+    else if (ext.toLowerCase() == ".pdf") {
+        subproc = spawnSync("pdftohtml", ["-s", "-dataurls", "-noframes", req.file.path, out]);
+        spawnSync("sed", ["-i", `s/href="${filenameDate}.html#/href="#/g`, out]);
     }
     else {
         subproc = spawnSync("pandoc", [req.file.path, "-t", "html", "-o", out, "--self-contained", "--wrap", "none", "--lua-filter", "xemf-to-png.lua"]);
@@ -138,7 +143,6 @@ app.post("*/descritores", upload.single('file'), (req, res) => {
     }).then(async (response) => {
         res.status(response.status);
         let tx = await response.text();
-        console.log(tx);
         res.end(tx);
         logProcess("/descritores", start, new Date(), req.file.size, req.file.mimetype, response.status);
     }).catch((err) => {

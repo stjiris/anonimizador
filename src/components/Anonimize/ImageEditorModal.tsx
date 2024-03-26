@@ -209,16 +209,17 @@ function drawFinal(image: HTMLImageElement, boxes: [number, number, number, numb
     if (height > 800) {
         c = 800 / height
     }
+    let inv_c = 1 / c;
     let ctx = canvas.getContext("2d");
     if (!ctx) return undefined;
-    ctx.drawImage(image, 0, 0, width * c, height * c);
+    ctx.drawImage(image, 0, 0, width, height);
     ctx.fillStyle = color;
     for (let box of boxes) {
         ctx.beginPath();
-        ctx.moveTo(box[0], box[1])
-        ctx.lineTo(box[0], box[3])
-        ctx.lineTo(box[2], box[3])
-        ctx.lineTo(box[2], box[1])
+        ctx.moveTo(box[0] * inv_c, box[1] * inv_c)
+        ctx.lineTo(box[0] * inv_c, box[3] * inv_c)
+        ctx.lineTo(box[2] * inv_c, box[3] * inv_c)
+        ctx.lineTo(box[2] * inv_c, box[1] * inv_c)
         ctx.fill();
     }
 

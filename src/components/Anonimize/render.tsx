@@ -3,6 +3,7 @@ import { AnonimizeStateState } from "../../types/AnonimizeState";
 import { EntityTypeI } from "../../types/EntityTypes";
 import { SpecificOffsetRange } from "../../util/uses";
 
+const TAGS_TO_IGNORE = "script,style,link,meta,head,html,svg,iframe,canvas,object,embed,applet,frameset,frame,noembed,noscript,param,source,track".split(",");
 
 export function renderBlock(doc: ChildNode, entityTypes: Record<string, EntityTypeI>, offsets: SpecificOffsetRange[], anonimizeState: AnonimizeStateState, offset: number, images: Record<number, AnonimizeImage>, imageIndex: { current: number }) {
     let elmt = doc;
@@ -32,6 +33,9 @@ export function renderBlock(doc: ChildNode, entityTypes: Record<string, EntityTy
         }
         return tokenFragment
     }
+    if (elmt.nodeType === Node.COMMENT_NODE || TAGS_TO_IGNORE.includes(elmt.nodeName.toLowerCase())) {
+        return "";
+    }
 
     let Tag = elmt.nodeName.toLowerCase();
     let elmtElmt: HTMLElement = elmt as HTMLElement;
@@ -57,12 +61,13 @@ export function renderBlock(doc: ChildNode, entityTypes: Record<string, EntityTy
 
 
     let attrs: string[] = [];
-    let localHref = elmtElmt.getAttribute("href")?.startsWith("#");
+    let href = elmtElmt.getAttribute("href");
+    let localHref = href?.startsWith("#");
     for (let attr of elmtElmt.getAttributeNames()) {
         attrs.push(`${attr}="${elmtElmt.getAttribute(attr)}"`)
     }
 
-    if (Tag === 'a' && !localHref) {
+    if (Tag === 'a' && href && !localHref) {
         attrs.push('target="_blank"'); // prevent user to exit page
     }
 

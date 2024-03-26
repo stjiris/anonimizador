@@ -16,6 +16,7 @@ import { ImageEditorModal } from "./ImageEditorModal";
 import { SearchModalContent } from "./SearchModalContent";
 import { TypesModalContent } from "./TypesModalContent";
 import { ToolsModalBody } from "./Tools";
+import { ExportButton } from "./ExportButton";
 
 interface AnonimizeProps {
     file: UserFile
@@ -66,6 +67,7 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
                         <option value={AnonimizeVisualState.TYPES}>{AnonimizeVisualState.TYPES}</option>
                         <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
                     </select>
+                    <ExportButton file={file} />
                     <Button className="red-link btn m-1 p-1" onClick={() => onClickDownload(anonimizeState.state, file, anonimizedHTML.current)} i="download" title="Descarregar ficheiro" />
                     <Sep />
                     <Button title="Pesquisar" i="search" text="Pesquisar" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-search" />
