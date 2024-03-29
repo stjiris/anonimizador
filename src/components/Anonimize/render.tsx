@@ -89,7 +89,20 @@ export function renderBlock(doc: ChildNode, entityTypes: Record<string, EntityTy
 
 
 
-export function renderToken(value: string, offset: number, anonimizeState: AnonimizeStateState, type?: EntityTypeI, specificOffset?: SpecificOffsetRange) {
+export function renderToken(value: string, offset: number, anonimizeState: AnonimizeStateState, type?: EntityTypeI, specificOffset?: SpecificOffsetRange): string {
+    if (value.length === 0) {
+        return ""
+    }
+    // if we have a specific offset inside this token
+    if (specificOffset && specificOffset.start >= offset && specificOffset.end < offset + value.length - 1) {
+        let p1 = value.substring(0, specificOffset.start - offset);
+        let token = value.substring(specificOffset.start - offset, specificOffset.end - offset + 1);
+        let p2 = value.substring(specificOffset.end - offset + 1);
+
+        return renderToken(p1, offset, anonimizeState, type) +
+            renderToken(token, offset + p1.length, anonimizeState, type, specificOffset) +
+            renderToken(p2, offset + p1.length - 1 + token.length - 1, anonimizeState, type)
+    }
     let dataAttrs: { [_: string]: string } = {
         'data-offset': offset.toString()
     };
