@@ -5,6 +5,7 @@ import { EntityPool } from "../types/EntityPool";
 import { EntityTypeI } from "../types/EntityTypes";
 import { UserFile } from "../types/UserFile";
 import { DescriptorI } from "../types/Descriptor";
+import { SummaryI } from "../types/Summary";
 
 export function useEntities(pool: EntityPool) {
     const [ents, setEnts] = useState(() => [...pool.entities])
@@ -112,4 +113,16 @@ export function useArea(file: UserFile) {
         }
     }, [file, update])
     return area;
+}
+
+export function useSummary(file: UserFile) {
+    const [summary, setSummary] = useState<SummaryI[] | undefined>(() => file.summary);
+    const update = useCallback(() => setSummary(file.summary), [file])
+    useEffect(() => {
+        file.onSummary(update);
+        return () => {
+            file.offSummary(update);
+        }
+    }, [file, update])
+    return summary;
 }

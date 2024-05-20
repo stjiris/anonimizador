@@ -2,10 +2,12 @@ import { useState } from "react";
 import { UserFile } from "../../types/UserFile";
 import { DescritoresModalBody } from "../../util/runRemoteDescritores";
 import { Button } from "../../util/BootstrapIcons";
+import { SumarizadorModalBody } from "../../util/runRemoteSumarizador";
 
 
 const TOOLS = {
     "Descritores": DescritoresModalBody,
+    "Sumarizador": SumarizadorModalBody,
 } as const;
 
 export function ToolsModalBody({ file }: { file: UserFile }) {

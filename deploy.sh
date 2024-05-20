@@ -1,5 +1,4 @@
-mkdir -p logs/
-docker build --build-arg VERSION_COMMIT=$(git rev-parse --short HEAD) --build-arg VERSION_DATE=$(date +%d/%m/%Y) --build-arg TITLE="Anonimizador" -t anonimizador .
-docker stop anonimizador
-docker rm anonimizador
-docker run -p 7998:7998 --restart unless-stopped --name anonimizador -d -v $(pwd)/logs/:/opt/app/logs anonimizador
+VERSION_COMMIT=$(git rev-parse --short HEAD)
+VERSION_DATE=$(date +%d/%m/%Y)
+docker compose build --build-arg VERSION_COMMIT=$VERSION_COMMIT --build-arg VERSION_DATE=$VERSION_DATE anonimizador
+docker compose up -d --force-recreate

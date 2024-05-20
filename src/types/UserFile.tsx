@@ -4,6 +4,7 @@ import { Entity, EntityI } from "./Entity";
 import { EntityPool } from "./EntityPool";
 import { EntityTypeFunction, EntityTypeI, getEntityTypeI, getEntityTypeIs, restoreEntityTypesColors, addEntityTypeI, updateEntityTypeI } from "./EntityTypes";
 import { DescriptorI } from "./Descriptor";
+import { SummaryI } from "./Summary";
 
 
 export interface SavedUserFile {
@@ -16,6 +17,7 @@ export interface SavedUserFile {
     images: Record<number, SaveAnonimizeImage>
     lastTopPosition?: number
     descriptors?: DescriptorI[]
+    summary?: SummaryI[]
     area?: string
 }
 
@@ -30,7 +32,7 @@ export class UserFile {
     lastTopPosition: number
     area?: string
     descriptors?: DescriptorI[]
-
+    summary?: SummaryI[]
 
     typesListeners: ((types: EntityTypeI[]) => void)[]
 
@@ -41,6 +43,8 @@ export class UserFile {
     areaListeners: ((area?: string) => void)[]
 
     descriptorsListeners: ((descriptors: DescriptorI[]) => void)[]
+
+    summaryListeners: ((summary: SummaryI[]) => void)[]
 
     saved: boolean
     doc: HTMLElement;
@@ -77,6 +81,7 @@ export class UserFile {
 
         this.areaListeners = []
         this.descriptorsListeners = []
+        this.summaryListeners = []
 
         this.savedListeners = []
 
@@ -84,6 +89,7 @@ export class UserFile {
 
         this.descriptors = obj.descriptors;
         this.area = obj.area;
+        this.summary = obj.summary;
 
         this.saved = false
         this.save()
@@ -253,6 +259,23 @@ export class UserFile {
         }
     }
 
+    onSummary(cb: (summary: SummaryI[]) => void) {
+        this.summaryListeners.push(cb);
+    }
+
+    offSummary(cb: (summary: SummaryI[]) => void) {
+        let idx = this.summaryListeners.findIndex((fn) => fn === cb);
+        if (idx >= 0) {
+            this.savedListeners.splice(idx, 1)
+        }
+    }
+
+    notifySummary() {
+        for (let cb of this.summaryListeners) {
+            cb(this.summary || []);
+        }
+    }
+
     static newFrom(name: string, innerHTML: string) {
         return new UserFile({
             html_contents: innerHTML,
@@ -264,6 +287,7 @@ export class UserFile {
             modified: new Date().toString(),
             descriptors: undefined,
             area: undefined,
+            summary: undefined,
         })
     }
 }

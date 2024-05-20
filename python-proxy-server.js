@@ -137,7 +137,7 @@ app.post("*/descritores", upload.single('file'), (req, res) => {
     let buffer = readFileSync(req.file.path);
     fd.append("file", new Blob([buffer]), req.file.originalname);
     fd.append("area", req.body.area);
-    fetch("https://iris.sysresearch.org/descritores/", {
+    fetch("http://descritores:8999", {
         method: "POST",
         body: fd
     }).then(async (response) => {
@@ -149,6 +149,28 @@ app.post("*/descritores", upload.single('file'), (req, res) => {
         res.status(500).write(err.toString());
         res.end();
         logProcess("/descritores", start, new Date(), req.file.size, req.file.mimetype, 500);
+    }).finally(() => {
+        rmSync(req.file.path);
+    });
+})
+
+app.post("*/sumarizador", upload.single('file'), (req, res) => {
+    let start = new Date();
+    let fd = new FormData();
+    let buffer = readFileSync(req.file.path);
+    fd.append("file", new Blob([buffer]), req.file.filename);
+    fetch("http://sumarizador:8999", {
+        method: "POST",
+        body: fd
+    }).then(async (response) => {
+        res.status(response.status);
+        let tx = await response.text();
+        res.end(tx);
+        logProcess("/sumarizador", start, new Date(), req.file.size, req.file.mimetype, response.status);
+    }).catch((err) => {
+        res.status(500).write(err.toString());
+        res.end();
+        logProcess("/sumarizador", start, new Date(), req.file.size, req.file.mimetype, 500);
     }).finally(() => {
         rmSync(req.file.path);
     });
