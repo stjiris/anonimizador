@@ -9,7 +9,7 @@ services:
       args:
         - TITLE=${ANONIMIZADOR_TITLE:-Anonimizador}
     ports:
-      - ${ANONIMIZADOR_PORT:-7998}:7998
+      - ${ANONIMIZADOR_PORT:-7999}:7999
     volumes:
       - logs:/opt/app/logs
     restart: unless-stopped
