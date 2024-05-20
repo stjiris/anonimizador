@@ -108,7 +108,8 @@ export class UserFile {
             images: savedImages,
             lastTopPosition: this.lastTopPosition,
             area: this.area,
-            descriptors: this.descriptors
+            descriptors: this.descriptors,
+            summary: this.summary,
         }
     }
 

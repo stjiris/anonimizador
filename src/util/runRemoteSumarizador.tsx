@@ -34,14 +34,12 @@ export function SumarizadorModalBody({ file }: { file: UserFile }) {
                     <Button i="star" text="Top 20" className={`btn m-1 p-1 ${top === 20 ? "active btn-primary" : ""}`} onClick={() => setTop(20)} />
                     <Button i="all" text="Todos" className={`btn m-1 p-1 ${top === Infinity ? "active btn-primary" : ""}`} onClick={() => setTop(Infinity)} />
                 </div>
-                <div className="container">
-                    <div className="row">
-                        {summary?.map((d, i) => i < top && <div key={i} className="col-4">
-                            <span>
-                                {d.text}
-                            </span>
-                        </div>)}
-                    </div>
+                <div className="container m-2">
+                    {summary?.map((d, i) => i < top && <div key={d.text} className="row border-bottom">
+                        <span className="summary m-1 p-1" data-position={i + 1}>
+                            {d.text}
+                        </span>
+                    </div>)}
                 </div>
             </>}
         </div>

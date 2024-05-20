@@ -2,7 +2,7 @@ import { formatBytes } from "../components/SelectFile";
 import { UserFile } from "../types/UserFile";
 import MaterialReactTable from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
-import { useArea, useDescriptors, useEntities, useImages, useSave, useTypes } from "./uses";
+import { useArea, useDescriptors, useEntities, useImages, useSave, useSummary, useTypes } from "./uses";
 
 const intl = new Intl.DateTimeFormat(["pt", "en"], { dateStyle: "short", timeStyle: "medium" });
 
@@ -13,6 +13,7 @@ export function InfoModalContent({ file }: { file: UserFile }) {
     let entities = useEntities(file.pool);
     let descriptors = useDescriptors(file);
     let area = useArea(file);
+    let summary = useSummary(file);
 
     let data: { key: string, value: string }[] = [
         { key: "Nome", value: file.name },
@@ -25,7 +26,8 @@ export function InfoModalContent({ file }: { file: UserFile }) {
         { key: "Imagens", value: Object.keys(images).length.toString() },
         { key: "Imagens Anonimizadas", value: Object.values(images).filter(i => i.anonimizedSrc).length.toString() },
         { key: "Área", value: area || "" },
-        { key: "Descritores", value: descriptors ? descriptors.map(d => d.label).join(", ") : "" },
+        { key: "Descritores Sugeridos", value: descriptors?.length.toString() || "" },
+        { key: "Sumarização Sugerida", value: summary?.length.toString() || "" },
     ];
 
 

@@ -51,14 +51,12 @@ export function DescritoresModalBody({ file }: { file: UserFile }) {
                     <Button i="star" text="Top 20" className={`btn m-1 p-1 ${top === 20 ? "active btn-primary" : ""}`} onClick={() => setTop(20)} />
                     <Button i="all" text="Todos" className={`btn m-1 p-1 ${top === Infinity ? "active btn-primary" : ""}`} onClick={() => setTop(Infinity)} />
                 </div>
-                <div className="container">
-                    <div className="row">
-                        {descriptors?.map((d, i) => i < top && <div key={d.label} className="col-4">
-                            <span>
-                                {d.label}
-                            </span>
-                        </div>)}
-                    </div>
+                <div className="container m-2">
+                    {descriptors?.map((d, i) => i < top && <div key={d.label} className="row border-bottom">
+                        <span className="descritor m-1 p-1" data-position={i + 1}>
+                            {d.label}
+                        </span>
+                    </div>)}
                 </div>
             </>}
         </div>
