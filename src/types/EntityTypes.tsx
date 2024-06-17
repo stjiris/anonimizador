@@ -12,7 +12,7 @@ export interface EntityTypeColor {
     color: string
 }
 
-const EntityTypeIVersion = "EntityTypeI.v0.1"
+export const EntityTypeIVersion = "EntityTypeI.v0.1"
 
 export const EntityTypeIDefaults: { [key: string]: EntityTypeI } = {
     PES: { name: "PES", color: "#00e2ff", functionIndex: AUTO_ANONIMIZE },
@@ -78,7 +78,7 @@ export function getEntityTypeIs(): EntityTypeI[] {
         else {
             EntityTypesStored[key].name = key
             EntityTypesStored[key].color = isColor(EntityTypesStored[key].color, EntityTypeIDefaults[key].color)
-            EntityTypesStored[key].functionIndex = isAnonimizeFunctionIndex(EntityTypesStored[key].functionIndex, AUTO_ANONIMIZE)
+            EntityTypesStored[key].functionIndex = isAnonimizeFunctionIndex(EntityTypesStored[key].functionIndex, EntityTypeIDefaults[key].functionIndex)
         }
     }
 
@@ -107,9 +107,15 @@ export function updateEntityTypeI(key: string, color: string, functionIndex: num
         EntityTypesStored = JSON.parse(JSON.stringify(EntityTypeIDefaults));
     }
 
-    EntityTypesStored[key].color = color
-    EntityTypesStored[key].functionIndex = functionIndex
-    delete _type_color_cache[key];
+    if(!(key in EntityTypesStored)){
+        EntityTypesStored[key] = {name: key, color: color, functionIndex: functionIndex}
+    }
+    else{
+        EntityTypesStored[key].name = key
+        EntityTypesStored[key].color = color
+        EntityTypesStored[key].functionIndex = functionIndex
+        delete _type_color_cache[key];
+    }
 
     localStorage.setItem(EntityTypeIVersion, JSON.stringify(EntityTypesStored));
     return Object.values(EntityTypesStored);

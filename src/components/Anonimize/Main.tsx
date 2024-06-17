@@ -15,7 +15,7 @@ import { HistoryCommands } from "./HistoryCommands";
 import { ImageEditorModal } from "./ImageEditorModal";
 import { SearchModalContent } from "./SearchModalContent";
 import { TypesModalContent } from "./TypesModalContent";
-import { ToolsModalBody } from "./Tools";
+import { ToolsButton, ToolsModalBody } from "./Tools";
 import { ExportButton } from "./ExportButton";
 
 interface AnonimizeProps {
@@ -58,7 +58,7 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
                 <div className="position-sticky top-0 bg-white p-0 m-0 d-flex" style={{ borderBottom: "5px solid #161616", zIndex: 1 }}>
                     {requesting ? <ForceExitButton setUserFile={props.setUserFile} /> : <ExitButton file={file} setUserFile={props.setUserFile} />}
                     <SavedBadge file={file} />
-                    <Button title="Outras ferramentas" i="tools" text="Ferramentas" className="btn btn-sm text-body  alert alert-gray m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-tools" />
+                    <ToolsButton />
                     <Button title="Gerir tipos" i="file-earmark-font" text="Tipos" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types" />
                     <Sep />
                     <select title="Escolher modo" className="text-body btn m-1 p-1 text-start alert alert-primary" onChange={(ev) => setAnonimizeSate(getAnonimizedStateCombined(ev.target.value as AnonimizeVisualState))} defaultValue={AnonimizeVisualState.TYPES}>
@@ -68,7 +68,6 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
                         <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
                     </select>
                     <ExportButton file={file} />
-                    <Button className="red-link btn m-1 p-1" onClick={() => onClickDownload(anonimizeState.state, file, anonimizedHTML.current)} i="download" title="Descarregar ficheiro" />
                     <Sep />
                     <Button title="Pesquisar" i="search" text="Pesquisar" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-search" />
                     <SuggestButton file={file} state={anonimizeState.state} setRequesting={setRequesting} requesting={requesting} />
@@ -103,40 +102,4 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
             <ToolsModalBody file={file} />
         </BootstrapModal>
     </>
-}
-
-async function onClickDownload(state: AnonimizeStateState, file: UserFile, html: string) {
-    let blobToDownload;
-    let ext;
-    if (state === AnonimizeStateState.TAGGED) {
-        blobToDownload = makeJsonDownload(file)
-        ext = ".json"
-    }
-    else {
-        blobToDownload = await makeDocxDowload(html)
-        ext = ".docx"
-    }
-    if (!blobToDownload) {
-        alert("Não foi possível concluir a operação. Ocorreu um erro.")
-        return;
-    }
-    let stubAnchor = document.createElement("a");
-    stubAnchor.href = URL.createObjectURL(blobToDownload);
-    stubAnchor.target = "_blank";
-    stubAnchor.download = `${state}_${file.name}${ext}`;
-    stubAnchor.click();
-}
-
-function makeJsonDownload(file: UserFile) {
-    return new Blob([JSON.stringify(file.toSavedFile())]);
-}
-
-function makeDocxDowload(html: string) {
-    let formData = new FormData();
-    let htmlBlob = new Blob([html]);
-    let htmlFile = new File([htmlBlob], "tmp.html")
-
-    formData.append("file", htmlFile);
-
-    return fetch("./docx", { method: "POST", body: formData }).then(r => r.status === 200 ? r.blob() : null)
 }
