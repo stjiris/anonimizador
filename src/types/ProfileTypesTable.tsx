@@ -4,11 +4,13 @@ import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { EntityTypeIDefaults, EntityTypeI } from "../types/EntityTypes";
 import { Bicon, Button } from "../util/BootstrapIcons";
 import { useTypes } from "../util/uses";
-import { ProfileI, useProfile } from "./Profile";
+import { ProfileI, useAvaiableProfiles, useProfile } from "./Profile";
 import { useMemo } from "react";
 
 export function ProfileTypesTable(){
     let [profile, setProfile] = useProfile();
+    let availableProfiles = useAvaiableProfiles();
+    let knownProfile = availableProfiles.find( p => p.name === profile?.name);
     const data = useMemo(() => profile ? Object.entries(profile.defaultEntityTypes).map( ([name, {color, functionIndex}]) => ({name, color, functionIndex})) : [], [profile]);
     if( !profile ) return null;
     return <>
@@ -31,30 +33,32 @@ export function ProfileTypesTable(){
                 columns={[TYPE_COLUMN(profile, setProfile),ANON_COLUMN(profile, setProfile),EXAMPLE_COLUMN]} 
                 data={data}
                 localization={MRT_Localization_PT}
-                renderTopToolbarCustomActions={() => [
-                    <Button key="reset" className="btn btn-warning" i="arrow-clockwise" text="Repor" onClick={() => setProfile({...profile!, defaultEntityTypes: EntityTypeIDefaults})}/>
-                ]}
+                renderTopToolbarCustomActions={() => knownProfile ? [
+                    <Button key="reset" className="btn btn-warning" i="arrow-clockwise" text="Repor" onClick={() => setProfile({...profile!, defaultEntityTypes: knownProfile!.defaultEntityTypes})}/>
+                ] : []}
+                renderBottomToolbarCustomActions={() =>
+                    <form className="d-flex m-2 w-100" onSubmit={(evt) => {
+                        evt.preventDefault(); 
+                        let form = evt.target as HTMLFormElement;
+                        let tipoInput = form.elements.namedItem("tipo") as HTMLInputElement;
+                        let colorInput = form.elements.namedItem("color") as HTMLInputElement;
+                        let anonInput = form.elements.namedItem("anonimização") as HTMLSelectElement;
+                        setProfile({...profile!, defaultEntityTypes: {...profile!.defaultEntityTypes, [tipoInput.value]: {color: colorInput.value, functionIndex: parseInt(anonInput.value)}}});
+                        tipoInput.value = "";
+                        colorInput.value = "";
+                        }}>
+                        <input className="form-control" name="tipo" placeholder="Tipo..." required></input>
+                        <input  className="form-control form-control-color" name="color" type="color"></input>
+                        <select  className="form-select" name="anonimização" required>{functionsWithDescriptionArray.map( (desc,i ) => <option key={i} label={desc.name} value={i}>{desc.name}</option>)}</select>
+                        <Button className="form-control btn btn-primary" i="plus" text="Adicionar" type="submit"/>
+                    </form>
+                }
                 muiTableBodyCellProps={({table, cell}) => ({
                     onClick: () => {table.setEditingCell(cell);}
                 })}
                 enableRowActions={true}
                 renderRowActions={({row}) => EntityTypeIDefaults[row.original.name] ? <></> : <Button className="btn text-danger" i='trash' title="Eliminar" onClick={() => setProfile({...profile!, defaultEntityTypes: Object.fromEntries(Object.entries(profile!.defaultEntityTypes).filter(([key]) => key !== row.original.name))})}/>}
             />
-        <form className="d-flex m-2" onSubmit={(evt) => {
-            evt.preventDefault(); 
-            let form = evt.target as HTMLFormElement;
-            let tipoInput = form.elements.namedItem("tipo") as HTMLInputElement;
-            let colorInput = form.elements.namedItem("color") as HTMLInputElement;
-            let anonInput = form.elements.namedItem("anonimização") as HTMLSelectElement;
-            setProfile({...profile!, defaultEntityTypes: {...profile!.defaultEntityTypes, [tipoInput.value]: {color: colorInput.value, functionIndex: parseInt(anonInput.value)}}});
-            tipoInput.value = "";
-            colorInput.value = "";
-            }}>
-            <input className="form-control" name="tipo" placeholder="Tipo..." required></input>
-            <input  className="form-control form-control-color" name="color" type="color"></input>
-            <select  className="form-select" name="anonimização" required>{functionsWithDescriptionArray.map( (desc,i ) => <option key={i} label={desc.name} value={i}>{desc.name}</option>)}</select>
-            <button className="form-control btn btn-primary">Adicionar</button>
-        </form>
     </>
 }
 

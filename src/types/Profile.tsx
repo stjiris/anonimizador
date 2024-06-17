@@ -109,11 +109,17 @@ export function ProfileSelector() {
         e.target.value = "";
     }, [setProfile]);
     const onDownloadProfile = useCallback(() => {
+        let newName = prompt("Nome do perfil", profile?.name || "")
+        if( !newName || availableProfiles.find( p => p.name === newName) ){
+            alert("Nome inválido");
+            return;
+        }
+        setProfile({...profile!, name: newName});
         let blob = new Blob([JSON.stringify(profile)], {type: "application/json"});
         let url = URL.createObjectURL(blob);
         let a = document.createElement("a");
         a.href = url;
-        a.download = profile?.name || "perfil.json";
+        a.download = newName || "perfil.json";
         a.click();
         URL.revokeObjectURL(url);
     }, [profile]);
@@ -150,7 +156,6 @@ export function ProfileSelector() {
                     </div>
                 </>
             }
-            <textarea className="form-control" id="perfilJSON" value={JSON.stringify(profile, null, 2)} readOnly></textarea>
         </div>
     </>
 
