@@ -3,7 +3,6 @@ import { functionsWithDescriptionArray } from "../util/anonimizeFunctions";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { EntityTypeIDefaults, EntityTypeI } from "../types/EntityTypes";
 import { Bicon, Button } from "../util/BootstrapIcons";
-import { useTypes } from "../util/uses";
 import { ProfileI, useAvaiableProfiles, useProfile } from "./Profile";
 import { useMemo } from "react";
 
@@ -71,7 +70,7 @@ const TYPE_COLUMN: (profile: ProfileI, setProfile: (p: ProfileI) => void) => MRT
         type: "color",
         name: "color",
         onBlur: (evt) => {
-            setProfile({...profile, defaultEntityTypes: {...profile.defaultEntityTypes, [row.original.name]: {...row.original, color: evt.target.value}}});
+            setProfile({...profile, defaultEntityTypes: {...profile.defaultEntityTypes, [row.original.name]: {functionIndex: row.original.functionIndex, color: evt.target.value}}});
             table.setEditingCell(null);
         }
     }),
@@ -90,7 +89,7 @@ const ANON_COLUMN: (profile: ProfileI, setProfile: (p: ProfileI) => void) => MRT
             native: true,
             defaultValue: row.original.functionIndex
         },
-        onChange: (evt) => setProfile({...profile, defaultEntityTypes: {...profile.defaultEntityTypes, [row.original.name]: {...row.original, functionIndex: parseInt(evt.target.value)}}})
+        onChange: (evt) => setProfile({...profile, defaultEntityTypes: {...profile.defaultEntityTypes, [row.original.name]: {color: row.original.color, functionIndex: parseInt(evt.target.value)}}})
     })
 })
 

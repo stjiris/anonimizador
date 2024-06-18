@@ -72,7 +72,7 @@ export function useProfile() {
 
 export function ProfileProvider({children}: {children: React.ReactNode}) {
     const state = useState<ProfileI|null>(getProfile);
-    const [profile, _setProfile] = state;
+    const [profile] = state;
 
     useEffect(() => {
         if(profile){

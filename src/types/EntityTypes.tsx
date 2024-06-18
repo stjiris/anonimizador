@@ -1,4 +1,5 @@
 import { AUTO_ANONIMIZE, isAnonimizeFunctionIndex } from "../util/anonimizeFunctions"
+import { isProfileI } from "./Profile"
 
 export interface EntityTypeI extends EntityTypeColor, EntityTypeFunction { }
 
@@ -36,6 +37,7 @@ export function getEntityTypeI(label: string): EntityTypeI {
         return _type_color_cache[label]!;
     }
     let types = getEntityTypeIs();
+    console.log(types)
     for (let t of types) {
         _type_color_cache[t.name] = t;
     }
@@ -63,6 +65,13 @@ function randBrightColor() {
 export function getEntityTypeIs(): EntityTypeI[] {
     let EntityTypesStored = JSON.parse(localStorage.getItem(EntityTypeIVersion) || "null");
     if (!EntityTypesStored) {
+        let profile = JSON.parse(localStorage.getItem("ProfileI.v0.1") || "null");
+        if (isProfileI(profile)) {
+            let ents = Object.entries(profile.defaultEntityTypes).map(([key, value]) => ({ name: key, color: value.color, functionIndex: value.functionIndex }))
+            let stored = Object.fromEntries(ents.map(e => [e.name, e]))
+            localStorage.setItem(EntityTypeIVersion, JSON.stringify(stored))
+            return ents;
+        }
         localStorage.setItem(EntityTypeIVersion, JSON.stringify(EntityTypeIDefaults))
         return Object.values(EntityTypeIDefaults);
     }
