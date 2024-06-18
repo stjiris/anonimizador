@@ -1,7 +1,7 @@
 import { ChangeEventHandler, createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { AUTO_ANONIMIZE, DONT_ANONIMIZE, FULL_ANONIMIZE, isAnonimizeFunctionIndex } from "../util/anonimizeFunctions";
 import { EntityTypeIDefaults, updateEntityTypeI } from "./EntityTypes";
-import { Button } from "../util/BootstrapIcons";
+import { Bicon, Button } from "../util/BootstrapIcons";
 import { ProfileTypesTable } from "./ProfileTypesTable";
 
 export interface ProfileI {
@@ -136,19 +136,21 @@ export function ProfileSelector() {
             <input ref={inputFileRef} type="file" hidden id="profileFile" onChange={onFileChangeCallback}/>
             <div>
                 <Button onClick={() => inputFileRef.current?.click()} i="upload" text="Carregar Perfil" className="btn btn-primary"/>
-                <Button onClick={onDownloadProfile} i="floppy" text="Salvar Perfil" className="btn btn-primary mx-1"/>
+                <Button onClick={onDownloadProfile} disabled={profile === null} i="floppy" text="Salvar Perfil" className="btn btn-primary mx-1"/>
                 <i className="bi bi-dot mx-1"></i>
                 {profiles && profiles.map( p => <button key={p.name} className="col btn btn-primary mx-1" disabled={p.name === profile?.name} onClick={() => setProfile(p)}>{p.name}</button> )}
+                <i className="bi bi-dot mx-1"></i>
+                <button className="col btn btn-primary mx-1" disabled={profile === null} onClick={() => setProfile(null)}>Sem perfil</button>
             </div>
             {profile &&
                 <>
                     <div>
                         <p className="m-0">Ferramentas ativas:</p>
                         <input type="checkbox" className="form-check-input" id="perfilSumarizador" checked={profile.tools.sumarizador} onChange={e => setProfile({...profile, tools: {...profile.tools, sumarizador: e.target.checked}})}/>
-                        <label className="form-check-label" htmlFor="perfilSumarizador">Sumarizador</label>
+                        <label className="form-check-label" htmlFor="perfilSumarizador" title="Ferramenta de sumarização treinada sobre acórdãos do Supremo Tribunal de Justiça">Sumarizador</label>
                         <br />
                         <input type="checkbox" className="form-check-input" id="perfilDescritores" checked={profile.tools.descritores} onChange={e => setProfile({...profile, tools: {...profile.tools, descritores: e.target.checked}})}/>
-                        <label className="form-check-label" htmlFor="perfilDescritores">Descritores</label>
+                        <label className="form-check-label" htmlFor="perfilDescritores" title="Ferramenta de extração de descritores treinada sobre acórdãos do Supremo Tribunal de Justiça">Descritores</label>
                     </div>
                     <div>
                         <p className="m-0">Tipos padrão:</p>
