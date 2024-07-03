@@ -167,7 +167,7 @@ export function useAvaiableProfiles(): ProfileI[]{
     const [profiles, setProfiles] = useState<ProfileI[]>([]);
     useEffect(() => {
         const abortController = new AbortController();
-        fetch("/profiles.json", {signal: abortController.signal}).then( r => r.json() ).then( r => {
+        fetch("./profiles.json", {signal: abortController.signal}).then( r => r.json() ).then( r => {
             if( Array.isArray(r) ){
                 setProfiles(r.filter( f => isProfileI(f) ));
             }
