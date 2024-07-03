@@ -5,6 +5,8 @@ import Header from './components/Header';
 import SelectFile from './components/SelectFile';
 import { UserFile } from './types/UserFile';
 import { Banner } from './components/Banner';
+import BootstrapModal from './util/BootstrapModal';
+import { ProfileSelector } from './types/Profile';
 
 declare global {
 	interface Window {
@@ -45,6 +47,9 @@ export default function App(props: {}) {
 						:
 						<SelectFile setUserFile={setUserFileProxy} />
 					}
+					<BootstrapModal id="modal-profile">
+						<ProfileSelector />
+					</BootstrapModal>
 					<Banner />
 				</>
 		}

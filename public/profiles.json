@@ -1,0 +1,63 @@
+[{
+    "name": "STJ",
+    "tools": {
+        "sumarizador": true,
+        "descritores": true
+    },
+    "defaultEntityTypes": {
+        "PES": { "color": "#00e2ff", "functionIndex": 1 },
+        "DAT": { "color": "#b7ff63", "functionIndex": 1 },
+        "ORG": { "color": "#00dbc6", "functionIndex": 1 },
+        "LOC": { "color": "#e238ff", "functionIndex": 1 },
+        "PRO": { "color": "#ff9800", "functionIndex": 1 },
+        "MAT": { "color": "#526cff", "functionIndex": 1 },
+        "CEP": { "color": "#ff4133", "functionIndex": 1 },
+        "TEL": { "color": "#ff5f95", "functionIndex": 1 },
+        "E-MAIL": { "color": "#ffeb3b", "functionIndex": 1 },
+        "IDP": { "color": "#69bcff", "functionIndex": 1 },
+        "INST": { "color": "#71ff77", "functionIndex": 1 },
+        "PROF": { "color": "#F7C4D8", "functionIndex": 1 }
+    }
+},
+{
+    "name": "CMS",
+    "tools": {
+        "sumarizador": false,
+        "descritores": false
+    },
+    "defaultEntityTypes": {
+        "PES": { "color": "#00e2ff", "functionIndex": 4 },
+        "DAT": { "color": "#b7ff63", "functionIndex": 4 },
+        "ORG": { "color": "#00dbc6", "functionIndex": 4 },
+        "LOC": { "color": "#e238ff", "functionIndex": 4 },
+        "PRO": { "color": "#ff9800", "functionIndex": 4 },
+        "MAT": { "color": "#526cff", "functionIndex": 4 },
+        "CEP": { "color": "#ff4133", "functionIndex": 4 },
+        "TEL": { "color": "#ff5f95", "functionIndex": 4 },
+        "E-MAIL": { "color": "#ffeb3b", "functionIndex": 4 },
+        "IDP": { "color": "#69bcff", "functionIndex": 4 },
+        "INST": { "color": "#71ff77", "functionIndex": 4 },
+        "PROF": { "color": "#F7C4D8", "functionIndex": 4 }
+    }
+},
+{
+    "name": "Público",
+    "tools": {
+        "sumarizador": false,
+        "descritores": false
+    },
+    "defaultEntityTypes": {
+        "PES": { "color": "#00e2ff", "functionIndex": 0 },
+        "DAT": { "color": "#b7ff63", "functionIndex": 0 },
+        "ORG": { "color": "#00dbc6", "functionIndex": 0 },
+        "LOC": { "color": "#e238ff", "functionIndex": 0 },
+        "PRO": { "color": "#ff9800", "functionIndex": 0 },
+        "MAT": { "color": "#526cff", "functionIndex": 0 },
+        "CEP": { "color": "#ff4133", "functionIndex": 0 },
+        "TEL": { "color": "#ff5f95", "functionIndex": 0 },
+        "E-MAIL": { "color": "#ffeb3b", "functionIndex": 0 },
+        "IDP": { "color": "#69bcff", "functionIndex": 0 },
+        "INST": { "color": "#71ff77", "functionIndex": 0 },
+        "PROF": { "color": "#F7C4D8", "functionIndex": 0 }
+    }
+}]

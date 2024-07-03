@@ -1,4 +1,5 @@
 import { AUTO_ANONIMIZE, isAnonimizeFunctionIndex } from "../util/anonimizeFunctions"
+import { isProfileI } from "./Profile"
 
 export interface EntityTypeI extends EntityTypeColor, EntityTypeFunction { }
 
@@ -12,7 +13,7 @@ export interface EntityTypeColor {
     color: string
 }
 
-const EntityTypeIVersion = "EntityTypeI.v0.1"
+export const EntityTypeIVersion = "EntityTypeI.v0.1"
 
 export const EntityTypeIDefaults: { [key: string]: EntityTypeI } = {
     PES: { name: "PES", color: "#00e2ff", functionIndex: AUTO_ANONIMIZE },
@@ -36,6 +37,7 @@ export function getEntityTypeI(label: string): EntityTypeI {
         return _type_color_cache[label]!;
     }
     let types = getEntityTypeIs();
+    console.log(types)
     for (let t of types) {
         _type_color_cache[t.name] = t;
     }
@@ -63,6 +65,13 @@ function randBrightColor() {
 export function getEntityTypeIs(): EntityTypeI[] {
     let EntityTypesStored = JSON.parse(localStorage.getItem(EntityTypeIVersion) || "null");
     if (!EntityTypesStored) {
+        let profile = JSON.parse(localStorage.getItem("ProfileI.v0.1") || "null");
+        if (isProfileI(profile)) {
+            let ents = Object.entries(profile.defaultEntityTypes).map(([key, value]) => ({ name: key, color: value.color, functionIndex: value.functionIndex }))
+            let stored = Object.fromEntries(ents.map(e => [e.name, e]))
+            localStorage.setItem(EntityTypeIVersion, JSON.stringify(stored))
+            return ents;
+        }
         localStorage.setItem(EntityTypeIVersion, JSON.stringify(EntityTypeIDefaults))
         return Object.values(EntityTypeIDefaults);
     }
@@ -78,7 +87,7 @@ export function getEntityTypeIs(): EntityTypeI[] {
         else {
             EntityTypesStored[key].name = key
             EntityTypesStored[key].color = isColor(EntityTypesStored[key].color, EntityTypeIDefaults[key].color)
-            EntityTypesStored[key].functionIndex = isAnonimizeFunctionIndex(EntityTypesStored[key].functionIndex, AUTO_ANONIMIZE)
+            EntityTypesStored[key].functionIndex = isAnonimizeFunctionIndex(EntityTypesStored[key].functionIndex, EntityTypeIDefaults[key].functionIndex)
         }
     }
 
@@ -107,9 +116,15 @@ export function updateEntityTypeI(key: string, color: string, functionIndex: num
         EntityTypesStored = JSON.parse(JSON.stringify(EntityTypeIDefaults));
     }
 
-    EntityTypesStored[key].color = color
-    EntityTypesStored[key].functionIndex = functionIndex
-    delete _type_color_cache[key];
+    if(!(key in EntityTypesStored)){
+        EntityTypesStored[key] = {name: key, color: color, functionIndex: functionIndex}
+    }
+    else{
+        EntityTypesStored[key].name = key
+        EntityTypesStored[key].color = color
+        EntityTypesStored[key].functionIndex = functionIndex
+        delete _type_color_cache[key];
+    }
 
     localStorage.setItem(EntityTypeIVersion, JSON.stringify(EntityTypesStored));
     return Object.values(EntityTypesStored);

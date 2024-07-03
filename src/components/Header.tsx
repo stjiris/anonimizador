@@ -1,6 +1,8 @@
-import { Bicon } from "../util/BootstrapIcons";
+import { ProfileSelector, useProfile } from "../types/Profile";
+import { Bicon, Button } from "../util/BootstrapIcons";
 
 export default function Header() {
+    const [profile] = useProfile();
     return <header className="py-2 align-items-center d-flex flex-wrap">
         <a className="align-items-center d-flex flex-wrap text-decoration-none nav-link" href="./">
             <img src="./stj-logo.png" style={{ maxHeight: 70 }} alt="Logotipo Supremo Tribunal de Justiça" />
@@ -9,6 +11,7 @@ export default function Header() {
             </div>
         </a>
         <pre className="m-0">Versão: {process.env.REACT_APP_VERSION_COMMIT} ({process.env.REACT_APP_VERSION_DATE})</pre>
+        <Button title="Perfil" i="palette2" text={`Perfil${profile?.name? `: ${profile.name}` : ''}`} className="btn btn-sm text-body  alert alert-gray m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-profile" />
         <div className="flex-fill d-none d-lg-block"></div>
         <nav className="d-print-none">
             <ul className="container d-flex nav align-items-center justify-content-evenly flex-wrap">
