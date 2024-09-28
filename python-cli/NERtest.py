@@ -365,11 +365,11 @@ def nlp(text):
     return FakeDoc(ents, doc.text)
 
 if __name__ == "__main__":
-    # f=open("teste.txt","r")
-    # text = f.read()
-    # doc = nlp(text)
-    # for ent in doc.ents:
-    #     print(ent.text, ent.label_, ent.start_char, ent.end_char)
+    f=open("teste.txt","r")
+    text = f.read()
+    doc = nlp(text)
+    for ent in doc.ents:
+        print(ent.text, ent.label_, ent.start_char, ent.end_char)
     
     # with open("/mnt/c/Users/jrfsi/Desktop/openai_test/test.jsonl", 'r') as f_in, open("/mnt/c/Users/jrfsi/Desktop/openai_test/mergeResult.jsonl", 'w') as f_out:
     #     for i, line in enumerate(f_in):
@@ -381,15 +381,15 @@ if __name__ == "__main__":
     #         f_out.write(json.dumps(result, ensure_ascii=False) + '\n')
     
     #run ner on a json file with a text camp
-    labels = ["PER","ORG","LOC","DAT"]
-    i=1
-    with open("../../ner_fine_tuning/data/testNoAnnotations.jsonl", 'r') as f_in, open("../../ner_fine_tuning/data/testModelGPT.jsonl", 'w') as f_out:
-        for line in f_in:
-            data = json.loads(line)
-            text = data["text"]
-            doc = nlp(text)
-            new_data = {"text": text, "label": [[ent.text,ent.label_] for ent in doc.ents if ent.label_ in labels]}
-            f_out.write(json.dumps(new_data, ensure_ascii=False))
-            f_out.write("\n")
-            print("Another One:",i)
-            i+=1
+    # labels = ["PER","ORG","LOC","DAT"]
+    # i=1
+    # with open("../../ner_fine_tuning/data/testNoAnnotations.jsonl", 'r') as f_in, open("../../ner_fine_tuning/data/testModelGPT.jsonl", 'w') as f_out:
+    #     for line in f_in:
+    #         data = json.loads(line)
+    #         text = data["text"]
+    #         doc = nlp(text)
+    #         new_data = {"text": text, "label": [[ent.text,ent.label_] for ent in doc.ents if ent.label_ in labels]}
+    #         f_out.write(json.dumps(new_data, ensure_ascii=False))
+    #         f_out.write("\n")
+    #         print("Another One:",i)
+    #         i+=1

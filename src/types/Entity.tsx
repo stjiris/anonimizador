@@ -1,9 +1,9 @@
-import { AnonimizeFunction, AnonimizeFunctionDescription, functionsWithDescriptionArray, DONT_ANONIMIZE } from "../util/anonimizeFunctions";
+import { AnonimizeFunction, AnonimizeFunctionDescription, functionsWithDescriptionArray } from "../util/anonimizeFunctions";
 import { EntityTypeFunction } from "./EntityTypes";
 
 export const normalizeEntityString = (str: string): string => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]/g, "");
 
-export interface OffsetRange{
+export interface OffsetRange {
     start: number
     end: number
     preview: string
@@ -24,8 +24,8 @@ export class Entity implements EntityI {
     index: number;
     typeIndex: number;
     funcIndex: number;
-    
-    constructor(label: string){
+
+    constructor(label: string) {
         this.type = label
         this.offsets = [];
         this.offsetsLength = 0;
@@ -34,27 +34,27 @@ export class Entity implements EntityI {
         this.funcIndex = -1
     }
 
-    addOffset(offset: OffsetRange[]){
+    addOffset(offset: OffsetRange[]) {
         // TODO: improve this by inlining insert?
         this.offsets.push(...offset);
-        this.offsets.sort( (a, b) => a.start - b.start)
+        this.offsets.sort((a, b) => a.start - b.start)
         this.offsetsLength = this.offsets.length;
     }
 
-    anonimizingFunction(entityType: EntityTypeFunction): AnonimizeFunction{
+    anonimizingFunction(entityType: EntityTypeFunction): AnonimizeFunction {
         return this.anonimizingFunctionDescription(entityType).fun;
     }
 
-    anonimizingFunctionDescription(entityType: EntityTypeFunction): AnonimizeFunctionDescription{
-        return this.overwriteAnonimization ? 
-            {name: "Valor exato", description:"", fun: () => this.overwriteAnonimization! } :
+    anonimizingFunctionDescription(entityType: EntityTypeFunction): AnonimizeFunctionDescription {
+        return this.overwriteAnonimization ?
+            { name: "Valor exato", description: "", fun: () => this.overwriteAnonimization! } :
             functionsWithDescriptionArray[entityType.functionIndex];
     }
 
     toStub(): EntityI {
         return {
             type: this.type,
-            offsets: [...this.offsets.map(o => ({...o}))],
+            offsets: [...this.offsets.map(o => ({ ...o }))],
             offsetsLength: this.offsetsLength,
             overwriteAnonimization: this.overwriteAnonimization
         }

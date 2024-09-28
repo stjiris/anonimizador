@@ -1,64 +1,64 @@
-export type AnonimizeFunction = (str:string, type: string,idx:number, typeIdx: number, funIdx: number) => string;
+export type AnonimizeFunction = (str: string, type: string, idx: number, typeIdx: number, funIdx: number) => string;
 
 export const identity: AnonimizeFunction = (str) => str
-export const increment: AnonimizeFunction = (_str, type, _idx,  tidx) => type.toString()+tidx.toString().padStart(4, '0')
+export const increment: AnonimizeFunction = (_str, type, _idx, tidx) => type.toString() + tidx.toString().padStart(4, '0')
 
 export const reticiencias: AnonimizeFunction = () => "..."
-export const ofuscateFirst: AnonimizeFunction = (str) => str[0] + str.slice(1).replace(/\S/g,".")
-export const ofuscateFirstTwo: AnonimizeFunction = (str) => str[0]+(str[1]||"") + str.slice(2).replace(/\S/g,".")
-export const ofuscateLast: AnonimizeFunction = (str) => str.slice(0,-1).replace(/\S/g,".") + str[str.length-1]
-export const ofuscateLastTwo: AnonimizeFunction = (str) => str.slice(0,-2).replace(/\S/g,".") + (str[str.length-2]||"") + str[str.length-1]
+export const ofuscateFirst: AnonimizeFunction = (str) => str[0] + str.slice(1).replace(/\S/g, ".")
+export const ofuscateFirstTwo: AnonimizeFunction = (str) => str[0] + (str[1] || "") + str.slice(2).replace(/\S/g, ".")
+export const ofuscateLast: AnonimizeFunction = (str) => str.slice(0, -1).replace(/\S/g, ".") + str[str.length - 1]
+export const ofuscateLastTwo: AnonimizeFunction = (str) => str.slice(0, -2).replace(/\S/g, ".") + (str[str.length - 2] || "") + str[str.length - 1]
 export const firstWord: AnonimizeFunction = (str) => str.replace(/([A-Za-zÀ-ÖØ-öø-ÿ0-9]+( d.\b)?).*/, "$1 ...")
 export const matriculaLeter: AnonimizeFunction = (str) => str.replace(/[0-9]/g, '.');
 export const matriculaNumber: AnonimizeFunction = (str) => str.replace(/[A-Za-z]/g, '.');
 
 let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-export const leter: AnonimizeFunction = (_str, _type, _idx, _tidx, fidx) => {    
+export const leter: AnonimizeFunction = (_str, _type, _idx, _tidx, fidx) => {
     let leter = alphabet[fidx % alphabet.length];
     let s = leter;
-    for( let i = -1; i < Math.floor(fidx / alphabet.length); i++ ){
-        s+=leter;
+    for (let i = -1; i < Math.floor(fidx / alphabet.length); i++) {
+        s += leter;
     }
 
     return s
 }
 
-export const year: AnonimizeFunction = (str: string,...args) => {
+export const year: AnonimizeFunction = (str: string, ...args) => {
     let ddmmyyyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{4})/);
-    if( ddmmyyyy ){
-        return "..."+ddmmyyyy[1]+"..."+ddmmyyyy[2]+ddmmyyyy[3];
+    if (ddmmyyyy) {
+        return "..." + ddmmyyyy[1] + "..." + ddmmyyyy[2] + ddmmyyyy[3];
     }
     let ddmmyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{1,2})/);
-    if(ddmmyy){
-        return "..."+ddmmyy[1]+"..."+ddmmyy[2]+ddmmyy[3];
+    if (ddmmyy) {
+        return "..." + ddmmyy[1] + "..." + ddmmyy[2] + ddmmyy[3];
     }
 
     let diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/)
-    if( diaDeMesDeyyyy ){
-        return "... de ... de "+diaDeMesDeyyyy[1];
+    if (diaDeMesDeyyyy) {
+        return "... de ... de " + diaDeMesDeyyyy[1];
     }
 
-    return reticiencias(str,...args);
+    return reticiencias(str, ...args);
 }
 
 
 export const processo: AnonimizeFunction = (str, ...args) => {
-    if( str.match(/([^\/]*\/[^.]*)\.(.).*/) ){
-        return str.replace(/([^\/]*\/[^.]*)\.(.).*/, "$1.$2...")
+    if (str.match(/([^/]*\/[^.]*)\.(.).*/)) {
+        return str.replace(/([^/]*\/[^.]*)\.(.).*/, "$1.$2...")
     }
     return reticiencias(str, ...args)
 }
 
 export const automatic: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) => {
-    if( type == "PES" )
-        return leter(str, type, idx, typeIdx, typeIdx-1) // overwrite funIdx, automatically only we should call it.
-    if( type == "DAT" )
+    if (type === "PES")
+        return leter(str, type, idx, typeIdx, typeIdx - 1) // overwrite funIdx, automatically only we should call it.
+    if (type === "DAT")
         return year(str, type, idx, typeIdx, funIdx)
-    if( type == "PRO" )
+    if (type === "PRO")
         return processo(str, type, idx, typeIdx, funIdx)
-    if( type == "MAT" )
+    if (type === "MAT")
         return matriculaLeter(str, type, idx, typeIdx, funIdx)
-    if( type == "INST" )
+    if (type === "INST")
         return firstWord(str, type, idx, typeIdx, funIdx)
     return reticiencias(str, type, idx, typeIdx, funIdx)
 }
@@ -147,7 +147,7 @@ export const functionsWithDescriptionArray: AnonimizeFunctionDescription[] = [
     }
 ]
 
-export function isAnonimizeFunctionIndex(index: number, defaultIndex: number){
-    if( index >= 0 && index < functionsWithDescriptionArray.length) return index;
+export function isAnonimizeFunctionIndex(index: number, defaultIndex: number) {
+    if (index >= 0 && index < functionsWithDescriptionArray.length) return index;
     return defaultIndex;
 }

@@ -1,32 +1,28 @@
-import { Component, ReactNode, useMemo, useState } from "react";
+import { Component, ReactNode } from "react";
 import { UserFile } from "./types/UserFile";
 import { Bicon, Button } from "./util/BootstrapIcons";
 
 interface CatchErrorProps {
 	userFile: UserFile
 	children: ReactNode
-	setUserFile: (u : UserFile|undefined) => void
+	setUserFile: (u: UserFile | undefined) => void
 }
 
 interface CatchErrorState {
 	error: Error | undefined
 }
 
-export class CatchError extends Component<CatchErrorProps,CatchErrorState> {
-	state: Readonly<CatchErrorState> = {error: undefined}
-
-	constructor(props: CatchErrorProps){
-		super(props)
-	}
+export class CatchError extends Component<CatchErrorProps, CatchErrorState> {
+	state: Readonly<CatchErrorState> = { error: undefined }
 
 	componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-		this.setState({error: error});
+		this.setState({ error: error });
 	}
 
 	render(): ReactNode {
-		if( this.state.error ){
+		if (this.state.error) {
 			return <div className='container alert alert-danger'>
-				<h4><Bicon n="exclamation-triangle"/> Ocurreu um erro no ficheiro {this.props.userFile.name}! ({this.state.error.name})</h4>
+				<h4><Bicon n="exclamation-triangle" /> Ocurreu um erro no ficheiro {this.props.userFile.name}! ({this.state.error.name})</h4>
 				<pre>
 					<details>
 						<summary>
@@ -35,7 +31,7 @@ export class CatchError extends Component<CatchErrorProps,CatchErrorState> {
 						{this.state.error.stack}
 					</details>
 				</pre>
-				<Button i="x" text="Fechar ficheiro" className="btn btn-warning" onClick={() => this.props.setUserFile(undefined)}/>
+				<Button i="x" text="Fechar ficheiro" className="btn btn-warning" onClick={() => this.props.setUserFile(undefined)} />
 			</div>
 		}
 		else {

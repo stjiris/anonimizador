@@ -5,9 +5,11 @@ import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { EntityTypeIDefaults, EntityTypeI } from "../../types/EntityTypes";
 import { Bicon, Button } from "../../util/BootstrapIcons";
 import { useTypes } from "../../util/uses";
+import { ProfileI, useProfile } from "../../types/Profile";
 
 export function TypesModalContent({file}:{file: UserFile}){
     let types = useTypes(file);
+    let [profile, setProfile] = useProfile();
     return <>
         <div className="modal-header">
             <div><h5 className="modal-title" id="modal-types-label">Gerir tipos de entidades</h5></div>
@@ -29,7 +31,7 @@ export function TypesModalContent({file}:{file: UserFile}){
                     enableFullScreenToggle={false}
                     enableColumnActions={false}
                     editingMode="cell"
-                    columns={[TYPE_COLUMN(file),ANON_COLUMN(file),EXAMPLE_COLUMN]} 
+                    columns={[TYPE_COLUMN(file, profile, setProfile),ANON_COLUMN(file),EXAMPLE_COLUMN]} 
                     data={types}
                     localization={MRT_Localization_PT}
                     renderTopToolbarCustomActions={() => [
@@ -64,7 +66,7 @@ export function TypesModalContent({file}:{file: UserFile}){
     </>
 }
 
-const TYPE_COLUMN: (file: UserFile) => MRT_ColumnDef<EntityTypeI> = (file) => ({
+const TYPE_COLUMN: (file: UserFile, profile: ProfileI | null, setProfile: (p:ProfileI) => void) => MRT_ColumnDef<EntityTypeI> = (file, profile, setProfile) => ({
     header: "Tipo",
     Header: <><Bicon n="pencil"/> Tipo</>,
     accessorKey: "color",
@@ -74,6 +76,9 @@ const TYPE_COLUMN: (file: UserFile) => MRT_ColumnDef<EntityTypeI> = (file) => ({
         name: "color",
         onBlur: (evt) => {
             file.updateType(row.original.name, evt.target.value, row.original.functionIndex)
+            if(profile){
+                setProfile({...profile, defaultEntityTypes: {...profile.defaultEntityTypes, [row.original.name]: {color: evt.target.value, functionIndex: row.original.functionIndex}}});
+            }
             table.setEditingCell(null);
         }
     }),

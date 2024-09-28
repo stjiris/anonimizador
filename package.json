@@ -45,7 +45,7 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:7998",
+  "proxy": "http://localhost:7999",
   "devDependencies": {
     "@types/lodash": "^4.14.191",
     "@types/react-window": "^1.8.5"

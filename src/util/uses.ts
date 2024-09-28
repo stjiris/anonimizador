@@ -4,8 +4,10 @@ import { Entity, OffsetRange } from "../types/Entity";
 import { EntityPool } from "../types/EntityPool";
 import { EntityTypeI } from "../types/EntityTypes";
 import { UserFile } from "../types/UserFile";
+import { DescriptorI } from "../types/Descriptor";
+import { SummaryI } from "../types/Summary";
 
-export function useEntities(pool: EntityPool){
+export function useEntities(pool: EntityPool) {
     const [ents, setEnts] = useState(() => [...pool.entities])
     const update = useCallback(() => setEnts([...pool.entities]), [pool])
     useEffect(() => {
@@ -21,13 +23,13 @@ export interface SpecificOffsetRange extends OffsetRange {
     ent: Entity
 }
 
-export function useSpecificOffsets(pool: EntityPool){
+export function useSpecificOffsets(pool: EntityPool) {
     const ents = useEntities(pool);
     const specific = useMemo(() => {
         const offsets: SpecificOffsetRange[] = [];
-        ents.forEach( e => {
-            e.offsets.forEach( o => {
-                offsets.push({...o, ent: e})
+        ents.forEach(e => {
+            e.offsets.forEach(o => {
+                offsets.push({ ...o, ent: e })
             })
         })
         return offsets.sort((a, b) => a.start - b.start);
@@ -35,9 +37,9 @@ export function useSpecificOffsets(pool: EntityPool){
     return specific;
 }
 
-export function useImages(file: UserFile){
-    const [images, setImages] = useState<Record<number,AnonimizeImage>>(() => ({...file.images}))
-    const update = useCallback(() => setImages({...file.images}),[file])
+export function useImages(file: UserFile) {
+    const [images, setImages] = useState<Record<number, AnonimizeImage>>(() => ({ ...file.images }))
+    const update = useCallback(() => setImages({ ...file.images }), [file])
     useEffect(() => {
         file.onImages(update)
         return () => {
@@ -47,14 +49,14 @@ export function useImages(file: UserFile){
     return images
 }
 
-export function useTypesDict(file: UserFile){
+export function useTypesDict(file: UserFile) {
     const getTypes = useCallback(() => {
         let obj: Record<string, EntityTypeI> = {};
-        file.types.forEach( t => obj[t.name] = t)
+        file.types.forEach(t => obj[t.name] = t)
         return obj;
-    },[file])
+    }, [file])
     const [types, setTypes] = useState<Record<string, EntityTypeI>>(getTypes)
-    const update = useCallback(() => setTypes(getTypes()),[file])
+    const update = useCallback(() => setTypes(getTypes()), [getTypes])
     useEffect(() => {
         file.onTypes(update)
         return () => {
@@ -64,9 +66,9 @@ export function useTypesDict(file: UserFile){
     return types
 }
 
-export function useTypes(file: UserFile){
+export function useTypes(file: UserFile) {
     const [types, setTypes] = useState<EntityTypeI[]>(() => [...file.types])
-    const update = useCallback(() => setTypes([...file.types]),[file])
+    const update = useCallback(() => setTypes([...file.types]), [file])
     useEffect(() => {
         file.onTypes(update)
         return () => {
@@ -77,7 +79,7 @@ export function useTypes(file: UserFile){
 }
 
 
-export function useSave(file: UserFile){
+export function useSave(file: UserFile) {
     const [saved, setSaved] = useState<boolean>(() => file.saved)
     const update = useCallback(() => setSaved(file.saved), [file])
     useEffect(() => {
@@ -85,6 +87,42 @@ export function useSave(file: UserFile){
         return () => {
             file.offSave(update);
         }
-    }, [file])
-    return saved;  
+    }, [file, update])
+    return saved;
+}
+
+export function useDescriptors(file: UserFile) {
+    const [desc, setDesc] = useState<DescriptorI[] | undefined>(() => file.descriptors)
+    const update = useCallback(() => setDesc(file.descriptors), [file])
+    useEffect(() => {
+        file.onDescriptors(update);
+        return () => {
+            file.offDescriptors(update);
+        }
+    }, [file, update])
+    return desc;
+}
+
+export function useArea(file: UserFile) {
+    const [area, setArea] = useState<string | undefined>(() => file.area)
+    const update = useCallback(() => setArea(file.area), [file])
+    useEffect(() => {
+        file.onArea(update);
+        return () => {
+            file.offArea(update);
+        }
+    }, [file, update])
+    return area;
+}
+
+export function useSummary(file: UserFile) {
+    const [summary, setSummary] = useState<SummaryI[] | undefined>(() => file.summary);
+    const update = useCallback(() => setSummary(file.summary), [file])
+    useEffect(() => {
+        file.onSummary(update);
+        return () => {
+            file.offSummary(update);
+        }
+    }, [file, update])
+    return summary;
 }
