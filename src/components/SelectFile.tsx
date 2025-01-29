@@ -23,7 +23,7 @@ const cols: MRT_ColumnDef<SavedUserFile>[] = [
         accessorFn: file => formatBytes(new Blob([JSON.stringify(file)]).size) // Overengeneering text.length
     },
     {
-        header: "N.º de Entidades / Ocurrências",
+        header: "N.º de Entidades / Ocorrências",
         accessorFn: file => `${file.ents.reduce((acc, c) => acc + 1, 0)} / ${file.ents.reduce((acc, c) => acc + c.offsets.length, 0)}`
     },
     {

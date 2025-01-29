@@ -50,7 +50,7 @@ export function EntityTable({ file }: { file: UserFile }) {
         }}
         columns={columns}
         data={ents}
-        localization={{ ...MRT_Localization_PT, noRecordsToDisplay: "Sem ocurrências de entidades" }} />
+        localization={{ ...MRT_Localization_PT, noRecordsToDisplay: "Sem ocorrências de entidades" }} />
 }
 
 const toolbar = (pool: EntityPool) => ({ table }: { table: MRT_TableInstance<Entity> }) => {
