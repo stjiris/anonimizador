@@ -15,10 +15,10 @@ export function EntityTable({ file }: { file: UserFile }) {
     const types = useTypesDict(file);
 
     const typesList = useMemo(() => Object.values(types), [types]);
-    const columns = useMemo(() => [HEADER, ENTITY, TYPE(file.pool, typesList), ANONIMIZE(file.pool, types)], [file.pool, types, typesList])
+    const columns = useMemo(() => [TYPE(file.pool, typesList), HEADER(file.pool), ENTITY(file.pool), ANONIMIZE(file.pool, types)], [file.pool, types, typesList])
     const details = useMemo(() => entityDetails(file.pool), [file.pool])
     const bar = useMemo(() => toolbar(file.pool), [file.pool])
-
+    
     return <MaterialReactTable
         key="ent-table"
         enableRowSelection
@@ -88,18 +88,18 @@ const removeSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPo
 }
 
 
-const HEADER: MRT_ColumnDef<Entity> = {
-    header: "#",
+const HEADER: (pool: EntityPool) => MRT_ColumnDef<Entity> = pool => ({
+    header: `# (${pool.entities.reduce((acc, c) => acc + c.offsets.length, 0)})`,
     accessorKey: "offsetsLength",
     enableColumnFilter: false,
     enableColumnDragging: false,
     enableColumnActions: false,
     enableEditing: false,
     size: 40
-}
+})
 
-const ENTITY: MRT_ColumnDef<Entity> = {
-    header: "Entidade",
+const ENTITY: (pool: EntityPool) => MRT_ColumnDef<Entity> = (pool) => ({
+    header: `Entidade (${pool.entities.length})`,
     accessorFn: (ent) => ent.offsets[0].preview,
     enableEditing: false,
     size: 60,
@@ -107,14 +107,13 @@ const ENTITY: MRT_ColumnDef<Entity> = {
         onClick: async () => {
             if (row.original.offsets.length === 0) return;
             let off = row.original.offsets[0];
-
             let elm = document.querySelector(`[data-offset="${off.start}"]`);
             if (elm) {
                 elm.scrollIntoView({ block: "center" });
             }
         }
     })
-}
+})
 
 const TYPE: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (pool, types) => ({
     header: "Tipo",

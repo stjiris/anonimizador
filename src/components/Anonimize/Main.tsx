@@ -69,10 +69,6 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
                     </select>
                     <ExportButton file={file} />
                     <Sep />
-                    <span className="text-body alert alert-success m-1 p-1">
-                        N.º de Entidades = {file.pool.entities.length}
-                    </span>
-                    <Sep />
                     <Button title="Pesquisar" i="search" text="Pesquisar" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-search" />
                     <SuggestButton file={file} state={anonimizeState.state} setRequesting={setRequesting} requesting={requesting} />
                     <HistoryCommands pool={file.pool} />
