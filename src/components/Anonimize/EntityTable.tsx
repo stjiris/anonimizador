@@ -130,7 +130,10 @@ const ENTITY: (pool: EntityPool) => MRT_ColumnDef<Entity> = (pool) => ({
                 elm.scrollIntoView({ block: "center" });
             }
         }
-    })
+    }),
+    enableColumnFilter: true,
+    enableColumnDragging: false,
+    enableColumnActions: false,
 })
 
 const TYPE: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (pool, types) => ({
@@ -152,7 +155,11 @@ const TYPE: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<Entity> = 
             row.original.type = event.target.value;
             if (o !== row.original.type) pool.notify("Modificar tipo");
         }
-    })
+    }),
+    enableColumnFilter: true,
+    enableColumnDragging: false,
+    enableColumnActions: false,
+    enableEditing: false
 })
 
 

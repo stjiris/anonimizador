@@ -52,9 +52,9 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
     }, [requesting, saved])
 
     return <>
-        <div className="row container-fluid bg-dark m-0 p-0">
+        <div id="doc" className="row w-100 m-0 p-0 bg-dark">
             <EntitiesStyle file={file} />
-            <div className="col-9">
+            <div className="col-9 p-0 m-0">
                 <div className="position-sticky top-0 bg-white p-0 m-0 d-flex" style={{ borderBottom: "5px solid #161616", zIndex: 1 }}>
                     {requesting ? <ForceExitButton setUserFile={props.setUserFile} /> : <ExitButton file={file} setUserFile={props.setUserFile} />}
                     <SavedBadge file={file} />
@@ -82,7 +82,7 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
                     }
                 </div>
             </div>
-            <div className="col-3">
+            <div id="entityTable" className="col-3 p-1 m-0">
                 <div className="m-0 position-sticky top-0">
                     <EntityTable file={file} />
                 </div>
