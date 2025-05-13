@@ -17,6 +17,7 @@ import { SearchModalContent } from "./SearchModalContent";
 import { TypesModalContent } from "./TypesModalContent";
 import { ToolsButton, ToolsModalBody } from "./Tools";
 import { ExportButton } from "./ExportButton";
+import { loadAnonimizeProfiles, getAnonimizeProfiles, AnonimizeProfile } from "../../util/AnonimizeProfiles";
 
 interface AnonimizeProps {
     file: UserFile
@@ -32,7 +33,16 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
     const [requesting, setRequesting] = useState<boolean>(false);
 
     const anonimizedHTML = useRef<string>("");
-
+    const [profiles, setProfiles] = useState<{ name: string; label: string }[]>([]);
+  
+    useEffect(() => {
+      loadAnonimizeProfiles()
+        .then(() => {
+          const perfis = getAnonimizeProfiles();
+          setProfiles(perfis); // Isto vai desencadear um re-render com os dados
+        })
+        .catch((err) => console.error("Erro ao carregar perfis:", err));
+    }, []);
 
     useEffect(() => {
         const onExit = (evt: BeforeUnloadEvent) => {
@@ -60,6 +70,12 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
                     <SavedBadge file={file} />
                     <ToolsButton />
                     <Button title="Gerir tipos" i="file-earmark-font" text="Tipos" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types" />
+                    <select title="Escolher perfil" className="text-body btn m-1 p-1 text-start alert alert-primary">
+                        <option key="DocProfile">{"Perfil de Anonimização"}</option>
+                        {profiles.map(p => (
+                            <option key={p.name} value={p.name}>{p.label}</option>
+                        ))}
+                    </select>
                     <Sep />
                     <select title="Escolher modo" className="text-body btn m-1 p-1 text-start alert alert-primary" onChange={(ev) => setAnonimizeSate(getAnonimizedStateCombined(ev.target.value as AnonimizeVisualState))} defaultValue={AnonimizeVisualState.TYPES}>
                         <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>

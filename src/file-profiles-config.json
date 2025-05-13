@@ -1,0 +1,20 @@
+[
+  {
+    "name": "default_profile",
+    "label": "Anonimização Pré-definida",
+    "default_entity_types": ["PES", "DAT", "ORG", "LOC", "PRO", "MAT", "CEP", "TEL", "E-MAIL", "IDP", "INST", "PROF"],
+    "allowed_entity_types": ["PES", "DAT", "ORG", "LOC", "PRO", "MAT", "CEP", "TEL", "E-MAIL", "IDP", "INST", "PROF"]
+  },
+  {
+    "name": "healthcare_profile",
+    "label": "Anonimização Saúde",
+    "default_entity_types": ["PES", "DAT", "IDP", "INST", "PROF"],
+    "allowed_entity_types": ["PES", "DAT", "ORG", "LOC", "PRO", "MAT", "CEP", "TEL", "E-MAIL", "IDP", "INST", "PROF"]
+  },
+  {
+    "name": "legal_profile",
+    "label": "Anonimização Legal",
+    "default_entity_types": ["PES", "ORG", "IDP", "DAT"],
+    "allowed_entity_types": ["PES", "DAT", "ORG", "LOC", "PRO", "MAT", "CEP", "TEL", "E-MAIL", "IDP", "INST", "PROF"]
+  }
+]
