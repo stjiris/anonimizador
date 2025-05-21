@@ -7,9 +7,25 @@ from flashtext import KeywordProcessor
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
 PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A-Z0-9]*"
 PATTERN_DATA = r"\b\d{1,2}(-|\.|/)\d{1,2}(-|\.|/)\d{2,4}\b"
-EXCLUDE = ['Tribunal','Réu','Reu','Ré','Rés','Autores','Supremo Tribunal de Justiça',"STJ","Supremo Tribunal",
+
+# Termos gerais do mundo do direito que não devem ser anonimizados
+EXCLUDE = ['Tribunal','Juízo','Secção','Vara','Arguído','Arguída','Arguídos','Arguídas',
+            'Réu','Reu','Ré','Rés','Autores','Supremo Tribunal de Justiça','STJ','Supremo Tribunal',
             'Requerida','Autora','Instância','Relação','Supremo','Recorrente','Recorrida','Recorrido',
             'Tribunal da Relação','artº','Exª','Exº','Secção do Supremo Tribunal de Justiça','A.A.','nºs']
+
+# Termos referentes a cargos desempenhados por agentes do poder judicial que não devem
+# ser anonimizados.
+MAGIS_JUIZES_PROC_LIST = ['Juiz', 'Juíza', 'Procurador', 'Procuradora', 'Magistrado', 'Magistrada', 
+                          'Desembargador', 'Desembargadora', "Relator", "Relatora", "Conselheiro", "Conselheira"]
+
+# Instituições e organismos públicos que não devem ser anonimizados
+INST_LIST = ['Ministério Público','MP','Procuradoria-Geral da República','PGR','Ministério','Conselho Superior da Magistratura','CSM'
+            'Secretaria','Polícia de Segurança Pública','PSP','Guarda Nacional Republicana','GNR','Polícia Judiciária','PJ','Autoridade Tributária','AT'
+            'Autoridade Nacional de Segurança Rodoviária','ANSR','Instituto de Mobilidade e dos Transporters', 'IMT', 'Autoridade de Segurança Alimentar e Económica'
+            'Câmara Municipal','Junta de Freguesia','Assembleia da República','AR','Assembleia Municipal','Marinha','Exército','Força Aérea']
+
+EXCLUDE = EXCLUDE + MAGIS_JUIZES_PROC_LIST + INST_LIST
 EXCLUDE = [x.lower() for x in EXCLUDE]
 
 class FakeEntity:

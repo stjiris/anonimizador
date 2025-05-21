@@ -11,6 +11,10 @@
 # production
 /build
 
+#Ignorar ficheiros de cache do container local
+logs/ 
+node_modules/
+
 # misc
 .DS_Store
 .env.local

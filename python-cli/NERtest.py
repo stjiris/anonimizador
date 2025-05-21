@@ -11,9 +11,15 @@ from flashtext import KeywordProcessor
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
 PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A-Z0-9]*"
 PATTERN_DATA = r"\b\d{1,2}(-|\.|/)\d{1,2}(-|\.|/)\d{2,4}\b"
-EXCLUDE = ['Tribunal','Réu','Reu','Ré','Supremo Tribunal de Justiça',"STJ","Supremo Tribunal",
-            'Requerida','Autora','Instância','Relação','Supremo','Recorrente','Recorrida','Recorrido',
-            'Tribunal da Relação','artº','Exª','Exº','Secção do Supremo Tribunal de Justiça','A.A.','nºs']
+
+# Lista de exceções com termos que nunca devem ser anonimizados
+EXCLUDE = ['Arguido','Arguida','Arguidos','Arguidas','Reu','Ré','Reus','Autor','Autora','Autores','Autoras',
+           'Tribunal','Juízo','Vara','Instância','STJ','Supremo Tribunal de Justiça','Supremo','Tribunal da Relação',
+           'Relação','Secção do Supremo Tribunal de Justiça','artº','Exº','Exª','A.A.','nºs','Recorrente',
+           'Requerida','Juiz','Juíza','Magistrado','Magistrada','Desembargador',
+           'Desembargadora','Conselheiro','Conselheira','Relator','Relatora','Procurador','Procuradora']
+
+
 EXCLUDE = [x.lower() for x in EXCLUDE]
 
 class FakeEntity:
