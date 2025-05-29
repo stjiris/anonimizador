@@ -15,7 +15,12 @@ export function EntityTable({ file }: { file: UserFile }) {
     const types = useTypesDict(file);
 
     const typesList = useMemo(() => Object.values(types), [types]);
-    const columns = useMemo(() => [TYPE(file.pool, typesList), HEADER(file.pool), ENTITY(file.pool), ANONIMIZE(file.pool, types)], [file.pool, types, typesList])
+    const columns = useMemo(() => [
+        TYPE(file.pool, typesList), 
+        HEADER(file.pool), 
+        ENTITY(file.pool), 
+        ANONIMIZE(file.pool, types)
+    ], [file.pool, types, typesList]);
     const details = useMemo(() => entityDetails(file.pool), [file.pool])
     const bar = useMemo(() => toolbar(file.pool), [file.pool])
     
@@ -27,30 +32,45 @@ export function EntityTable({ file }: { file: UserFile }) {
         positionActionsColumn="last"
         editingMode="cell"
         enableDensityToggle={false}
-        enableHiding={true}
+        enableHiding
         enableStickyHeader
         enablePagination={false}
         enableFullScreenToggle={false}
-        renderDetailPanel={details}
-        renderTopToolbarCustomActions={bar}
+        renderDetailPanel={entityDetails(file.pool)}
+        renderTopToolbarCustomActions={toolbar(file.pool)}
         muiTableBodyCellProps={{
-            style: {
-                whiteSpace: "normal",
-                wordWrap: "break-word"
+            sx: {
+                whiteSpace: 'normal',
+                wordWrap: 'break-word',
+                lineHeight: '1.2',
+                padding: '8px'
             }
         }}
         muiTableHeadCellProps={{
-            style: {
-                borderBottom: "5px solid #161616"
+            sx: {
+                borderBottom: '5px solid #161616',
+                padding: '8px',
+                fontSize: '0.875rem'
+            }
+        }}
+        muiTablePaperProps={{
+            sx: {
+                maxHeight: '100%',
+                display: 'flex',
+                flexDirection: 'column'
             }
         }}
         positionToolbarAlertBanner="bottom"
         initialState={{
-            density: 'compact'
+            density: 'compact',
+            columnPinning: { right: ['mrt-row-actions'] }
         }}
         columns={columns}
         data={ents}
-        localization={{ ...MRT_Localization_PT, noRecordsToDisplay: "Sem ocorrências de entidades" }} />
+        localization={{ 
+            ...MRT_Localization_PT, 
+            noRecordsToDisplay: "Sem entidades" 
+        }} />;
 }
 
 const toolbar = (pool: EntityPool) => ({ table }: { table: MRT_TableInstance<Entity> }) => {
@@ -112,7 +132,10 @@ const ENTITY: (pool: EntityPool) => MRT_ColumnDef<Entity> = (pool) => ({
                 elm.scrollIntoView({ block: "center" });
             }
         }
-    })
+    }),
+    enableColumnFilter: true,
+    enableColumnDragging: false,
+    enableColumnActions: false,
 })
 
 const TYPE: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (pool, types) => ({
@@ -134,7 +157,11 @@ const TYPE: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<Entity> = 
             row.original.type = event.target.value;
             if (o !== row.original.type) pool.notify("Modificar tipo");
         }
-    })
+    }),
+    enableColumnFilter: true,
+    enableColumnDragging: false,
+    enableColumnActions: false,
+    enableEditing: false
 })
 
 

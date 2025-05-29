@@ -18,6 +18,7 @@ export default function AnonimizeContent(props: AnonimizeContentProps) {
 
     const offsets = useSpecificOffsets(props.file.pool)
     const entityTypes = useTypesDict(props.file);
+    console.log(entityTypes);
     const images = useImages(props.file)
     const accessHtml = props.accessHtml;
 
