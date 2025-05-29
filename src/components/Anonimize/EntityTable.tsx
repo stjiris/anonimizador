@@ -21,6 +21,8 @@ export function EntityTable({ file }: { file: UserFile }) {
         ENTITY(file.pool), 
         ANONIMIZE(file.pool, types)
     ], [file.pool, types, typesList]);
+    const details = useMemo(() => entityDetails(file.pool), [file.pool])
+    const bar = useMemo(() => toolbar(file.pool), [file.pool])
     
     return <MaterialReactTable
         key="ent-table"
