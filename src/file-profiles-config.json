@@ -2,19 +2,84 @@
   {
     "name": "default_profile",
     "label": "Anonimização Pré-definida",
-    "default_entity_types": ["PES", "DAT", "ORG", "LOC", "PRO", "MAT", "CEP", "TEL", "E-MAIL", "IDP", "INST", "PROF"],
-    "allowed_entity_types": ["PES", "DAT", "ORG", "LOC", "PRO", "MAT", "CEP", "TEL", "E-MAIL", "IDP", "INST", "PROF"]
+    "default_entity_types": [
+      "PES",
+      "DAT",
+      "ORG",
+      "LOC",
+      "PRO",
+      "MAT",
+      "CEP",
+      "TEL",
+      "E-MAIL",
+      "IDP",
+      "INST",
+      "PROF"
+    ],
+    "allowed_entity_types": [
+      "PES",
+      "DAT",
+      "ORG",
+      "LOC",
+      "PRO",
+      "MAT",
+      "CEP",
+      "TEL",
+      "E-MAIL",
+      "IDP",
+      "INST",
+      "PROF"
+    ],
+    "custom_entities": [],
+    "excluded_words": []
   },
   {
     "name": "healthcare_profile",
     "label": "Anonimização Saúde",
-    "default_entity_types": ["PES", "DAT", "IDP", "INST", "PROF"],
-    "allowed_entity_types": ["PES", "DAT", "ORG", "LOC", "PRO", "MAT", "CEP", "TEL", "E-MAIL", "IDP", "INST", "PROF"]
+    "default_entity_types": [
+      "PES",
+      "DAT",
+      "ORG",
+      "LOC",
+      "PRO",
+      "MAT",
+      "CEP",
+      "TEL",
+      "E-MAIL",
+      "IDP",
+      "INST",
+      "PROF"
+    ],
+    "allowed_entity_types": [
+      "PES",
+      "DAT",
+      "ORG",
+      "LOC",
+      "PRO",
+      "MAT",
+      "CEP",
+      "TEL",
+      "E-MAIL",
+      "IDP",
+      "INST",
+      "PROF"
+    ],
+    "custom_entities": [
+      [
+        "Tribunal Judicial",
+        "ORG"
+      ]
+    ],
+    "excluded_words": [
+      "AutoForte"
+    ]
   },
   {
-    "name": "legal_profile",
-    "label": "Anonimização Legal",
-    "default_entity_types": ["PES", "ORG", "IDP", "DAT"],
-    "allowed_entity_types": ["PES", "DAT", "ORG", "LOC", "PRO", "MAT", "CEP", "TEL", "E-MAIL", "IDP", "INST", "PROF"]
+    "name": "legal_anonimize",
+    "label": "Anonimização Pré-definida",
+    "default_entity_types": [],
+    "allowed_entity_types": [],
+    "custom_entities": [],
+    "excluded_words": []
   }
 ]
