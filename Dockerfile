@@ -24,6 +24,9 @@ RUN env/bin/pip install --no-cache-dir -r requirements.txt
 
 ENV PYTHON_COMMAND=/opt/app/env/bin/python
 
+ARG MATOMO_URL
+ENV REACT_APP_MATOMO_URL=${MATOMO_URL}
+
 COPY package*.json ./
 
 RUN npm ci
@@ -38,7 +41,11 @@ ARG VERSION_COMMIT="0000000"
 
 COPY . .
 
-RUN REACT_APP_VERSION_DATE=${VERSION_DATE} REACT_APP_VERSION_COMMIT=${VERSION_COMMIT} REACT_APP_TITLE=${TITLE} npm run build
+RUN REACT_APP_VERSION_DATE=${VERSION_DATE} \
+    REACT_APP_VERSION_COMMIT=${VERSION_COMMIT} \
+    REACT_APP_TITLE=${TITLE} \
+    REACT_APP_MATOMO_URL=${MATOMO_URL} \
+    npm run build
 
 RUN mv iris-lfs-storage/model-best/ ./python-cli/
 RUN mv iris-lfs-storage/model-gpt/ ./python-cli/
