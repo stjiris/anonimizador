@@ -1,5 +1,4 @@
-// src/App.tsx
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { CatchError } from './CatchError';
 import Anonimize from './components/Anonimize/Main';
@@ -17,7 +16,6 @@ declare global {
   }
 }
 
-// Fires a Matomo page‑view whenever the location changes
 function AnalyticsTracker() {
   const location = useLocation();
   useEffect(() => {
@@ -76,13 +74,10 @@ function MainApp() {
 export default function App() {
   return (
     <BrowserRouter>
-      {/* Inject Matomo tracker once */}
       <Matomo />
 
-      {/* Fire events on each route change */}
       <AnalyticsTracker />
 
-      {/* Define your routes (only one here, but you can split further) */}
       <Routes>
         <Route path="/*" element={<MainApp />} />
       </Routes>

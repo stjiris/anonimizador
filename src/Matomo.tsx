@@ -1,8 +1,7 @@
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 export function Matomo() {
   useEffect(() => {
-    // inject the _paq array and script tag
     const _paq = (window as any)._paq = (window as any)._paq || [];
     _paq.push(['trackPageView']);
     _paq.push(['enableLinkTracking']);
@@ -18,8 +17,7 @@ export function Matomo() {
     g.src = u + 'matomo.js';
     s.parentNode!.insertBefore(g, s);
 
-    // optionally, return a cleanup if you re-mount
-    return () => { /* nothing to cleanup */ };
+    return () => {};
   }, []);
 
   return null;
