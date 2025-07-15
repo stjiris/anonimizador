@@ -152,7 +152,12 @@ export function AddUserFileAction({ setUserFile }: { setUserFile: (file: UserFil
         await onFile(e).then(f => f ? setUserFile(f) : null)
         setUploading(false);
     }
-
+    window._paq.push([
+      'trackEvent',
+      'Anonymization',      // category
+      'click',              // action
+      'AnonymizeButton',    // name
+    ]);
     return <>
         <label htmlFor="file" role="button" className={`btn btn-primary m-auto ${uploading ? "disabled" : ""}`}>{uploading ? <><span className="spinner-border spinner-border-sm" role="status"></span> A carregar ficheiro...</> : <><Bicon n="file-earmark-plus" /> Adicionar Ficheiro</>}</label>
         <input hidden type="file" name="file" id="file" onChange={onChange}></input>
