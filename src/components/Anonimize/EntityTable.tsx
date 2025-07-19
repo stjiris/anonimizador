@@ -7,11 +7,16 @@ import { UserFile } from "../../types/UserFile";
 import { EntityTypeI } from "../../types/EntityTypes";
 import { FULL_ANONIMIZE } from "../../util/anonimizeFunctions";
 import { useEntities, useTypesDict } from "../../util/uses";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 
 export function EntityTable({ file }: { file: UserFile }) {
+    const [showOnlyMarks, setShowOnlyMarks] = useState(false);
+
     const ents = useEntities(file.pool);
+    const filteredEnts = showOnlyMarks
+    ? ents.filter(e => e.type === "Marca")
+    : ents;
     const types = useTypesDict(file);
 
     const typesList = useMemo(() => Object.values(types), [types]);
@@ -35,7 +40,7 @@ export function EntityTable({ file }: { file: UserFile }) {
         enablePagination={false}
         enableFullScreenToggle={false}
         renderDetailPanel={entityDetails(file.pool)}
-        renderTopToolbarCustomActions={toolbar(file.pool)}
+        renderTopToolbarCustomActions={toolbar(file.pool, showOnlyMarks, setShowOnlyMarks)}
         muiTableBodyCellProps={{
             sx: {
                 whiteSpace: 'normal',
@@ -64,19 +69,24 @@ export function EntityTable({ file }: { file: UserFile }) {
             columnPinning: { right: ['mrt-row-actions'] }
         }}
         columns={columns}
-        data={ents}
+        data={filteredEnts}
         localization={{ 
             ...MRT_Localization_PT, 
             noRecordsToDisplay: "Sem entidades" 
         }} />;
 }
 
-const toolbar = (pool: EntityPool) => ({ table }: { table: MRT_TableInstance<Entity> }) => {
-    let selectedeKeys = selectedIndexes(table).length
+const toolbar = ( pool: EntityPool, showOnlyMarks: boolean, setShowOnlyMarks: (v: boolean) => void ) => ({ table }: { table: MRT_TableInstance<Entity> }) => {
+    let selectedeKeys = selectedIndexes(table).length;
+
+    const isJoinDisabled = showOnlyMarks || selectedeKeys <= 1;
+    const isSplitDisabled = showOnlyMarks || selectedeKeys === 0;
+
     return <div className="d-flex w-100">
-        <Button i="union" text="Juntar" className="btn btn-primary my-0 mx-1 p-1" disabled={selectedeKeys <= 1} onClick={() => joinSelectedEntities(table, pool)} />
-        <Button i="exclude" text="Separar" className="btn btn-warning my-0 mx-1 p-1" disabled={selectedeKeys === 0} onClick={() => splitSelectedEntities(table, pool)} />
+        <Button i="union" text="Juntar" className="btn btn-primary my-0 mx-1 p-1" disabled={isJoinDisabled} onClick={() => { if (!isJoinDisabled) joinSelectedEntities(table, pool); }} />
+        <Button i="exclude" text="Separar" className="btn btn-warning my-0 mx-1 p-1" disabled={isSplitDisabled} onClick={() => { if (!isSplitDisabled) splitSelectedEntities(table, pool); }} />
         <Button i="trash" text="Remover" className="btn btn-danger my-0 mx-1 p-1" disabled={selectedeKeys === 0} onClick={() => removeSelectedEntities(table, pool)} />
+        <Button i="tag" text={showOnlyMarks ? "Todas" : "Marcas"} className="btn btn-secondary my-0 mx-1 p-1" onClick={() => setShowOnlyMarks(!showOnlyMarks)} />
     </div>
 }
 
