@@ -40,6 +40,7 @@ export const EntityTypeIDefaults: { [key: string]: EntityTypeI } = {
     "X-INST": { name: "X-INST", color: "#DCDCDC", functionIndex: DONT_ANONIMIZE },
     PROF: { name: "PROF", color: "#F7C4D8", functionIndex: AUTO_ANONIMIZE },
     "X-PROF": { name: "X-PROF", color: "#DCDCDC", functionIndex: DONT_ANONIMIZE },
+    "Marca": { name: "Marca", color: "#2f4f4f", functionIndex: DONT_ANONIMIZE },
 }
 
 const _type_color_cache: { [key: string]: EntityTypeI | undefined } = {}

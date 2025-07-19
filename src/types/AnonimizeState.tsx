@@ -1,7 +1,9 @@
 export const enum AnonimizeStateState {
     ORIGINAL = "Original", // Shows original file without any marks
-    TAGGED = "Edição", // Shows entities highlights
-    ANONIMIZED = "Anonimizado" // Shows file without entities
+    TAGGED = "Edição - Todos", // Shows entities highlights
+    ANONIMIZED = "Anonimizado", // Shows file without entities
+    OTHERS_TAGGED = "Edição - Outros", // Shows other entities highlights
+    NORMAL_TAGGED = "Edição - Normais" // Shows normal entities highlights
 }
 
 export interface AnonimizeStateCombined {
@@ -11,7 +13,9 @@ export interface AnonimizeStateCombined {
 
 export const enum AnonimizeVisualState {
     ORIGINAL = "Ver - Forma inicial", // Shows original file without any marks
-    TYPES = "Editar - Tipos", // Shows entities highlights
+    ALL_TYPES = "Editar - Tipos - Todos", // Shows all types of entities
+    OTHER_TYPES = "Editar - Tipos - Outros", // Shows other types of entities
+    NORMAL_TYPES = "Editar - Tipos - Normais", // Shows normal types of entities
     REPLACE = "Editar - Subsituições", // Shows entities highlights
     ANONIMIZED = "Ver - Anonimização" // Shows file without entities
 }
@@ -26,9 +30,17 @@ export function getAnonimizedStateCombined(from: AnonimizeVisualState): Anonimiz
         case AnonimizeVisualState.ORIGINAL:
             anonimizeState = AnonimizeStateState.ORIGINAL;
             break;
-        case AnonimizeVisualState.TYPES:
+        case AnonimizeVisualState.ALL_TYPES:
             showTypes = true;
             anonimizeState = AnonimizeStateState.TAGGED;
+            break;
+        case AnonimizeVisualState.OTHER_TYPES:
+            showTypes = true;
+            anonimizeState = AnonimizeStateState.OTHERS_TAGGED;
+            break;
+        case AnonimizeVisualState.NORMAL_TYPES:
+            showTypes = true;
+            anonimizeState = AnonimizeStateState.NORMAL_TAGGED;
             break;
         case AnonimizeVisualState.REPLACE:
             anonimizeState = AnonimizeStateState.TAGGED;

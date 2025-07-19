@@ -28,7 +28,8 @@
         "INST":{"color":"#71ff77","functionIndex":1},
         "X-INST":{"color":"#DCDCDC","functionIndex":0},
         "PROF":{"color":"#F7C4D8","functionIndex":1},
-        "X-PROF":{"color":"#DCDCDC","functionIndex":0}
+        "X-PROF":{"color":"#DCDCDC","functionIndex":0},
+        "Marca":{"color":"#2f4f4f","functionIndex":0}
     }
 },
 {

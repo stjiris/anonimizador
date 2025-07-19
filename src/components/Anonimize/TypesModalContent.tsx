@@ -8,7 +8,7 @@ import { useTypes } from "../../util/uses";
 import { ProfileI, useProfile } from "../../types/Profile";
 
 export function TypesModalContent({file}:{file: UserFile}){
-    let types = useTypes(file);
+    let types = useTypes(file).filter(type => !type.name.startsWith("X"));
     let [profile, setProfile] = useProfile();
     return <>
         <div className="modal-header">

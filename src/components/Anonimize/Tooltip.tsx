@@ -57,27 +57,79 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
 
     switch (selection.would) {
         case AddEntityDryRun.CHANGE_ARRAY:
-            return <div style={style}>
-                <div className="d-flex flex-column gap-1 bg-white p-1 border">
-                    {props.entityTypes.map((t, i) => <span key={i} role="button" className='badge text-body' style={{ background: t.color }} onMouseDown={() => setType(props.pool!, sel, t)}>{t.name}</span>)}
+            return (
+                <div style={style}>
+                    <div className="d-flex flex-column gap-1 bg-white p-1 border">
+                        {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
+                            <span
+                                key={i}
+                                role="button"
+                                className="badge text-body"
+                                style={{ background: t.color }}
+                                onMouseDown={() => setType(props.pool!, sel, t)}
+                            >
+                                {t.name}
+                            </span>
+                        ))}
+                    </div>
                 </div>
-            </div>;
-        case AddEntityDryRun.CHANGE_OFFSET:
-            return <div style={style}>
-                <div className="d-flex flex-column gap-1 bg-white p-1 border">
-                    {props.entityTypes.map((t, i) => <span key={i} role="button" className='badge text-body' style={{ background: t.color }} onMouseDown={() => setType(props.pool!, sel, t)}>{t.name}</span>)}
+            );
+        case AddEntityDryRun.CHANGE_OFFSET:     
+            return (
+                <div style={style}>
+                    <div className="d-flex flex-column gap-1 bg-white p-1 border">
+                        {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
+                            <span
+                                key={i}
+                                role="button"
+                                className="badge text-body"
+                                style={{ background: t.color }}
+                                onMouseDown={() => setType(props.pool!, sel, t)}
+                            >
+                                {t.name}
+                            </span>
+                        ))}
+                    </div>
                 </div>
-            </div>;
+            );
         case AddEntityDryRun.CHANGE_TYPE:
-            return <div style={style}>
-                <div className="d-flex flex-column gap-1 bg-white p-1 border">
-                    <span role="button" onMouseDown={() => removeType(props.pool!, sel)}><i className='bi bi-trash'></i> Remover</span>
-                    {props.entityTypes.map((t, i) => <span key={i} role="button" className='badge text-body' style={{ background: t.color }} onMouseDown={() => setType(props.pool!, sel, t)}>{t.name}</span>)}
+            return (
+                <div style={style}>
+                    <div className="d-flex flex-column gap-1 bg-white p-1 border">
+                        <span
+                            role="button"
+                            onMouseDown={() => removeType(props.pool!, sel)}
+                        >
+                            <i className="bi bi-trash"></i> Remover
+                        </span>
+                        {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
+                            <span
+                                key={i}
+                                role="button"
+                                className="badge text-body"
+                                style={{ background: t.color }}
+                                onMouseDown={() => setType(props.pool!, sel, t)}
+                            >
+                                {t.name}
+                            </span>
+                        ))}
+                    </div>
                 </div>
-            </div>;
+            );
         default:
             return <></>
     }
+}
+
+
+export function sortEntityTypesXLast(types: EntityTypeColor[]): EntityTypeColor[] {
+    return [...types].sort((a, b) => {
+        const aIsX = a.name.startsWith("X");
+        const bIsX = b.name.startsWith("X");
+        if (aIsX && !bIsX) return 1;
+        if (!aIsX && bIsX) return -1;
+        return 0;
+    });
 }
 
 function setType(pool: EntityPool, selection: TokenSelection, type: EntityTypeColor) {

@@ -27,7 +27,7 @@ const Sep = () => <small className="text-white text-nowrap p-1 m-1 flex-grow-1 t
 
 export default function Anonimize({ file, ...props }: AnonimizeProps) {
     // States
-    const [anonimizeState, setAnonimizeSate] = useState<AnonimizeStateCombined>(getAnonimizedStateCombined(AnonimizeVisualState.TYPES));
+    const [anonimizeState, setAnonimizeSate] = useState<AnonimizeStateCombined>(getAnonimizedStateCombined(AnonimizeVisualState.ALL_TYPES));
     const saved = useSave(file);
     const [requesting, setRequesting] = useState<boolean>(false);
 
@@ -61,10 +61,12 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
                     <ToolsButton />
                     <Button title="Gerir tipos" i="file-earmark-font" text="Tipos" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types" />
                     <Sep />
-                    <select title="Escolher modo" className="text-body btn m-1 p-1 text-start alert alert-primary" onChange={(ev) => setAnonimizeSate(getAnonimizedStateCombined(ev.target.value as AnonimizeVisualState))} defaultValue={AnonimizeVisualState.TYPES}>
+                    <select title="Escolher modo" className="text-body btn m-1 p-1 text-start alert alert-primary" onChange={(ev) => setAnonimizeSate(getAnonimizedStateCombined(ev.target.value as AnonimizeVisualState))} defaultValue={AnonimizeVisualState.ALL_TYPES}>
                         <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
                         <option value={AnonimizeVisualState.REPLACE}>{AnonimizeVisualState.REPLACE}</option>
-                        <option value={AnonimizeVisualState.TYPES}>{AnonimizeVisualState.TYPES}</option>
+                        <option value={AnonimizeVisualState.ALL_TYPES}>{AnonimizeVisualState.ALL_TYPES}</option>
+                        <option value={AnonimizeVisualState.OTHER_TYPES}>{AnonimizeVisualState.OTHER_TYPES}</option>
+                        <option value={AnonimizeVisualState.NORMAL_TYPES}>{AnonimizeVisualState.NORMAL_TYPES}</option>
                         <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
                     </select>
                     <ExportButton file={file} />
