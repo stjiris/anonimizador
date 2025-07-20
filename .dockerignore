@@ -1,0 +1,10 @@
+build/
+env/
+logs/
+node_modules/
+python-cli/model-best/
+python-cli/__pycache__/
+Dockerfile
+docker-compose.yml
+.dockerignore
+*.tar
