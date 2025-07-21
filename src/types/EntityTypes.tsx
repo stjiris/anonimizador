@@ -20,6 +20,7 @@ export const EntityTypeIDefaults: { [key: string]: EntityTypeI } = {
     DAT: { name: "DAT", color: "#b7ff63", functionIndex: AUTO_ANONIMIZE },
     ORG: { name: "ORG", color: "#00dbc6", functionIndex: AUTO_ANONIMIZE },
     LOC: { name: "LOC", color: "#e238ff", functionIndex: AUTO_ANONIMIZE },
+    MOR: { name: "MOR", color: "#ffc0cb", functionIndex: 15 },
     PRO: { name: "PRO", color: "#ff9800", functionIndex: AUTO_ANONIMIZE },
     MAT: { name: "MAT", color: "#526cff", functionIndex: AUTO_ANONIMIZE },
     CEP: { name: "CEP", color: "#ff4133", functionIndex: AUTO_ANONIMIZE },

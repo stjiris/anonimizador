@@ -285,6 +285,8 @@ export class UserFile {
 
             let PES_count = this.pool.countPES;
 
+            console.log(PES_count + " PEOPLE\n");
+            
             if(PES_count > 26) { //Checks if there are over 26 entities of type PES;
                 this.updateType("PES", "#00e2ff", 14); //If so, it updates the anonymization technique to be used;
             }

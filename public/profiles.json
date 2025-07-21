@@ -83,6 +83,6 @@
         "E-MAIL": { "color": "#ffeb3b", "functionIndex": 1 },
         "IDP": { "color": "#69bcff", "functionIndex": 1 },
         "INST": { "color": "#71ff77", "functionIndex": 0 },
-        "PROF": { "color": "#F7C4D8", "functionIndex": 1 }
+        "PROF": { "color": "#F7C4D8", "functionIndex": 0 }
     }
 }]
