@@ -11,6 +11,7 @@
         "X-DAT":{"color":"#DCDCDC","functionIndex":0},
         "ORG":{"color":"#00dbc6","functionIndex":1},
         "X-ORG":{"color":"#DCDCDC","functionIndex":0},
+        "PART": {"color":"#bcec0fff", "functionIndex":2},
         "LOC":{"color":"#e238ff","functionIndex":1},
         "X-LOC":{"color":"#DCDCDC","functionIndex":0},
         "MOR": {"color": "#ffc0cb", "functionIndex": 15},

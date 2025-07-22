@@ -8,7 +8,6 @@ CH
 Chega
 IL
 Iniciativa Liberal
-L
 Livre
 PCP
 Partido Comunista Português
@@ -30,7 +29,6 @@ PCTP/MRPP
 Partido Comunista dos Trabalhadores Portugueses
 VP
 Volt Portugal
-E
 Ergue-te
 PTP 
 Partido Trabalhista Português

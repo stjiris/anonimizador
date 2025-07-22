@@ -22,6 +22,7 @@ export const EntityTypeIDefaults: { [key: string]: EntityTypeI } = {
     "X-DAT": { name: "X-DAT", color: "#DCDCDC", functionIndex: DONT_ANONIMIZE },
     ORG: { name: "ORG", color: "#00dbc6", functionIndex: AUTO_ANONIMIZE },
     "X-ORG": { name: "X-ORG", color: "#DCDCDC", functionIndex: DONT_ANONIMIZE },
+    PART: { name: "PART", color:"#bcec0fff", functionIndex: AUTO_ANONIMIZE},
     LOC: { name: "LOC", color: "#e238ff", functionIndex: AUTO_ANONIMIZE },
     "X-LOC": { name: "X-LOC", color: "#DCDCDC", functionIndex: DONT_ANONIMIZE },
     MOR: { name: "MOR", color: "#ffc0cb", functionIndex: 15 },

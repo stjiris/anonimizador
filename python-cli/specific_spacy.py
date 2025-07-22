@@ -170,7 +170,7 @@ def label_professions(doc, ents):
     #Make each profession a pattern        
     pattern=[{"LOWER": {"IN": new_professions}}]#, {"TEXT": {"REGEX": r"\b(\w+)(a|o|as|os)?\b"}}]
     #Add patterns to the matcher
-    matcher.add("PROFESSIONS",[pattern])
+    matcher.add("PROFESSIONS", [pattern])
     
     #Run matcher on document and saves it on matches
     matches = matcher(doc)
@@ -197,6 +197,26 @@ def label_political_parties(doc, ents):
     #Open professions file to create a list with professions
     with open("partidos.txt", "r") as f:
         parties = [line.strip().lower() for line in f]
+
+    #Make each profession a pattern        
+    pattern=[{"LOWER": {"IN": parties}}]#, {"TEXT": {"REGEX": r"\b(\w+)(a|o|as|os)?\b"}}]
+    #Add patterns to the matcher
+    matcher.add("PART", [pattern])
+    
+    #Run matcher on document and saves it on matches
+    matches = matcher(doc)
+    
+    #Copy entities from doc to the new entity list
+    for ent in ents:
+        entities.append(ent)
+        
+    #Finds where match is on document and adds it to entity list
+    for match_id, start, end in matches:
+        span = doc[start:end]
+        entities.append(FakeEntity("PART", start, end, span.text))
+
+    #Return new entities
+    return entities
 
 def process_entities(ents, text):
     with open('patterns.csv', 'r') as csvfd:
@@ -360,6 +380,7 @@ def nlp(text, model):
                 ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
         
     ents = label_professions(doc, ents)
+    ents = label_political_parties(doc, ents)
     ents = process_entities(ents, text)
     ents = add_missed_entities(ents, text)
     ents = sorted(ents,key=lambda x: x.start_char)
