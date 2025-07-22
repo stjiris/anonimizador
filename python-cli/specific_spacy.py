@@ -153,14 +153,6 @@ def remove_entities_with_excluded_words(doc):
 
     return doc
 
-@Language.component("label_political_parties")
-def label_political_parties(doc):
-    #Load political parties into a set for fast lookup
-    with open("partidos.txt", "r", encoding="utf-8") as f:
-        parties = [line.strip().lower() for line in f]
-
-    return doc
-
 def label_professions(doc, ents):
     #Create matcher
     matcher = Matcher(doc.vocab)
@@ -321,7 +313,6 @@ def merge(ents, text):
 
 def nlp(text, model):
     model.add_pipe("new_line_segmenter", before="ner")
-    model.add_pipe("label_political_parties", last="true")
     model.add_pipe("remove_entities_with_excluded_words", last=True)
     #Create entity list
     ents = []
