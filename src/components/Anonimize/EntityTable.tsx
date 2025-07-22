@@ -40,7 +40,7 @@ export function EntityTable({ file }: { file: UserFile }) {
         enablePagination={false}
         enableFullScreenToggle={false}
         renderDetailPanel={entityDetails(file.pool)}
-        renderTopToolbarCustomActions={toolbar(file.pool, showOnlyMarks, setShowOnlyMarks)}
+        renderTopToolbarCustomActions={toolbar(file.pool, file, showOnlyMarks, setShowOnlyMarks)}
         muiTableBodyCellProps={{
             sx: {
                 whiteSpace: 'normal',
@@ -76,16 +76,16 @@ export function EntityTable({ file }: { file: UserFile }) {
         }} />;
 }
 
-const toolbar = ( pool: EntityPool, showOnlyMarks: boolean, setShowOnlyMarks: (v: boolean) => void ) => ({ table }: { table: MRT_TableInstance<Entity> }) => {
+const toolbar = ( pool: EntityPool, file: UserFile, showOnlyMarks: boolean, setShowOnlyMarks: (v: boolean) => void ) => ({ table }: { table: MRT_TableInstance<Entity> }) => {
     let selectedeKeys = selectedIndexes(table).length;
 
     const isJoinDisabled = showOnlyMarks || selectedeKeys <= 1;
     const isSplitDisabled = showOnlyMarks || selectedeKeys === 0;
 
     return <div className="d-flex w-100">
-        <Button i="union" text="Juntar" className="btn btn-primary my-0 mx-1 p-1" disabled={isJoinDisabled} onClick={() => { if (!isJoinDisabled) joinSelectedEntities(table, pool); }} />
-        <Button i="exclude" text="Separar" className="btn btn-warning my-0 mx-1 p-1" disabled={isSplitDisabled} onClick={() => { if (!isSplitDisabled) splitSelectedEntities(table, pool); }} />
-        <Button i="trash" text="Remover" className="btn btn-danger my-0 mx-1 p-1" disabled={selectedeKeys === 0} onClick={() => removeSelectedEntities(table, pool)} />
+        <Button i="union" text="Juntar" className="btn btn-primary my-0 mx-1 p-1" disabled={isJoinDisabled} onClick={() => { if (!isJoinDisabled) joinSelectedEntities(table, pool, file); }} />
+        <Button i="exclude" text="Separar" className="btn btn-warning my-0 mx-1 p-1" disabled={isSplitDisabled} onClick={() => { if (!isSplitDisabled) splitSelectedEntities(table, pool, file); }} />
+        <Button i="trash" text="Remover" className="btn btn-danger my-0 mx-1 p-1" disabled={selectedeKeys === 0} onClick={() => removeSelectedEntities(table, pool, file)} />
         <Button i="tag" text={showOnlyMarks ? "Todas" : "Marcas"} className="btn btn-secondary my-0 mx-1 p-1" onClick={() => setShowOnlyMarks(!showOnlyMarks)} />
     </div>
 }
@@ -102,19 +102,19 @@ const selectedIndexes = (table: MRT_TableInstance<Entity>) => Object.keys(table.
 const removeTableSelection = (table: MRT_TableInstance<Entity>) => table.setRowSelection({})
 
 const joinSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
-    pool.joinEntities(selectedIndexes(table))
+    pool.joinEntities(selectedIndexes(table));
     removeTableSelection(table);
     file.checkCountPES();
 }
 const splitSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
-    pool.splitEntities(selectedIndexes(table))
-    removeTableSelection(table)
+    pool.splitEntities(selectedIndexes(table));
+    removeTableSelection(table);
     file.checkCountPES();
 }
 
 const removeSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
     pool.removeEntities(selectedIndexes(table));
-    removeTableSelection(table)
+    removeTableSelection(table);
     file.checkCountPES();
 }
 
