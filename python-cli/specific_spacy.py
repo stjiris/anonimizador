@@ -153,6 +153,20 @@ def remove_entities_with_excluded_words(doc):
 
     return doc
 
+@Language.component("label_parties")
+def label_parties(doc):
+
+    with open("partidos.txt", "r") as f:
+        polParties = [line.strip().lower() for line in f]
+
+    for ent in doc.ents:
+        if ent.label_ == "ORG":
+            entText = ent.text.lower()
+            if entText in polParties:
+                ent.label_ = "PART"
+
+    return doc
+
 def label_professions(doc, ents):
     #Create matcher
     matcher = Matcher(doc.vocab)
@@ -313,6 +327,7 @@ def merge(ents, text):
 
 def nlp(text, model):
     model.add_pipe("new_line_segmenter", before="ner")
+    model.add_pipe("label_parties", after="ner")
     model.add_pipe("remove_entities_with_excluded_words", last=True)
     #Create entity list
     ents = []
