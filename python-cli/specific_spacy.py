@@ -187,6 +187,17 @@ def label_professions(doc, ents):
     #Return new entities
     return entities
 
+def label_political_parties(doc, ents):
+    #Create matcher
+    matcher = Matcher(doc.vocab)
+    
+    #Create entity list
+    entities = []
+    
+    #Open professions file to create a list with professions
+    with open("partidos.txt", "r") as f:
+        parties = [line.strip().lower() for line in f]
+
 def process_entities(ents, text):
     with open('patterns.csv', 'r') as csvfd:
         reader = csv.DictReader(csvfd, delimiter="\t")
@@ -350,6 +361,7 @@ def nlp(text, model):
                 ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
         
     ents = label_professions(doc, ents)
+    ents = label_political_parties(doc, ents)
     ents = process_entities(ents, text)
     ents = add_missed_entities(ents, text)
     ents = sorted(ents,key=lambda x: x.start_char)

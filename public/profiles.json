@@ -72,7 +72,7 @@
     },
     "defaultEntityTypes": {
         "PES": { "color": "#00e2ff", "functionIndex": 1 },
-        "DAT": { "color": "#b7ff63", "functionIndex": 1 },
+        "DAT": { "color": "#b7ff63", "functionIndex": 16 },
         "ORG": { "color": "#00dbc6", "functionIndex": 0 },
         "LOC": { "color": "#e238ff", "functionIndex": 0 },
         "MOR": {"color": "#ffc0cb", "functionIndex": 15 },

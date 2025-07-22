@@ -41,6 +41,25 @@ export const year: AnonimizeFunction = (str: string, ...args) => {
     return reticiencias(str, ...args);
 }
 
+//Anonymization technique for dates that uses "D" and "M" as placeholders for "Dia" and "Mês" respectively,
+//instead of "...", leading dates to be returned in the following formats: "D/M/0000", "D-M-0000" or "D de M de 0000";
+export const year2: AnonimizeFunction = (str: string, ...args) => {
+    let ddmmyyyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{4})/);
+    if (ddmmyyyy) {
+        return "D" + ddmmyyyy[1] + "M" + ddmmyyyy[2] + ddmmyyyy[3];
+    }
+    let ddmmyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{1,2})/);
+    if (ddmmyy) {
+        return "D" + ddmmyy[1] + "M" + ddmmyy[2] + ddmmyy[3];
+    }
+
+    let diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/)
+    if (diaDeMesDeyyyy) {
+        return "D de M de " + diaDeMesDeyyyy[1];
+    }
+
+    return str;
+}
 
 export const processo: AnonimizeFunction = (str, ...args) => {
     if (str.match(/([^/]*\/[^.]*)\.(.).*/)) {
@@ -63,7 +82,7 @@ export const automatic: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) =>
     return reticiencias(str, type, idx, typeIdx, funIdx)
 }
 
-// Anonymization technique that uses the leters "AA" coupled with a numerical increment;
+//Anonymization technique that uses the leters "AA" coupled with a numerical increment;
 export const AA_inc: AnonimizeFunction = (_str, type, _idx, tidx) => "AA" + tidx.toString()
 
 const moradasTypes = ['Rua', 'Avenida', 'Largo', 'Praça', 'Travessa', 'Estrada', 'Calçada', 'Alameda', 'Rotunda', 'Praceta', 'Beco', 'Viela']
@@ -175,6 +194,12 @@ export const functionsWithDescriptionArray: AnonimizeFunctionDescription[] = [
         "name": "Incremental - Tipo de morada",
         "description": "Substitui ocorrência por tipo de morada com incremento. Ex: Rua 1, Praça 2, etc.",
         "fun": moradas_inc
+    },
+    //Adding the new anonymization function for dates to the list of functions with index 16;
+    {
+        "name": "Ofuscação data - Manter Ano (sem reticências)",
+        "description": "Substitui ocorrência por D/M/YYYY, mantendo o ano visível. Ex: 06/06/1997 => D/M/1997",
+        "fun": year2
     }
 ]
 
