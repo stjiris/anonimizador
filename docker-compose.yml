@@ -8,7 +8,6 @@ services:
       dockerfile: ./Dockerfile
       args:
         - TITLE=${ANONIMIZADOR_TITLE:-Anonimizador}
-        - MATOMO_URL=${MATOMO_URL}
     ports:
       - ${ANONIMIZADOR_PORT:-7999}:7999
     volumes:
