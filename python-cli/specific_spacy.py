@@ -159,8 +159,6 @@ def label_political_parties(doc):
     with open("partidos.txt", "r") as f:
         parties = [line.strip().lower() for line in f]
 
-    print(parties)
-
     #Match entities to parties (case-insensitive)
     #Loop only through entities flagged as organizations by NER
     for ent in doc.ents:
