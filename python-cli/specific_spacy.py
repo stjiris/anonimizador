@@ -128,6 +128,9 @@ def remove_entities_with_excluded_words(doc):
     # List of words that should trigger exclusion
     excluded_words = ["Recorrida"]
     excluded_words = [x.lower() for x in excluded_words]
+
+    with open("partidos.txt", "r") as f:
+        polParties = [line.strip().lower() for line in f]
     
     # A list to hold entities that are not excluded
     entities = []
@@ -148,7 +151,10 @@ def remove_entities_with_excluded_words(doc):
             if any(word.lower() in text_lower for word in MORADAS_TYPES):
                 ent.label_ = "MOR"
 
-
+        if ent.label_ == "ORG":
+            entText = ent.text.lower()
+            if entText in polParties:
+                ent.label_ = "PART"
     
     # Assign the non-excluded entities back to the document
     doc.ents = entities
@@ -159,14 +165,11 @@ def remove_entities_with_excluded_words(doc):
 def label_parties(doc):
     with open("partidos.txt", "r") as f:
         polParties = [line.strip().lower() for line in f]
-    logging.debug(f"Loaded political parties: {polParties}")
 
     for ent in doc.ents:
         if ent.label_ == "ORG":
             entText = ent.text.lower()
-            logging.debug(f"Entity text lowered: {entText}")
             if entText in polParties:
-                logging.debug(f"Changing label of entity '{ent.text}' to PART")
                 ent.label_ = "PART"
 
     return doc
@@ -331,7 +334,6 @@ def merge(ents, text):
 
 def nlp(text, model):
     model.add_pipe("new_line_segmenter", before="ner")
-    model.add_pipe("label_parties", after="ner")
     model.add_pipe("remove_entities_with_excluded_words", last=True)
     #Create entity list
     ents = []
