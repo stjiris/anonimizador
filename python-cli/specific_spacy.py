@@ -5,8 +5,6 @@ from spacy.matcher import Matcher
 from flashtext import KeywordProcessor
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
-
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
 PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A-Z0-9]*"
 PATTERN_DATA = r"\b\d{1,2}(-|\.|/)\d{1,2}(-|\.|/)\d{2,4}\b"
@@ -128,9 +126,6 @@ def remove_entities_with_excluded_words(doc):
     # List of words that should trigger exclusion
     excluded_words = ["Recorrida"]
     excluded_words = [x.lower() for x in excluded_words]
-
-    with open("partidos.txt", "r") as f:
-        polParties = [line.strip().lower() for line in f]
     
     # A list to hold entities that are not excluded
     entities = []
@@ -145,24 +140,27 @@ def remove_entities_with_excluded_words(doc):
         if not (word_exclusion_condition or symbol_exclusion_condition):
             # If the entity does not meet either exclusion condition, append it to the list
             entities.append(ent)
-        
-        if ent.label_ == "LOC":
-            text_lower = ent.text.lower()
-            if any(word.lower() in text_lower for word in MORADAS_TYPES):
-                ent.label_ = "MOR"
-
-        if ent.label_ == "ORG":
-            entText = ent.text.lower()
-            if entText in polParties:
-                ent.label_ = "PART"
     
     # Assign the non-excluded entities back to the document
     doc.ents = entities
 
     return doc
 
-@Language.component("label_parties")
-def label_parties(doc):
+# Labels specified instances of type "LOC" as addresses
+@Language.component("find_addresses")
+def find_addresses(doc):
+    for ent in doc.ents:
+        if ent.label_ == "LOC":
+                text_lower = ent.text.lower()
+                if any(word.lower() in text_lower for word in MORADAS_TYPES):
+                    ent.label_ = "MOR"
+    
+    return doc
+
+# Labels specified organizations as political parties
+@Language.component("label_professions")
+def label_professions(doc):
+
     with open("partidos.txt", "r") as f:
         polParties = [line.strip().lower() for line in f]
 
@@ -172,7 +170,37 @@ def label_parties(doc):
             if entText in polParties:
                 ent.label_ = "PART"
 
-    return doc
+# Goes through the document to find instances of political parties that were not identified as organizations by the model
+def label_missed_parties(doc, ents):
+    #Create matcher
+    matcher = Matcher(doc.vocab)
+    
+    #Create entity list
+    entities = []
+    
+    #Open professions file to create a list with professions
+    with open("partidos.txt", "r") as f:
+        polParties = [line.strip().lower() for line in f]
+
+    #Make each profession a pattern        
+    pattern=[{"LOWER": {"IN": polParties}}]
+    #Add patterns to the matcher
+    matcher.add("PARTIES", [pattern])
+    
+    #Run matcher on document and saves it on matches
+    matches = matcher(doc)
+    
+    #Copy entities from doc to the new entity list
+    for ent in ents:
+        entities.append(ent)
+        
+    #Finds where match is on document and adds it to entity list
+    for match_id, start, end in matches:
+        span = doc[start:end]
+        entities.append(FakeEntity("PART", start, end, span.text))
+        
+    #Return new entities
+    return entities
 
 def label_professions(doc, ents):
     #Create matcher
@@ -334,8 +362,11 @@ def merge(ents, text):
 
 def nlp(text, model):
     model.add_pipe("new_line_segmenter", before="ner")
+    # Ordering functions
+    model.add_pipe("label_professions", before="find_addresses")
+    model.add_pipe("find_addresses", before="remove_entities_with_excluded_words")
     model.add_pipe("remove_entities_with_excluded_words", last=True)
-    #Create entity list
+    # Create entity list
     ents = []
     
     try:
@@ -371,6 +402,7 @@ def nlp(text, model):
         
     ents = label_professions(doc, ents)
     ents = process_entities(ents, text)
+    ents = label_missed_parties(ents, text)
     ents = add_missed_entities(ents, text)
     ents = sorted(ents,key=lambda x: x.start_char)
     ents = merge(ents, text)
