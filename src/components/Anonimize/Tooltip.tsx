@@ -2,12 +2,14 @@ import { useEffect, useState } from "react"
 import { AddEntityDryRun, EntityPool } from "../../types/EntityPool"
 import { EntityTypeColor } from "../../types/EntityTypes"
 import { TokenSelection } from "../../types/Selection"
+import { UserFile } from "types/UserFile"
 
 interface AnonimizeTooltipProps {
     entityTypes: EntityTypeColor[]
     pool: EntityPool
     contentRef: React.RefObject<HTMLDivElement>
     nodesRef: React.MutableRefObject<HTMLElement[]>
+    file: UserFile
 }
 
 interface SelectionState {
@@ -19,6 +21,8 @@ interface SelectionState {
 
 export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
     const [selection, setSelection] = useState<SelectionState>({ selection: undefined, would: undefined, affects: undefined });
+
+    let fileA = props.file;
 
     const onMouseup = (ev: React.MouseEvent<HTMLDivElement>) => {
         if (props.contentRef.current) {
@@ -57,36 +61,90 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
 
     switch (selection.would) {
         case AddEntityDryRun.CHANGE_ARRAY:
-            return <div style={style}>
-                <div className="d-flex flex-column gap-1 bg-white p-1 border">
-                    {props.entityTypes.map((t, i) => <span key={i} role="button" className='badge text-body' style={{ background: t.color }} onMouseDown={() => setType(props.pool!, sel, t)}>{t.name}</span>)}
+            return (
+                <div style={style}>
+                    <div className="d-flex flex-column gap-1 bg-white p-1 border">
+                        {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
+                            <span
+                                key={i}
+                                role="button"
+                                className="badge text-body"
+                                style={{ background: t.color }}
+                                onMouseDown={() => setType(props.pool!, sel, t, fileA)}
+                            >
+                                {t.name}
+                            </span>
+                        ))}
+                    </div>
                 </div>
-            </div>;
-        case AddEntityDryRun.CHANGE_OFFSET:
-            return <div style={style}>
-                <div className="d-flex flex-column gap-1 bg-white p-1 border">
-                    {props.entityTypes.map((t, i) => <span key={i} role="button" className='badge text-body' style={{ background: t.color }} onMouseDown={() => setType(props.pool!, sel, t)}>{t.name}</span>)}
+            );
+        case AddEntityDryRun.CHANGE_OFFSET:     
+            return (
+                <div style={style}>
+                    <div className="d-flex flex-column gap-1 bg-white p-1 border">
+                        {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
+                            <span
+                                key={i}
+                                role="button"
+                                className="badge text-body"
+                                style={{ background: t.color }}
+                                onMouseDown={() => setType(props.pool!, sel, t, fileA)}
+                            >
+                                {t.name}
+                            </span>
+                        ))}
+                    </div>
                 </div>
-            </div>;
+            );
         case AddEntityDryRun.CHANGE_TYPE:
-            return <div style={style}>
-                <div className="d-flex flex-column gap-1 bg-white p-1 border">
-                    <span role="button" onMouseDown={() => removeType(props.pool!, sel)}><i className='bi bi-trash'></i> Remover</span>
-                    {props.entityTypes.map((t, i) => <span key={i} role="button" className='badge text-body' style={{ background: t.color }} onMouseDown={() => setType(props.pool!, sel, t)}>{t.name}</span>)}
+            return (
+                <div style={style}>
+                    <div className="d-flex flex-column gap-1 bg-white p-1 border">
+                        <span
+                            role="button"
+                            onMouseDown={() => removeType(props.pool!, sel, fileA)}
+                        >
+                            <i className="bi bi-trash"></i> Remover
+                        </span>
+                        {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
+                            <span
+                                key={i}
+                                role="button"
+                                className="badge text-body"
+                                style={{ background: t.color }}
+                                onMouseDown={() => setType(props.pool!, sel, t, fileA)}
+                            >
+                                {t.name}
+                            </span>
+                        ))}
+                    </div>
                 </div>
-            </div>;
+            );
         default:
             return <></>
     }
 }
 
-function setType(pool: EntityPool, selection: TokenSelection, type: EntityTypeColor) {
-    pool.removeOffset(selection.start, selection.end, false);
-    pool.addEntity(selection.start, selection.end, selection.text, type.name);
+
+export function sortEntityTypesXLast(types: EntityTypeColor[]): EntityTypeColor[] {
+    return [...types].sort((a, b) => {
+        const aIsX = a.name.startsWith("X");
+        const bIsX = b.name.startsWith("X");
+        if (aIsX && !bIsX) return 1;
+        if (!aIsX && bIsX) return -1;
+        return 0;
+    });
 }
 
-function removeType(pool: EntityPool, selection: TokenSelection) {
+function setType(pool: EntityPool, selection: TokenSelection, type: EntityTypeColor, file: UserFile) {
+    pool.removeOffset(selection.start, selection.end, false);
+    pool.addEntity(selection.start, selection.end, selection.text, type.name);
+    file.checkCountPES();
+}
+
+function removeType(pool: EntityPool, selection: TokenSelection, file: UserFile) {
     pool.removeOffset(selection.start, selection.end)
+    file.checkCountPES();
 }
 
 

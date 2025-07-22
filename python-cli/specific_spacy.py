@@ -3,14 +3,28 @@ import csv
 from spacy.language import Language
 from spacy.matcher import Matcher
 from flashtext import KeywordProcessor
+import logging
 
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
 PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A-Z0-9]*"
 PATTERN_DATA = r"\b\d{1,2}(-|\.|/)\d{1,2}(-|\.|/)\d{2,4}\b"
-EXCLUDE = ['Tribunal','Réu','Reu','Ré','Rés','Autores','Supremo Tribunal de Justiça',"STJ","Supremo Tribunal",
+
+# Termos gerais do mundo do direito que não devem ser anonimizados
+EXCLUDE = ['Tribunal','Juízo','Secção','Vara','Arguído','Arguída','Arguídos','Arguídas',
+            'Réu','Reu','Ré','Rés','Autores','Supremo Tribunal de Justiça','STJ','Supremo Tribunal',
             'Requerida','Autora','Instância','Relação','Supremo','Recorrente','Recorrida','Recorrido',
             'Tribunal da Relação','artº','Exª','Exº','Secção do Supremo Tribunal de Justiça','A.A.','nºs']
+
+# Termos referentes a cargos desempenhados por agentes do poder judicial que não devem
+# ser anonimizados.
+MAGIS_JUIZES_PROC_LIST = ['Juiz', 'Juíza', 'Procurador', 'Procuradora', 'Magistrado', 'Magistrada', 
+                          'Desembargador', 'Desembargadora', "Relator", "Relatora", "Conselheiro", "Conselheira"]
+
+EXCLUDE = EXCLUDE + MAGIS_JUIZES_PROC_LIST
 EXCLUDE = [x.lower() for x in EXCLUDE]
+
+# Termos referentes aos diferentes designativos usandos para moradas
+MORADAS_TYPES = ["rua", "avenida", "praça", "largo", "travessa", "praceta", "estrada", "calçada", "alameda", "rotunda", "urbanização", "beco", "viela"]
 
 class FakeEntity:
     def __init__(self,label,start,end,text: str):
@@ -126,9 +140,17 @@ def remove_entities_with_excluded_words(doc):
         if not (word_exclusion_condition or symbol_exclusion_condition):
             # If the entity does not meet either exclusion condition, append it to the list
             entities.append(ent)
+        
+        if ent.label_ == "LOC":
+            text_lower = ent.text.lower()
+            if any(word.lower() in text_lower for word in MORADAS_TYPES):
+                ent.label_ = "MOR"
+
+
     
     # Assign the non-excluded entities back to the document
     doc.ents = entities
+
     return doc
 
 def label_professions(doc, ents):
@@ -164,6 +186,17 @@ def label_professions(doc, ents):
         
     #Return new entities
     return entities
+
+def label_political_parties(doc, ents):
+    #Create matcher
+    matcher = Matcher(doc.vocab)
+    
+    #Create entity list
+    entities = []
+    
+    #Open professions file to create a list with professions
+    with open("partidos.txt", "r") as f:
+        parties = [line.strip().lower() for line in f]
 
 def process_entities(ents, text):
     with open('patterns.csv', 'r') as csvfd:

@@ -4,11 +4,17 @@ import { Entity, normalizeEntityString } from "../types/Entity";
 import { UserFile } from "../types/UserFile";
 import { Button } from "./BootstrapIcons";
 import { useEntities } from "./uses";
+import { getProfile, ProfileI, useAvaiableProfiles, useProfile } from "types/Profile";
 
 export function SuggestButton({ setRequesting, file, requesting, state }: { setRequesting: (b: boolean) => void, file: UserFile, requesting: boolean, state: AnonimizeStateState }) {
     let ents = useEntities(file.pool)
     const disabled = ents.length > 0 || requesting || state !== AnonimizeStateState.TAGGED;
     const signal = useRef<AbortController>()
+
+    //Updating the logic in this function to check which profile is in use to cover a special case
+    //for anonymization within the main/secondary STJ profiles;
+
+    const [profile, setProfile] = useProfile();
 
     useEffect(() => {
         signal.current = new AbortController();
@@ -21,7 +27,20 @@ export function SuggestButton({ setRequesting, file, requesting, state }: { setR
         return <button className="btn btn-small btn-primary m-1 p-1" disabled><span className="spinner-border spinner-border-sm" role="status"></span> A sugerir...</button>
     }
 
-    return <Button i="file-earmark-play" text="Sugerir" className={`btn btn-small btn-primary m-1 p-1 ${disabled ? "border-0 bg-white text-muted" : ""}`} onClick={() => { setRequesting(true); runRemoteNlp(file, signal.current?.signal).finally(() => setRequesting(false)) }} disabled={disabled} />
+    return <Button i="file-earmark-play" text="Sugerir" className={`btn btn-small btn-primary m-1 p-1 ${disabled ? "border-0 bg-white text-muted" : ""}`} 
+    onClick={() => {
+
+        setRequesting(true);
+        runRemoteNlp(file, signal.current?.signal)
+            .then(() => { //This code runs after a list of entities and instances is returned by the remoteNLP process;
+                setRequesting(false);
+
+                file.profile = profile?.name;
+                file.checkCountPES();
+            });
+    }}
+
+    disabled={disabled} />
 }
 
 

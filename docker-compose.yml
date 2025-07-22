@@ -11,7 +11,7 @@ services:
     ports:
       - ${ANONIMIZADOR_PORT:-7999}:7999
     volumes:
-      - logs:/opt/app/logs
+      - logs:/opt/app/logs  # Mount logs directory for persistence
     restart: unless-stopped
   sumarizador:
     build: https://github.com/stjiris/sumarizador.git#493187b33aea6cd68881b3a31d9199be9044de07

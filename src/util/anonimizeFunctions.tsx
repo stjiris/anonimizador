@@ -41,6 +41,25 @@ export const year: AnonimizeFunction = (str: string, ...args) => {
     return reticiencias(str, ...args);
 }
 
+//Anonymization technique for dates that uses "D" and "M" as placeholders for "Dia" and "Mês" respectively,
+//instead of "...", leading dates to be returned in the following formats: "D/M/0000", "D-M-0000" or "D de M de 0000";
+export const year2: AnonimizeFunction = (str: string, ...args) => {
+    let ddmmyyyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{4})/);
+    if (ddmmyyyy) {
+        return "D" + ddmmyyyy[1] + "M" + ddmmyyyy[2] + ddmmyyyy[3];
+    }
+    let ddmmyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{1,2})/);
+    if (ddmmyy) {
+        return "D" + ddmmyy[1] + "M" + ddmmyy[2] + ddmmyy[3];
+    }
+
+    let diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/)
+    if (diaDeMesDeyyyy) {
+        return "D de M de " + diaDeMesDeyyyy[1];
+    }
+
+    return str;
+}
 
 export const processo: AnonimizeFunction = (str, ...args) => {
     if (str.match(/([^/]*\/[^.]*)\.(.).*/)) {
@@ -63,6 +82,25 @@ export const automatic: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) =>
     return reticiencias(str, type, idx, typeIdx, funIdx)
 }
 
+//Anonymization technique that uses the leters "AA" coupled with a numerical increment;
+export const AA_inc: AnonimizeFunction = (_str, type, _idx, tidx) => "AA" + tidx.toString()
+
+const moradasTypes = ['Rua', 'Avenida', 'Largo', 'Praça', 'Travessa', 'Estrada', 'Calçada', 'Alameda', 'Rotunda', 'Praceta', 'Beco', 'Viela']
+
+export const moradas_inc: AnonimizeFunction = (str, _idx, tidx) => {
+
+    let strLow = str
+
+    for (let morType of moradasTypes) {
+        if(strLow.includes(morType) || str.includes(morType.toLowerCase())) {
+            return morType.toString() + " " + tidx.toString();
+        }
+    }
+
+    return "Localização " + tidx.toString();
+}
+
+
 export interface AnonimizeFunctionDescription {
     name: string,
     description: string,
@@ -73,11 +111,11 @@ export const DONT_ANONIMIZE = 0
 export const AUTO_ANONIMIZE = 1
 export const FULL_ANONIMIZE = 4
 
-// To add functions and keep compability this array should only be appended
+//To add functions and keep compability this array should only be appended
 export const functionsWithDescriptionArray: AnonimizeFunctionDescription[] = [
     {
         "name": "Não anonimizar",
-        "description": "Mantem a ocurrência original sem a modificar.",
+        "description": "Mantem a ocorrência original sem a modificar.",
         "fun": identity
     },
     {
@@ -87,63 +125,81 @@ export const functionsWithDescriptionArray: AnonimizeFunctionDescription[] = [
     },
     {
         "name": "Incremental - Tipo",
-        "description": "Subsituí ocurrência com TIPO e o número da ocurrência. Ex: TIPO0001, TIPO0002, etc.",
+        "description": "Substitui ocorrência com TIPO e o número da ocurrência. Ex: TIPO0001, TIPO0002, etc.",
         "fun": increment
     },
     {
         "name": "Incremental - Letra",
-        "description": "Subsituí ocurrência com duas ou mais letra. Ex: AA, BB, etc.",
+        "description": "Substitui ocorrência com duas ou mais letras. Ex: AA, BB, etc.",
         "fun": leter
     },
     {
         "name": "Ofuscação total",
-        "description": "Subsituí ocurrência com reticiências. Ex: ...",
+        "description": "Substitui ocorrência com reticências. Ex: ...",
         "fun": reticiencias
     },
     {
         "name": "Ofuscação parcial - 1.ª Letra",
-        "description": "Substituí ocurrência por ponto, mantendo a 1.ª letra. Ex: INESC => I....",
+        "description": "Substitui ocorrência por ponto, mantendo a 1.ª letra. Ex: INESC => I....",
         "fun": ofuscateFirst
     },
     {
         "name": "Ofuscação parcial - 2 Letras",
-        "description": "Substituí ocurrência por ponto, mantendo as 1.ªs 2 letras. Ex: INESC => IN...",
+        "description": "Substitui ocorrência por ponto, mantendo as primeiras 2 letras. Ex: INESC => IN...",
         "fun": ofuscateFirstTwo
     },
     {
-        "name": "Ofuscação paricial - 1.ª Palavra",
-        "description": "Substituí ocurrência por reticiências, mantendo a 1.ª palavra. Ex: Universidade de Lisboa => Universidade de ...",
+        "name": "Ofuscação parcial - 1.ª Palavra",
+        "description": "Substitui ocorrência por reticências, mantendo a 1.ª palavra. Ex: Universidade de Lisboa => Universidade de ...",
         "fun": firstWord
     },
     {
         "name": "Ofuscação parcial - Última Letra",
-        "description": "Substituí ocurrência por ponto, mantendo a última letra. Ex: INESC => ....C",
+        "description": "Substitui ocorrência por ponto, mantendo a última letra. Ex: INESC => ....C",
         "fun": ofuscateLast
     },
     {
         "name": "Ofuscação parcial - Últimas 2 Letras",
-        "description": "Substituí ocurrência por ponto, mantendo as últimas 2 letras. Ex: INESC => ...SC",
+        "description": "Substitui ocorrência por ponto, mantendo as últimas 2 letras. Ex: INESC => ...SC",
         "fun": ofuscateLastTwo
     },
     {
-        "name": "Ofucação data - Manter Ano",
-        "description": "Substituí ocurrência por reticiências, mantendo o ano visível. Ex: 06/06/1997 => .../.../1997",
+        "name": "Ofuscação data - Manter Ano",
+        "description": "Substitui ocorrência por reticências, mantendo o ano visível. Ex: 06/06/1997 => .../.../1997",
         "fun": year
     },
     {
-        "name": "Ofuscação processo - Manter inicio",
-        "description": "Substituí ocurrência por reticiências, mantendo parte inicial do processo. Ex: 27871/19.4T8LSB.L1.S1 => 27871/19.4...",
+        "name": "Ofuscação processo - Manter início",
+        "description": "Substitui ocorrência por reticências, mantendo parte inicial do processo. Ex: 27871/19.4T8LSB.L1.S1 => 27871/19.4...",
         "fun": processo
     },
     {
-        "name": "Ofuscação matricula - Manter letras",
-        "description": "Substituí ocurrência por reticiências, mantendo as letras da matrícula. Ex: ..-OO-..",
+        "name": "Ofuscação matrícula - Manter letras",
+        "description": "Substitui ocorrência por reticências, mantendo as letras da matrícula. Ex: ..-OO-..",
         "fun": matriculaLeter
     },
     {
-        "name": "Ofuscação matricula - Manter números",
-        "description": "Substituí ocurrência por reticiências, mantendo os números da matrícula. Ex: 00-..-..",
+        "name": "Ofuscação matrícula - Manter números",
+        "description": "Substitui ocorrência por reticências, mantendo os números da matrícula. Ex: 00-..-..",
         "fun": matriculaNumber
+    },
+    //Adding the new AA increment function to the list of functions with index 14;
+    {
+        "name": "Incremental - AA",
+        "description": "Substitui ocorrência pelas letras AA incrementadas numericamente. Ex: AA1, AA2, AA3, etc.",
+        "fun": AA_inc
+    },
+    //Adding the new incremental function for addresses, "moradas", to the list of functions with index 15;
+    {
+        "name": "Incremental - Tipo de morada",
+        "description": "Substitui ocorrência por tipo de morada com incremento. Ex: Rua 1, Praça 2, etc.",
+        "fun": moradas_inc
+    },
+    //Adding the new anonymization function for dates to the list of functions with index 16;
+    {
+        "name": "Ofuscação data - Manter Ano (sem reticências)",
+        "description": "Substitui ocorrência por D/M/YYYY, mantendo o ano visível. Ex: 06/06/1997 => D/M/1997",
+        "fun": year2
     }
 ]
 

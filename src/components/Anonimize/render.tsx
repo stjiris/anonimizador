@@ -136,6 +136,18 @@ export function renderToken(value: string, offset: number, anonimizeState: Anoni
             return value;
         case AnonimizeStateState.TAGGED:
             return `<span ${Object.entries(dataAttrs).map(([k, v]) => `${k}="${v}"`).join("")}>${value}</span>`
+        case AnonimizeStateState.OTHERS_TAGGED:
+            if (type && type.name.startsWith("X")) {
+                return `<span ${Object.entries(dataAttrs).map(([k, v]) => `${k}="${v}"`).join(" ")}>${value}</span>`;
+            } else {
+                return value;
+            }
+        case AnonimizeStateState.NORMAL_TAGGED:
+            if (type && !type.name.startsWith("X")) {
+                return `<span ${Object.entries(dataAttrs).map(([k, v]) => `${k}="${v}"`).join(" ")}>${value}</span>`;
+            } else {
+                return value;
+            }
         default:
             return "";
     }

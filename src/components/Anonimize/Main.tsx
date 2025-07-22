@@ -17,6 +17,7 @@ import { SearchModalContent } from "./SearchModalContent";
 import { TypesModalContent } from "./TypesModalContent";
 import { ToolsButton, ToolsModalBody } from "./Tools";
 import { ExportButton } from "./ExportButton";
+import { loadAnonimizeProfiles, getAnonimizeProfiles, AnonimizeProfile } from "../../util/AnonimizeProfiles";
 
 interface AnonimizeProps {
     file: UserFile
@@ -27,12 +28,21 @@ const Sep = () => <small className="text-white text-nowrap p-1 m-1 flex-grow-1 t
 
 export default function Anonimize({ file, ...props }: AnonimizeProps) {
     // States
-    const [anonimizeState, setAnonimizeSate] = useState<AnonimizeStateCombined>(getAnonimizedStateCombined(AnonimizeVisualState.TYPES));
+    const [anonimizeState, setAnonimizeSate] = useState<AnonimizeStateCombined>(getAnonimizedStateCombined(AnonimizeVisualState.ALL_TYPES));
     const saved = useSave(file);
     const [requesting, setRequesting] = useState<boolean>(false);
 
     const anonimizedHTML = useRef<string>("");
-
+    const [profiles, setProfiles] = useState<{ name: string; label: string }[]>([]);
+  
+    useEffect(() => {
+      loadAnonimizeProfiles()
+        .then(() => {
+          const perfis = getAnonimizeProfiles();
+          setProfiles(perfis); // Isto vai desencadear um re-render com os dados
+        })
+        .catch((err) => console.error("Erro ao carregar perfis:", err));
+    }, []);
 
     useEffect(() => {
         const onExit = (evt: BeforeUnloadEvent) => {
@@ -52,19 +62,21 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
     }, [requesting, saved])
 
     return <>
-        <div className="row container-fluid bg-dark m-0 p-0">
+        <div id="doc" className="row w-100 m-0 p-0 bg-dark">
             <EntitiesStyle file={file} />
-            <div className="col-8">
+            <div className="col-9 p-0 m-0">
                 <div className="position-sticky top-0 bg-white p-0 m-0 d-flex" style={{ borderBottom: "5px solid #161616", zIndex: 1 }}>
                     {requesting ? <ForceExitButton setUserFile={props.setUserFile} /> : <ExitButton file={file} setUserFile={props.setUserFile} />}
                     <SavedBadge file={file} />
                     <ToolsButton />
                     <Button title="Gerir tipos" i="file-earmark-font" text="Tipos" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types" />
                     <Sep />
-                    <select title="Escolher modo" className="text-body btn m-1 p-1 text-start alert alert-primary" onChange={(ev) => setAnonimizeSate(getAnonimizedStateCombined(ev.target.value as AnonimizeVisualState))} defaultValue={AnonimizeVisualState.TYPES}>
+                    <select title="Escolher modo" className="text-body btn m-1 p-1 text-start alert alert-primary" onChange={(ev) => setAnonimizeSate(getAnonimizedStateCombined(ev.target.value as AnonimizeVisualState))} defaultValue={AnonimizeVisualState.ALL_TYPES}>
                         <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
                         <option value={AnonimizeVisualState.REPLACE}>{AnonimizeVisualState.REPLACE}</option>
-                        <option value={AnonimizeVisualState.TYPES}>{AnonimizeVisualState.TYPES}</option>
+                        <option value={AnonimizeVisualState.ALL_TYPES}>{AnonimizeVisualState.ALL_TYPES}</option>
+                        <option value={AnonimizeVisualState.OTHER_TYPES}>{AnonimizeVisualState.OTHER_TYPES}</option>
+                        <option value={AnonimizeVisualState.NORMAL_TYPES}>{AnonimizeVisualState.NORMAL_TYPES}</option>
                         <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
                     </select>
                     <ExportButton file={file} />
@@ -82,7 +94,7 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
                     }
                 </div>
             </div>
-            <div className="col-4">
+            <div id="entityTable" className="col-3 p-1 m-0">
                 <div className="m-0 position-sticky top-0">
                     <EntityTable file={file} />
                 </div>

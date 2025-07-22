@@ -46,6 +46,18 @@ export default function AnonimizeToken(props: AnonimizeTokenProps){
             return <>{props.string}</>;
         case AnonimizeStateState.TAGGED:
             return <span {...dataAttrs}>{props.string}</span>;
+        case AnonimizeStateState.OTHERS_TAGGED:
+            if (props.type && props.type.name.startsWith("X")) {
+                return <span {...dataAttrs}>{props.string}</span>;
+            } else {
+                return <>{props.string}</>;
+            }
+        case AnonimizeStateState.NORMAL_TAGGED:
+            if (props.type && !props.type.name.startsWith("X")) {
+                return <span {...dataAttrs}>{props.string}</span>;
+            } else {
+                return <>{props.string}</>;
+            }
         default:
             return <></>;
     }   

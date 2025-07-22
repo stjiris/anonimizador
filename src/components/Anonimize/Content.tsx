@@ -30,7 +30,7 @@ export default function AnonimizeContent(props: AnonimizeContentProps) {
 
     return <>
         <div id="content" className={props.showTypes ? 'show-type' : 'show-cod'} ref={contentRef} dangerouslySetInnerHTML={{ __html: html }}></div>
-        <AnonimizeTooltip entityTypes={Object.values(entityTypes)} pool={props.file.pool} contentRef={contentRef} nodesRef={nodesRef} />
+        <AnonimizeTooltip entityTypes={Object.values(entityTypes)} pool={props.file.pool} contentRef={contentRef} nodesRef={nodesRef} file={props.file} />
     </>
 }
 

@@ -7,17 +7,25 @@ import { UserFile } from "../../types/UserFile";
 import { EntityTypeI } from "../../types/EntityTypes";
 import { FULL_ANONIMIZE } from "../../util/anonimizeFunctions";
 import { useEntities, useTypesDict } from "../../util/uses";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 
 export function EntityTable({ file }: { file: UserFile }) {
+    const [showOnlyMarks, setShowOnlyMarks] = useState(false);
+
     const ents = useEntities(file.pool);
+    const filteredEnts = showOnlyMarks
+    ? ents.filter(e => e.type === "Marca")
+    : ents;
     const types = useTypesDict(file);
 
     const typesList = useMemo(() => Object.values(types), [types]);
-    const columns = useMemo(() => [TYPE(file.pool, typesList), HEADER(file.pool), ENTITY(file.pool), ANONIMIZE(file.pool, types)], [file.pool, types, typesList])
-    const details = useMemo(() => entityDetails(file.pool), [file.pool])
-    const bar = useMemo(() => toolbar(file.pool), [file.pool])
+    const columns = useMemo(() => [
+        TYPE(file.pool, typesList), 
+        HEADER(file.pool), 
+        ENTITY(file.pool), 
+        ANONIMIZE(file.pool, types)
+    ], [file.pool, types, typesList]);
     
     return <MaterialReactTable
         key="ent-table"
@@ -27,38 +35,58 @@ export function EntityTable({ file }: { file: UserFile }) {
         positionActionsColumn="last"
         editingMode="cell"
         enableDensityToggle={false}
-        enableHiding={true}
+        enableHiding
         enableStickyHeader
         enablePagination={false}
         enableFullScreenToggle={false}
-        renderDetailPanel={details}
-        renderTopToolbarCustomActions={bar}
+        renderDetailPanel={entityDetails(file.pool)}
+        renderTopToolbarCustomActions={toolbar(file.pool, file, showOnlyMarks, setShowOnlyMarks)}
         muiTableBodyCellProps={{
-            style: {
-                whiteSpace: "normal",
-                wordWrap: "break-word"
+            sx: {
+                whiteSpace: 'normal',
+                wordWrap: 'break-word',
+                lineHeight: '1.2',
+                padding: '8px'
             }
         }}
         muiTableHeadCellProps={{
-            style: {
-                borderBottom: "5px solid #161616"
+            sx: {
+                borderBottom: '5px solid #161616',
+                padding: '8px',
+                fontSize: '0.875rem'
+            }
+        }}
+        muiTablePaperProps={{
+            sx: {
+                maxHeight: '100%',
+                display: 'flex',
+                flexDirection: 'column'
             }
         }}
         positionToolbarAlertBanner="bottom"
         initialState={{
-            density: 'compact'
+            density: 'compact',
+            columnPinning: { right: ['mrt-row-actions'] }
         }}
         columns={columns}
-        data={ents}
-        localization={{ ...MRT_Localization_PT, noRecordsToDisplay: "Sem ocorrências de entidades" }} />
+        data={filteredEnts}
+        localization={{ 
+            ...MRT_Localization_PT, 
+            noRecordsToDisplay: "Sem entidades" 
+        }} />;
 }
 
-const toolbar = (pool: EntityPool) => ({ table }: { table: MRT_TableInstance<Entity> }) => {
-    let selectedeKeys = selectedIndexes(table).length
+const toolbar = ( pool: EntityPool, file: UserFile, showOnlyMarks: boolean, setShowOnlyMarks: (v: boolean) => void ) => ({ table }: { table: MRT_TableInstance<Entity> }) => {
+    let selectedeKeys = selectedIndexes(table).length;
+
+    const isJoinDisabled = showOnlyMarks || selectedeKeys <= 1;
+    const isSplitDisabled = showOnlyMarks || selectedeKeys === 0;
+
     return <div className="d-flex w-100">
-        <Button i="union" text="Juntar" className="btn btn-primary my-0 mx-1 p-1" disabled={selectedeKeys <= 1} onClick={() => joinSelectedEntities(table, pool)} />
-        <Button i="exclude" text="Separar" className="btn btn-warning my-0 mx-1 p-1" disabled={selectedeKeys === 0} onClick={() => splitSelectedEntities(table, pool)} />
-        <Button i="trash" text="Remover" className="btn btn-danger my-0 mx-1 p-1" disabled={selectedeKeys === 0} onClick={() => removeSelectedEntities(table, pool)} />
+        <Button i="union" text="Juntar" className="btn btn-primary my-0 mx-1 p-1" disabled={isJoinDisabled} onClick={() => { if (!isJoinDisabled) joinSelectedEntities(table, pool, file); }} />
+        <Button i="exclude" text="Separar" className="btn btn-warning my-0 mx-1 p-1" disabled={isSplitDisabled} onClick={() => { if (!isSplitDisabled) splitSelectedEntities(table, pool, file); }} />
+        <Button i="trash" text="Remover" className="btn btn-danger my-0 mx-1 p-1" disabled={selectedeKeys === 0} onClick={() => removeSelectedEntities(table, pool, file)} />
+        <Button i="tag" text={showOnlyMarks ? "Todas" : "Marcas"} className="btn btn-secondary my-0 mx-1 p-1" onClick={() => setShowOnlyMarks(!showOnlyMarks)} />
     </div>
 }
 
@@ -73,18 +101,21 @@ const selectedIndexes = (table: MRT_TableInstance<Entity>) => Object.keys(table.
 
 const removeTableSelection = (table: MRT_TableInstance<Entity>) => table.setRowSelection({})
 
-const joinSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool) => {
-    pool.joinEntities(selectedIndexes(table))
+const joinSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
+    pool.joinEntities(selectedIndexes(table));
     removeTableSelection(table);
+    file.checkCountPES();
 }
-const splitSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool) => {
-    pool.splitEntities(selectedIndexes(table))
-    removeTableSelection(table)
+const splitSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
+    pool.splitEntities(selectedIndexes(table));
+    removeTableSelection(table);
+    file.checkCountPES();
 }
 
-const removeSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool) => {
+const removeSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
     pool.removeEntities(selectedIndexes(table));
-    removeTableSelection(table)
+    removeTableSelection(table);
+    file.checkCountPES();
 }
 
 
@@ -112,7 +143,10 @@ const ENTITY: (pool: EntityPool) => MRT_ColumnDef<Entity> = (pool) => ({
                 elm.scrollIntoView({ block: "center" });
             }
         }
-    })
+    }),
+    enableColumnFilter: true,
+    enableColumnDragging: false,
+    enableColumnActions: false,
 })
 
 const TYPE: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (pool, types) => ({
@@ -134,7 +168,11 @@ const TYPE: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<Entity> = 
             row.original.type = event.target.value;
             if (o !== row.original.type) pool.notify("Modificar tipo");
         }
-    })
+    }),
+    enableColumnFilter: true,
+    enableColumnDragging: false,
+    enableColumnActions: false,
+    enableEditing: false
 })
 
 
