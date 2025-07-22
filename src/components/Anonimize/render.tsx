@@ -15,7 +15,7 @@ export function renderBlock(doc: ChildNode, entityTypes: Record<string, EntityTy
         var token: RegExpExecArray | null;
         let remaining = offsets;
         while ((token = reg.exec(elmtStr)) !== null) {
-            let current = remaining.at(0);
+            let current = remaining[0];
             if (!current) {
                 tokenFragment += renderToken(token[0], offset + token.index, anonimizeState);
                 continue
