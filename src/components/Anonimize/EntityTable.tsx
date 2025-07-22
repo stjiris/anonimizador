@@ -101,18 +101,21 @@ const selectedIndexes = (table: MRT_TableInstance<Entity>) => Object.keys(table.
 
 const removeTableSelection = (table: MRT_TableInstance<Entity>) => table.setRowSelection({})
 
-const joinSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool) => {
+const joinSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
     pool.joinEntities(selectedIndexes(table))
     removeTableSelection(table);
+    file.checkCountPES();
 }
-const splitSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool) => {
+const splitSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
     pool.splitEntities(selectedIndexes(table))
     removeTableSelection(table)
+    file.checkCountPES();
 }
 
-const removeSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool) => {
+const removeSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
     pool.removeEntities(selectedIndexes(table));
     removeTableSelection(table)
+    file.checkCountPES();
 }
 
 

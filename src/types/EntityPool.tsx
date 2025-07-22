@@ -8,12 +8,14 @@ export enum AddEntityDryRun {
 
 export class EntityPool {
     entities: Entity[]
+    countPES: number //Counts the number of entities of type "PES"
     originalText: string
     listeners: ((action: string) => void)[]
 
     constructor(text: string, initial?: EntityI[], cb?: (action: string) => void) {
         this.entities = initial?.map((e, i) => Entity.makeEntity(e, i)) || [];
         this.listeners = [];
+        this.countPES = 0; //Default to 0;
         this.originalText = text;
         if (cb) this.onChange(cb);
         this.updateOrder("Inicio")
@@ -102,6 +104,10 @@ export class EntityPool {
             e.funcIndex = funcCounts[e.funcIndex]!++;
         });
         this.notify(action)
+
+        if(typeCounts["PES"]) {
+            this.countPES = typeCounts["PES"];
+        }
     }
 
     expandCollapse(startOffset: number, endOffset: number, text: string) {

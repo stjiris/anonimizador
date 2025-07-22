@@ -5,7 +5,7 @@ import { EntityPool } from "./EntityPool";
 import { EntityTypeFunction, EntityTypeI, getEntityTypeI, getEntityTypeIs, restoreEntityTypesColors, addEntityTypeI, updateEntityTypeI } from "./EntityTypes";
 import { DescriptorI } from "./Descriptor";
 import { SummaryI } from "./Summary";
-
+import { AUTO_ANONIMIZE } from "util/anonimizeFunctions";
 
 export interface SavedUserFile {
     name: string
@@ -19,6 +19,7 @@ export interface SavedUserFile {
     descriptors?: DescriptorI[]
     summary?: SummaryI[]
     area?: string
+    profile?: string
 }
 
 export class UserFile {
@@ -33,6 +34,7 @@ export class UserFile {
     area?: string
     descriptors?: DescriptorI[]
     summary?: SummaryI[]
+    profile?: string
 
     typesListeners: ((types: EntityTypeI[]) => void)[]
 
@@ -55,7 +57,7 @@ export class UserFile {
         this.types = obj.functions.map(f => ({ color: getEntityTypeI(f.name).color, name: f.name, functionIndex: f.functionIndex }))
         this.imported = new Date(obj.imported)
         this.modified = new Date(obj.modified)
-
+        
         let dom = new DOMParser().parseFromString(this.html_contents, "text/html");
         this.doc = dom.body;
 
@@ -110,6 +112,7 @@ export class UserFile {
             area: this.area,
             descriptors: this.descriptors,
             summary: this.summary,
+            profile: this.profile,
         }
     }
 
@@ -275,6 +278,22 @@ export class UserFile {
         for (let cb of this.summaryListeners) {
             cb(this.summary || []);
         }
+    }
+
+    checkCountPES() {
+        if(this.profile == "STJ - Principal") {
+
+            let PES_count = this.pool.countPES;
+
+            console.log(PES_count + " PEOPLE\n");
+            
+            if(PES_count > 26) { //Checks if there are over 26 entities of type PES;
+                this.updateType("PES", "#00e2ff", 14); //If so, it updates the anonymization technique to be used;
+            }
+            else {
+                this.updateType("PES", "#00e2ff", AUTO_ANONIMIZE);
+            }
+        } 
     }
 
     static newFrom(name: string, innerHTML: string) {

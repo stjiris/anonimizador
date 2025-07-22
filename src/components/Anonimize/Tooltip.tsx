@@ -2,12 +2,14 @@ import { useEffect, useState } from "react"
 import { AddEntityDryRun, EntityPool } from "../../types/EntityPool"
 import { EntityTypeColor } from "../../types/EntityTypes"
 import { TokenSelection } from "../../types/Selection"
+import { UserFile } from "types/UserFile"
 
 interface AnonimizeTooltipProps {
     entityTypes: EntityTypeColor[]
     pool: EntityPool
     contentRef: React.RefObject<HTMLDivElement>
     nodesRef: React.MutableRefObject<HTMLElement[]>
+    file: UserFile
 }
 
 interface SelectionState {
@@ -19,6 +21,8 @@ interface SelectionState {
 
 export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
     const [selection, setSelection] = useState<SelectionState>({ selection: undefined, would: undefined, affects: undefined });
+
+    let fileA = props.file;
 
     const onMouseup = (ev: React.MouseEvent<HTMLDivElement>) => {
         if (props.contentRef.current) {
@@ -66,7 +70,7 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
                                 role="button"
                                 className="badge text-body"
                                 style={{ background: t.color }}
-                                onMouseDown={() => setType(props.pool!, sel, t)}
+                                onMouseDown={() => setType(props.pool!, sel, t, fileA)}
                             >
                                 {t.name}
                             </span>
@@ -84,7 +88,7 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
                                 role="button"
                                 className="badge text-body"
                                 style={{ background: t.color }}
-                                onMouseDown={() => setType(props.pool!, sel, t)}
+                                onMouseDown={() => setType(props.pool!, sel, t, fileA)}
                             >
                                 {t.name}
                             </span>
@@ -98,7 +102,7 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
                     <div className="d-flex flex-column gap-1 bg-white p-1 border">
                         <span
                             role="button"
-                            onMouseDown={() => removeType(props.pool!, sel)}
+                            onMouseDown={() => removeType(props.pool!, sel, fileA)}
                         >
                             <i className="bi bi-trash"></i> Remover
                         </span>
@@ -108,7 +112,7 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
                                 role="button"
                                 className="badge text-body"
                                 style={{ background: t.color }}
-                                onMouseDown={() => setType(props.pool!, sel, t)}
+                                onMouseDown={() => setType(props.pool!, sel, t, fileA)}
                             >
                                 {t.name}
                             </span>
@@ -132,13 +136,15 @@ export function sortEntityTypesXLast(types: EntityTypeColor[]): EntityTypeColor[
     });
 }
 
-function setType(pool: EntityPool, selection: TokenSelection, type: EntityTypeColor) {
+function setType(pool: EntityPool, selection: TokenSelection, type: EntityTypeColor, file: UserFile) {
     pool.removeOffset(selection.start, selection.end, false);
     pool.addEntity(selection.start, selection.end, selection.text, type.name);
+    file.checkCountPES();
 }
 
-function removeType(pool: EntityPool, selection: TokenSelection) {
+function removeType(pool: EntityPool, selection: TokenSelection, file: UserFile) {
     pool.removeOffset(selection.start, selection.end)
+    file.checkCountPES();
 }
 
 

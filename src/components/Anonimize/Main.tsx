@@ -17,6 +17,7 @@ import { SearchModalContent } from "./SearchModalContent";
 import { TypesModalContent } from "./TypesModalContent";
 import { ToolsButton, ToolsModalBody } from "./Tools";
 import { ExportButton } from "./ExportButton";
+import { loadAnonimizeProfiles, getAnonimizeProfiles, AnonimizeProfile } from "../../util/AnonimizeProfiles";
 
 interface AnonimizeProps {
     file: UserFile
@@ -32,7 +33,16 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
     const [requesting, setRequesting] = useState<boolean>(false);
 
     const anonimizedHTML = useRef<string>("");
-
+    const [profiles, setProfiles] = useState<{ name: string; label: string }[]>([]);
+  
+    useEffect(() => {
+      loadAnonimizeProfiles()
+        .then(() => {
+          const perfis = getAnonimizeProfiles();
+          setProfiles(perfis); // Isto vai desencadear um re-render com os dados
+        })
+        .catch((err) => console.error("Erro ao carregar perfis:", err));
+    }, []);
 
     useEffect(() => {
         const onExit = (evt: BeforeUnloadEvent) => {
