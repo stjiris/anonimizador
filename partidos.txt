@@ -3,6 +3,7 @@ PPD/PSD
 Partido Social Democrata
 CDS-PP
 CDS - Partido Popular
+Centro Democrático Social - Partido Popular
 PS
 Partido Socialista
 CH
@@ -10,10 +11,12 @@ Chega
 IL
 Iniciativa Liberal
 Livre
+CDU
+Coligação Democrática Unitária
 PCP
 Partido Comunista Português
 PVE
-Partido Ecologista "Os Verdes"
+"Partido Ecologista "Os Verdes""
 BE
 Bloco de Esquerda
 PAN
