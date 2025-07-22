@@ -153,6 +153,21 @@ def remove_entities_with_excluded_words(doc):
 
     return doc
 
+@Language.component("label_political_parties")
+def label_political_parties(doc):
+    #Load political parties into a set for fast lookup
+    with open("partidos.txt", "r") as f:
+        parties = set(line.strip().lower() for line in f if line.strip())
+
+    #Match entities to parties (case-insensitive)
+    for ent in doc.ents:
+        if ent.label_ == "ORG": #Loop only through entities flagged as organizations by NER
+            ent_text = ent.text.lower()
+            if ent_text in parties:
+                ent.label_ = "PART"
+
+    return doc
+
 def label_professions(doc, ents):
     #Create matcher
     matcher = Matcher(doc.vocab)
@@ -184,37 +199,6 @@ def label_professions(doc, ents):
         span = doc[start:end]
         entities.append(FakeEntity("PROF", start, end, span.text))
         
-    #Return new entities
-    return entities
-
-def label_political_parties(doc, ents):
-    #Create matcher
-    matcher = Matcher(doc.vocab)
-    
-    #Create entity list
-    entities = []
-    
-    #Open professions file to create a list with professions
-    with open("partidos.txt", "r") as f:
-        parties = [line.strip().lower() for line in f]
-
-    #Make each profession a pattern        
-    pattern=[{"LOWER": {"IN": parties}}]#, {"TEXT": {"REGEX": r"\b(\w+)(a|o|as|os)?\b"}}]
-    #Add patterns to the matcher
-    matcher.add("PART", [pattern])
-    
-    #Run matcher on document and saves it on matches
-    matches = matcher(doc)
-    
-    #Copy entities from doc to the new entity list
-    for ent in ents:
-        entities.append(ent)
-        
-    #Finds where match is on document and adds it to entity list
-    for match_id, start, end in matches:
-        span = doc[start:end]
-        entities.append(FakeEntity("PART", start, end, span.text))
-
     #Return new entities
     return entities
 
@@ -344,6 +328,7 @@ def merge(ents, text):
 
 def nlp(text, model):
     model.add_pipe("new_line_segmenter", before="ner")
+    model.add_pipe("label_political_parties", after="ner")
     model.add_pipe("remove_entities_with_excluded_words", last=True)
     #Create entity list
     ents = []

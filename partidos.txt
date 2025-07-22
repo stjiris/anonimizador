@@ -1,4 +1,5 @@
 PSD
+PPD/PSD
 Partido Social Democrata
 CDS-PP
 CDS - Partido Popular
