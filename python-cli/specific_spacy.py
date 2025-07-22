@@ -157,11 +157,14 @@ def remove_entities_with_excluded_words(doc):
 def label_political_parties(doc):
     #Load political parties into a set for fast lookup
     with open("partidos.txt", "r") as f:
-        parties = set(line.strip().lower() for line in f if line.strip())
+        parties = [line.strip().lower() for line in f]
+
+    print(parties)
 
     #Match entities to parties (case-insensitive)
+    #Loop only through entities flagged as organizations by NER
     for ent in doc.ents:
-        if ent.label_ == "ORG": #Loop only through entities flagged as organizations by NER
+        if ent.label_ == "ORG": 
             ent_text = ent.text.lower()
             if ent_text in parties:
                 ent.label_ = "PART"
