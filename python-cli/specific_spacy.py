@@ -5,6 +5,8 @@ from spacy.matcher import Matcher
 from flashtext import KeywordProcessor
 import logging
 
+logging.basicConfig(level=logging.DEBUG)
+
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
 PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A-Z0-9]*"
 PATTERN_DATA = r"\b\d{1,2}(-|\.|/)\d{1,2}(-|\.|/)\d{2,4}\b"
@@ -155,14 +157,16 @@ def remove_entities_with_excluded_words(doc):
 
 @Language.component("label_parties")
 def label_parties(doc):
-
     with open("partidos.txt", "r") as f:
         polParties = [line.strip().lower() for line in f]
+    logging.debug(f"Loaded political parties: {polParties}")
 
     for ent in doc.ents:
         if ent.label_ == "ORG":
             entText = ent.text.lower()
+            logging.debug(f"Entity text lowered: {entText}")
             if entText in polParties:
+                logging.debug(f"Changing label of entity '{ent.text}' to PART")
                 ent.label_ = "PART"
 
     return doc
