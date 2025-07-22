@@ -164,8 +164,6 @@ def label_political_parties(doc):
     for ent in doc.ents:
         if ent.label_ == "ORG": 
             ent_text = ent.text.lower()
-            if ent_text in parties:
-                ent.label_ = "PART"
 
     return doc
 
@@ -329,7 +327,7 @@ def merge(ents, text):
 
 def nlp(text, model):
     model.add_pipe("new_line_segmenter", before="ner")
-    model.add_pipe("label_political_parties", after="ner")
+    model.add_pipe("label_political_parties", last="true")
     model.add_pipe("remove_entities_with_excluded_words", last=True)
     #Create entity list
     ents = []
