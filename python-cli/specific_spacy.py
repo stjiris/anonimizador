@@ -156,7 +156,7 @@ def remove_entities_with_excluded_words(doc):
 @Language.component("label_political_parties")
 def label_political_parties(doc):
     #Load political parties into a set for fast lookup
-    with open("partidos.txt", "r") as f:
+    with open("partidos.txt", "r", encoding="utf-8") as f:
         parties = [line.strip().lower() for line in f]
 
     #Match entities to parties (case-insensitive)
