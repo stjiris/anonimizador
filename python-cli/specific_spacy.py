@@ -349,7 +349,6 @@ def nlp(text, model):
                 ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
         
     ents = label_professions(doc, ents)
-    ents = label_political_parties(doc, ents)
     ents = process_entities(ents, text)
     ents = add_missed_entities(ents, text)
     ents = sorted(ents,key=lambda x: x.start_char)
