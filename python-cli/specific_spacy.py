@@ -150,17 +150,23 @@ def remove_entities_with_excluded_words(doc):
 
 # Labels specified instances of type "LOC" as addresses
 def label_X_entities_and_addresses(ents):
+
+    entities = []
+
     for ent in ents:
 
         # For locations (entities of type "LOC")
         if ent.label_ == "LOC":
                 text_lower = ent.text.lower()
-                if any(word.lower() in text_lower for word in MORADAS_TYPES):
+
+                if any(word.lower() in text_lower for word in MORADAS_TYPES.lower()):
                     new_MOR = FakeEntity("MOR", ent.start, ent.end, ent.text)
-                    ents.append(new_MOR)
+                    entities.append(new_MOR)
                 else:
                     newXLoc = FakeEntity("X-LOC", ent.start, ent.end, ent.text)
-                    ents.append(newXLoc)
+                    entities.append(newXLoc)
+
+        entities.append(ent.label_, ent.start, ent.end, ent.text)
 
     
     return ents
@@ -188,7 +194,7 @@ def label_parties(ents, text, doc):
     # Get political parties missed by NER
     #----------------------------------------------
     matcher = Matcher(doc.vocab)
-    
+
     patterns = [[{"TEXT": party}] for party in polParties]
     matcher.add("PARTIES", patterns)
 
@@ -401,7 +407,7 @@ def nlp(text, model):
     ents = label_professions(doc, ents)
     ents = process_entities(ents, text)
     ents = add_missed_entities(ents, text)
-    ents = label_parties(ents, text, doc)
+    #ents = label_parties(ents, text, doc)
     ents = label_X_entities_and_addresses(ents)
     ents = sorted(ents,key=lambda x: x.start_char)
     ents = merge(ents, text)
