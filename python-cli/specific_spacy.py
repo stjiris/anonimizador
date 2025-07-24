@@ -46,7 +46,7 @@ def exclude_manual(ents):
         label,start,end,text = e.label_,e.start_char,e.end_char,e.text
         if text.lower().strip() in EXCLUDE:
             continue
-        elif len(text) <= 2:
+        elif len(text) <= 1: # Changed from 2 to 1 to accommodate acronyms for political parties;
             continue
         elif re.match(r"^\d+(º|ª)$",text):
             continue
@@ -150,11 +150,22 @@ def remove_entities_with_excluded_words(doc):
 @Language.component("find_addresses")
 def find_addresses(doc):
 
+    # A new list to hold entities
+    entities = []
+
     for ent in doc.ents:
+        
+        # For locations (entities of type "LOC")
         if ent.label_ == "LOC":
                 text_lower = ent.text.lower()
                 if any(word.lower() in text_lower for word in MORADAS_TYPES):
-                    ent.label_ = "MOR"
+                    new_MOR = FakeEntity("MOR", ent.start, ent.end, ent.text)
+                    entities.append(new_MOR)
+                else:
+                    newXLoc = FakeEntity("X-LOC", ent.start, ent.end, ent.text)
+                    entities.append(newXLoc)
+
+    doc.ents = entities
     
     return doc
 
