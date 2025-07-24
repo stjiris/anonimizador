@@ -1,8 +1,10 @@
 import re
 import csv
 from spacy.language import Language
-from spacy.matcher import Matcher, PhraseMatcher
+from spacy.matcher import Matcher
 from flashtext import KeywordProcessor
+from spacy.util import filter_spans  # Deduplicate overlapping spans
+
 import logging
 
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
@@ -172,29 +174,37 @@ def label_parties(ents, text, doc):
     with open("partidos.txt", "r") as f:
         polParties = {line.strip() for line in f}
 
+    seenParties = {}
+
     for ent in ents:
         if ent.label_ == "ORG" and ent.text in polParties:  
             ent.label_ = "PART"
-            polParties.remove(ent.text)
+            seenParties.add(ent.text)
+
+    for party in seenParties:
+        polParties.pop(party)
 
     #----------------------------------------------
     # Get political parties missed
     #----------------------------------------------
 
     matcher = Matcher(doc.vocab)
+    ents = []
     
-    # For each party, create an exact token-based pattern
+    # Preprocess parties: trim whitespace and split tokens
     for party in polParties:
-    # Match the ENTIRE string as one token (if it exists in the doc)
-        pattern = [{"TEXT": party}]  # No splitting! Exact full-text match
-        matcher.add(party, [pattern])
+        tokens = party.strip().split()
+        if not tokens:
+            continue  # Skip empty entries
+        matcher.add(party, [[{"TEXT": token} for token in tokens]])
     
     matches = matcher(doc)
-
-    for _, start, end in matches:
-        span = doc[start:end]
-        ents.append(FakeEntity("PART", start, end, span.text))
-
+    
+    # Convert matches to spans and filter overlaps
+    spans = [doc[start:end] for _, start, end in matches]
+    for span in filter_spans(spans):  # Removes overlaps
+        ents.append(FakeEntity("PART", span.start, span.end, span.text))
+    
     return ents
 
 def label_professions(doc, ents):
