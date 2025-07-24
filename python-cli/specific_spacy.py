@@ -151,8 +151,6 @@ def remove_entities_with_excluded_words(doc):
 # Labels specified instances of type "LOC" as addresses
 def label_X_entities_and_addresses(ents):
 
-    entities = []
-
     for ent in ents:
 
         # For locations (entities of type "LOC")
@@ -160,16 +158,11 @@ def label_X_entities_and_addresses(ents):
                 text_lower = ent.text.lower()
 
                 if any(word.lower() in text_lower for word in MORADAS_TYPES):
-                    new_MOR = FakeEntity("MOR", ent.start, ent.end, ent.text)
-                    entities.append(new_MOR)
+                    ent.label_ = "MOR"
                 else:
-                    newXLoc = FakeEntity("X-LOC", ent.start, ent.end, ent.text)
-                    entities.append(newXLoc)
-
-        entities.append(ent.label_, ent.start, ent.end, ent.text)
-
+                    ent.label_ = "X-LOC"
     
-    return entities
+    return ents
 
 # Labels specified organizations as political parties
 def label_parties(ents, text, doc):
