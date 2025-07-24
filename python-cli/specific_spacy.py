@@ -1,7 +1,7 @@
 import re
 import csv
 from spacy.language import Language
-from spacy.matcher import Matcher
+from spacy.matcher import Matcher, PhraseMatcher
 from flashtext import KeywordProcessor
 import logging
 
@@ -147,26 +147,21 @@ def remove_entities_with_excluded_words(doc):
     return doc
 
 # Labels specified instances of type "LOC" as addresses
-def find_addresses(doc):
-
-    # A new list to hold entities
-    entities = []
-
-    for ent in doc.ents:
+def label_X_entities_and_addresses(ents):
+    for ent in ents:
 
         # For locations (entities of type "LOC")
         if ent.label_ == "LOC":
                 text_lower = ent.text.lower()
                 if any(word.lower() in text_lower for word in MORADAS_TYPES):
                     new_MOR = FakeEntity("MOR", ent.start, ent.end, ent.text)
-                    entities.append(new_MOR)
+                    ents.append(new_MOR)
                 else:
                     newXLoc = FakeEntity("X-LOC", ent.start, ent.end, ent.text)
-                    entities.append(newXLoc)
+                    ents.append(newXLoc)
 
-    doc.ents = entities
     
-    return doc
+    return ents
 
 # Labels specified organizations as political parties
 def label_parties(ents, text, doc):
@@ -175,42 +170,33 @@ def label_parties(ents, text, doc):
     # Get political parties identified by the model
     #----------------------------------------------
     with open("partidos.txt", "r") as f:
-        polParties = [line.strip().lower() for line in f]
+        polParties = {line.strip() for line in f}
 
     for ent in ents:
-        if ent.label_ == "ORG":
-            entText = ent.text.lower()
-            if entText in polParties:
-                ent.label_ = "PART"
+        if ent.label_ == "ORG" and ent.text in polParties:  
+            ent.label_ = "PART"
+            polParties.remove(ent.text)
 
     #----------------------------------------------
     # Get political parties missed
     #----------------------------------------------
 
-    # Create matcher
     matcher = Matcher(doc.vocab)
+    ents = []
     
-    # Create entity list
-    entities = []
-
-    # Make each party a pattern        
-    pattern=[{"LOWER": {"IN": polParties}}]
-    # Add patterns to the matcher
-    matcher.add("PARTIES", [pattern])
+    # For each party, create an exact token-based pattern
+    for party in polParties:
+    # Match the ENTIRE string as one token (if it exists in the doc)
+        pattern = [{"TEXT": party}]  # No splitting! Exact full-text match
+        matcher.add(party, [pattern])
     
-    # Run matcher on document and saves it on matches
     matches = matcher(doc)
-    
-    # Copy entities from doc to the new entity list
-    for ent in ents:
-        entities.append(ent)
-        
-    #Finds where match is on document and adds it to entity list
-    for match_id, start, end in matches:
-        span = doc[start:end]
-        entities.append(FakeEntity("PART", start, end, span.text))
 
-    return entities
+    for _, start, end in matches:
+        span = doc[start:end]
+        ents.append(FakeEntity("PART", start, end, span.text))
+
+    return ents
 
 def label_professions(doc, ents):
     #Create matcher
@@ -412,6 +398,7 @@ def nlp(text, model):
     ents = process_entities(ents, text)
     ents = add_missed_entities(ents, text)
     ents = label_parties(ents, text, doc)
+    ents = label_X_entities_and_addresses(ents)
     ents = sorted(ents,key=lambda x: x.start_char)
     ents = merge(ents, text)
     return FakeDoc(ents, doc.text)
