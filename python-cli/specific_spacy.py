@@ -171,6 +171,9 @@ def find_addresses(doc):
 # Labels specified organizations as political parties
 def label_parties(ents, text, doc):
 
+    #----------------------------------------------
+    # Get political parties identified by the model
+    #----------------------------------------------
     with open("partidos.txt", "r") as f:
         polParties = [line.strip().lower() for line in f]
 
@@ -179,6 +182,10 @@ def label_parties(ents, text, doc):
             entText = ent.text.lower()
             if entText in polParties:
                 ent.label_ = "PART"
+
+    #----------------------------------------------
+    # Get political parties missed
+    #----------------------------------------------
 
     # Create matcher
     matcher = Matcher(doc.vocab)
@@ -191,10 +198,10 @@ def label_parties(ents, text, doc):
     # Add patterns to the matcher
     matcher.add("PARTIES", [pattern])
     
-    #Run matcher on document and saves it on matches
+    # Run matcher on document and saves it on matches
     matches = matcher(doc)
     
-    #Copy entities from doc to the new entity list
+    # Copy entities from doc to the new entity list
     for ent in ents:
         entities.append(ent)
         
