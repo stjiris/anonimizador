@@ -179,10 +179,9 @@ def label_parties(ents, text, doc):
     for ent in ents:
         if ent.label_ == "ORG" and ent.text in polParties:  
             ent.label_ = "PART"
-            seenParties.add(ent.text)
+            seenParties.pop(ent.text)
 
-    for party in seenParties:
-        polParties.pop(party)
+    
 
     #----------------------------------------------
     # Get political parties missed
