@@ -93,7 +93,7 @@ export const moradas_inc: AnonimizeFunction = (str, _idx, tidx) => {
 
     for (let morType of moradasTypes) {
         if(strLow.includes(morType) || str.includes(morType.toLowerCase())) {
-            return morType.toString() + " " + tidx.toString();
+            return morType.toString() + " " + _idx.toString();
         }
     }
 
