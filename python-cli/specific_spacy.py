@@ -149,6 +149,7 @@ def remove_entities_with_excluded_words(doc):
 # Labels specified instances of type "LOC" as addresses
 @Language.component("find_addresses")
 def find_addresses(doc):
+
     for ent in doc.ents:
         if ent.label_ == "LOC":
                 text_lower = ent.text.lower()
@@ -158,8 +159,8 @@ def find_addresses(doc):
     return doc
 
 # Labels specified organizations as political parties
-@Language.component("label_professions")
-def label_professions(doc):
+@Language.component("label_parties")
+def label_parties(doc):
 
     with open("partidos.txt", "r") as f:
         polParties = [line.strip().lower() for line in f]
@@ -170,37 +171,7 @@ def label_professions(doc):
             if entText in polParties:
                 ent.label_ = "PART"
 
-# Goes through the document to find instances of political parties that were not identified as organizations by the model
-def label_missed_parties(doc, ents):
-    #Create matcher
-    matcher = Matcher(doc.vocab)
-    
-    #Create entity list
-    entities = []
-    
-    #Open professions file to create a list with professions
-    with open("partidos.txt", "r") as f:
-        polParties = [line.strip().lower() for line in f]
-
-    #Make each profession a pattern        
-    pattern=[{"LOWER": {"IN": polParties}}]
-    #Add patterns to the matcher
-    matcher.add("PARTIES", [pattern])
-    
-    #Run matcher on document and saves it on matches
-    matches = matcher(doc)
-    
-    #Copy entities from doc to the new entity list
-    for ent in ents:
-        entities.append(ent)
-        
-    #Finds where match is on document and adds it to entity list
-    for match_id, start, end in matches:
-        span = doc[start:end]
-        entities.append(FakeEntity("PART", start, end, span.text))
-        
-    #Return new entities
-    return entities
+    return doc
 
 def label_professions(doc, ents):
     #Create matcher
@@ -363,7 +334,7 @@ def merge(ents, text):
 def nlp(text, model):
     model.add_pipe("new_line_segmenter", before="ner")
     # Ordering functions
-    model.add_pipe("label_professions", before="find_addresses")
+    model.add_pipe("label_parties", before="find_addresses")
     model.add_pipe("find_addresses", before="remove_entities_with_excluded_words")
     model.add_pipe("remove_entities_with_excluded_words", last=True)
     # Create entity list
@@ -402,7 +373,7 @@ def nlp(text, model):
         
     ents = label_professions(doc, ents)
     ents = process_entities(ents, text)
-    ents = label_missed_parties(ents, text)
+    #ents = label_missed_parties(ents, text)
     ents = add_missed_entities(ents, text)
     ents = sorted(ents,key=lambda x: x.start_char)
     ents = merge(ents, text)
