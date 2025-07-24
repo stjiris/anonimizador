@@ -174,33 +174,32 @@ def label_parties(ents, text, doc):
     with open("partidos.txt", "r") as f:
         polParties = {line.strip() for line in f}
 
-    seenParties = {}
+    seenParties = set()
 
     for ent in ents:
-        if ent.label_ == "ORG" and ent.text in polParties:  
+        if ent.label_ == "ORG" and ent.text in polParties:
             ent.label_ = "PART"
-            seenParties.add(ent.text)
+            seenParties.add(ent.text)  
 
-    for party in seenParties:
-        polParties.discard(party)
+    # Remove found parties 
+    polParties -= seenParties
 
     #----------------------------------------------
-    # Get political parties missed
+    # Get political parties missed by NER
     #----------------------------------------------
-
     matcher = Matcher(doc.vocab)
-    ents = []
     
-    patterns = [[{"LOWER": party}] for party in polParties]  # Correct way
+    patterns = [[{"TEXT": party}] for party in polParties]
     matcher.add("PARTIES", patterns)
-    
+
     matches = matcher(doc)
-    
+
     #Finds where match is on document and adds it to entity list
     for match_id, start, end in matches:
         span = doc[start:end]
         ents.append(FakeEntity("PART", start, end, span.text))
-
+        
+ 
     return ents
 
 def label_professions(doc, ents):
