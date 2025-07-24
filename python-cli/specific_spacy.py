@@ -159,7 +159,7 @@ def label_X_entities_and_addresses(ents):
         if ent.label_ == "LOC":
                 text_lower = ent.text.lower()
 
-                if any(word.lower() in text_lower for word in MORADAS_TYPES.lower()):
+                if any(word.lower() in text_lower for word in MORADAS_TYPES):
                     new_MOR = FakeEntity("MOR", ent.start, ent.end, ent.text)
                     entities.append(new_MOR)
                 else:
@@ -169,7 +169,7 @@ def label_X_entities_and_addresses(ents):
         entities.append(ent.label_, ent.start, ent.end, ent.text)
 
     
-    return ents
+    return entities
 
 # Labels specified organizations as political parties
 def label_parties(ents, text, doc):
