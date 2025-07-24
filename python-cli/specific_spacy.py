@@ -3,7 +3,6 @@ import csv
 from spacy.language import Language
 from spacy.matcher import Matcher
 from flashtext import KeywordProcessor
-from spacy.util import filter_spans  # Deduplicate overlapping spans
 
 import logging
 

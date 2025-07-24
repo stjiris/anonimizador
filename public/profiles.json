@@ -14,7 +14,7 @@
         "PART": {"color":"#4d4a35", "functionIndex":2},
         "LOC":{"color":"#e238ff","functionIndex":1},
         "X-LOC":{"color":"#DCDCDC","functionIndex":0},
-        "MOR": {"color": "#ffc0cb", "functionIndex": 15},
+        "MOR": {"color": "#ffc0cb", "functionIndex": 1},
         "PRO":{"color":"#ff9800","functionIndex":1},
         "X-PRO":{"color":"#DCDCDC","functionIndex":0},
         "MAT":{"color":"#526cff","functionIndex":2},

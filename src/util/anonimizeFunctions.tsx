@@ -68,6 +68,24 @@ export const processo: AnonimizeFunction = (str, ...args) => {
     return reticiencias(str, ...args)
 }
 
+//Anonymization technique that uses the leters "AA" coupled with a numerical increment;
+export const AA_inc: AnonimizeFunction = (_str, type, _idx, tidx) => "AA" + tidx.toString()
+
+const moradasTypes = ['Rua', 'Avenida', 'Largo', 'Praça', 'Travessa', 'Estrada', 'Calçada', 'Alameda', 'Rotunda', 'Praceta', 'Beco', 'Viela']
+
+export const moradas_inc: AnonimizeFunction = (str, type, _idx, tidx, funIdx) => {
+
+    let strLow = str
+
+    for (let morType of moradasTypes) {
+        if(strLow.includes(morType) || str.includes(morType.toLowerCase())) {
+            return morType.toString() + " " + tidx.toString();
+        }
+    }
+
+    return "Localização " + tidx.toString();
+}
+
 export const automatic: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) => {
     if (type === "PES")
         return leter(str, type, idx, typeIdx, typeIdx - 1) // overwrite funIdx, automatically only we should call it.
@@ -79,25 +97,9 @@ export const automatic: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) =>
         return matriculaLeter(str, type, idx, typeIdx, funIdx)
     if (type === "INST")
         return firstWord(str, type, idx, typeIdx, funIdx)
+    if (type === "MOR")
+        return moradas_inc(str, type, idx, typeIdx, funIdx)
     return reticiencias(str, type, idx, typeIdx, funIdx)
-}
-
-//Anonymization technique that uses the leters "AA" coupled with a numerical increment;
-export const AA_inc: AnonimizeFunction = (_str, type, _idx, tidx) => "AA" + tidx.toString()
-
-const moradasTypes = ['Rua', 'Avenida', 'Largo', 'Praça', 'Travessa', 'Estrada', 'Calçada', 'Alameda', 'Rotunda', 'Praceta', 'Beco', 'Viela']
-
-export const moradas_inc: AnonimizeFunction = (str, _idx, tidx) => {
-
-    let strLow = str
-
-    for (let morType of moradasTypes) {
-        if(strLow.includes(morType) || str.includes(morType.toLowerCase())) {
-            return morType.toString() + " " + _idx.toString();
-        }
-    }
-
-    return "Localização " + tidx.toString();
 }
 
 
