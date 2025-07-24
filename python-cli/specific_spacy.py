@@ -182,7 +182,6 @@ def label_parties(ents, text, doc):
     #----------------------------------------------
 
     matcher = Matcher(doc.vocab)
-    ents = []
     
     # For each party, create an exact token-based pattern
     for party in polParties:
