@@ -171,15 +171,15 @@ def find_addresses(doc):
 # Labels specified organizations as political parties
 def label_parties(ents, text):
 
-    #with open("partidos.txt", "r") as f:
-        #polParties = [line.strip().lower() for line in f]
+    with open("partidos.txt", "r") as f:
+        polParties = [line.strip().lower() for line in f]
 
     for ent in ents:
         if ent.label_ == "ORG":
-            ent.label_ = "PART"
-            #entText = ent.text.lower()
-            #if entText in polParties:
-                #ent.label_ = "PART"
+            #ent.label_ = "PART"
+            entText = ent.text.lower()
+            if entText in polParties:
+                ent.label_ = "PART"
 
     return ents
 
