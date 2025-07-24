@@ -179,9 +179,10 @@ def label_parties(ents, text, doc):
     for ent in ents:
         if ent.label_ == "ORG" and ent.text in polParties:  
             ent.label_ = "PART"
-            seenParties.pop(ent.text)
+            seenParties.add(ent.text)
 
-    
+    for party in seenParties:
+        polParties.discard(party)
 
     #----------------------------------------------
     # Get political parties missed
@@ -190,20 +191,16 @@ def label_parties(ents, text, doc):
     matcher = Matcher(doc.vocab)
     ents = []
     
-    # Preprocess parties: trim whitespace and split tokens
-    for party in polParties:
-        tokens = party.strip().split()
-        if not tokens:
-            continue  # Skip empty entries
-        matcher.add(party, [[{"TEXT": token} for token in tokens]])
+    patterns = [[{"LOWER": party}] for party in polParties]  # Correct way
+    matcher.add("PARTIES", patterns)
     
     matches = matcher(doc)
     
-    # Convert matches to spans and filter overlaps
-    spans = [doc[start:end] for _, start, end in matches]
-    for span in filter_spans(spans):  # Removes overlaps
-        ents.append(FakeEntity("PART", span.start, span.end, span.text))
-    
+    #Finds where match is on document and adds it to entity list
+    for match_id, start, end in matches:
+        span = doc[start:end]
+        ents.append(FakeEntity("PART", start, end, span.text))
+
     return ents
 
 def label_professions(doc, ents):
