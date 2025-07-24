@@ -335,6 +335,7 @@ def nlp(text, model):
     model.add_pipe("new_line_segmenter", before="ner")
     # Ordering functions
     model.add_pipe("label_parties", after="ner")
+    model.add_pipe("find_addresses", after="ner")
     model.add_pipe("remove_entities_with_excluded_words", last=True)
     # Create entity list
     ents = []
