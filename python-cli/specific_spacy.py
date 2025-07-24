@@ -411,7 +411,7 @@ def nlp(text, model):
     ents = label_professions(doc, ents)
     ents = process_entities(ents, text)
     ents = add_missed_entities(ents, text)
-    ents = label_parties(ents, text)
+    ents = label_parties(ents, text, doc)
     ents = sorted(ents,key=lambda x: x.start_char)
     ents = merge(ents, text)
     return FakeDoc(ents, doc.text)
