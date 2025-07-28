@@ -25,6 +25,7 @@
         "X-TEL":{"color":"#DCDCDC","functionIndex":0},
         "E-MAIL":{"color":"#ffeb3b","functionIndex":1},
         "X-E-MAIL":{"color":"#DCDCDC","functionIndex":0},
+        "RED":{"color":"#b59379ff","functionIndex":2},
         "IDP":{"color":"#69bcff","functionIndex":1},
         "X-IDP":{"color":"#DCDCDC","functionIndex":0},
         "INST":{"color":"#71ff77","functionIndex":1},

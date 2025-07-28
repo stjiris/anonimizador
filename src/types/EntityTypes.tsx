@@ -36,6 +36,7 @@ export const EntityTypeIDefaults: { [key: string]: EntityTypeI } = {
     "X-TEL": { name: "X-TEL", color: "#DCDCDC", functionIndex: DONT_ANONIMIZE },
     "E-MAIL": { name: "E-MAIL", color: "#ffeb3b", functionIndex: AUTO_ANONIMIZE },
     "X-E-MAIL": { name: "X-E-MAIL", color: "#DCDCDC", functionIndex: DONT_ANONIMIZE },
+    RED : { name: "RED", color: "#b59379ff", functionIndex: AUTO_ANONIMIZE },
     IDP: { name: "IDP", color: "#69bcff", functionIndex: AUTO_ANONIMIZE },
     "X-IDP": { name: "X-IDP", color: "#DCDCDC", functionIndex: DONT_ANONIMIZE },
     INST: { name: "INST", color: "#71ff77", functionIndex: AUTO_ANONIMIZE },

@@ -99,7 +99,7 @@ export const automatic: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) =>
         return firstWord(str, type, idx, typeIdx, funIdx)
     if (type === "MOR")
         return moradas_inc(str, type, idx, typeIdx, funIdx)
-    console.log("Automatic function not implemented for type: " + type)
+    
     return reticiencias(str, type, idx, typeIdx, funIdx)
 }
 

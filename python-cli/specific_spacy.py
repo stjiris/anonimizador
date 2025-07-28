@@ -19,7 +19,7 @@ EXCLUDE = ['Tribunal','Juízo','Secção','Vara','Arguído','Arguída','Arguído
 # Termos referentes a cargos desempenhados por agentes do poder judicial que não devem
 # ser anonimizados.
 MAGIS_JUIZES_PROC_LIST = ['Juiz', 'Juíza', 'Procurador', 'Procuradora', 'Magistrado', 'Magistrada', 
-                          'Desembargador', 'Desembargadora', "Relator", "Relatora", "Conselheiro", "Conselheira"]
+                          'Desembargador', 'Desembargadora', 'Relator', 'Relatora', 'Conselheiro', 'Conselheira']
 
 EXCLUDE = EXCLUDE + MAGIS_JUIZES_PROC_LIST
 EXCLUDE = [x.lower() for x in EXCLUDE]
@@ -160,6 +160,18 @@ def label_X_entities_and_addresses(ents):
                     ent.label_ = "MOR"
                 else:
                     ent.label_ = "X-LOC"
+
+        if ent.label_ == "ORG":
+            ent.label_ = "X-ORG"
+
+        if ent.label_ == "PROF":
+            ent.label_ = "X-PROF"
+
+        if ent.label_ == "INST":
+            ent.label_ = "X-INST"
+
+        if ent.label_ == "X-PRO":
+            ent.label_ = "X-PROF"    
     
     return ents
 
@@ -198,6 +210,37 @@ def label_parties(ents, text, doc):
         ents.append(FakeEntity("PART", start, end, span.text))
         
  
+    return ents
+
+def label_social_media(ents, doc):
+    # Create matcher
+    matcher = Matcher(doc.vocab)
+
+    with open("redes_sociais.txt", "r") as f:
+        platforms = [line.strip().lower() for line in f]
+
+    for p in platforms:
+        # Create a pattern for each social media platform
+        pattern = [{"TEXT": {"REGEX": rf"(?:https?:\/\/)?(?:www\.)?{p}\.com\/[A-Za-z0-9_.-]+"}}]
+        matcher.add(f"LINK_{p.upper()}", [pattern])
+
+        # Create a pattern for social media handles (e.g., @username)
+        handle_pattern = [
+            {"LOWER": p},
+            {"TEXT": "@"},
+            {"TEXT": {"REGEX": r"[A-Za-z0-9_.-]{1,30}"}}
+        ]
+        matcher.add(f"HANDLE_{p.upper()}", [handle_pattern])
+    
+    # Run matcher on document and saves it on matches
+    matches = matcher(doc)
+        
+    # Find where match is on document and adds it to entity list
+    for match_id, start, end in matches:
+        span = doc[start:end]
+        ents.append(FakeEntity("RED", start, end, span.text))
+        
+    # Return new entities
     return ents
 
 def label_professions(doc, ents):
