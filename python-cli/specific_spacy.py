@@ -225,14 +225,6 @@ def label_social_media(ents, doc):
         # Create a pattern for each social media platform
         pattern = [{"TEXT": {"REGEX": "(?:https?:\/\/)?(?:www\.)?{p}\.com\/[A-Za-z0-9_.-]+"}}]
         matcher.add(f"LINK_{p.upper()}", [pattern])
-
-        # Create a pattern for social media handles (e.g., @username)
-        handle_pattern = [
-            {"LOWER": p},
-            {"TEXT": "@"},
-            {"TEXT": {"REGEX": "[A-Za-z0-9_.-]{1,30}"}}
-        ]
-        matcher.add(f"HANDLE_{p.upper()}", [handle_pattern])
     
     # Run matcher on document and saves it on matches
     matches = matcher(doc)
