@@ -212,7 +212,7 @@ def label_parties(ents, text, doc):
  
     return ents
 
-def label_social_media(ents, doc):
+def label_social_media(doc, ents):
     # Create matcher
     matcher = Matcher(doc.vocab)
 
@@ -221,10 +221,10 @@ def label_social_media(ents, doc):
     with open("redes_sociais.txt", "r") as f:
         platforms = [line.strip().lower() for line in f]
 
-    for p in platforms:
+    #for p in platforms:
         # Create a pattern for each social media platform
-        pattern = [{"TEXT": {"REGEX": "(?:https?:\/\/)?(?:www\.)?{p}\.com\/[A-Za-z0-9_.-]+"}}]
-        matcher.add(f"LINK_{p.upper()}", [pattern])
+        #pattern = [{"TEXT": {"REGEX": "(?:https?:\/\/)?(?:www\.)?{p}\.com\/[A-Za-z0-9_.-]+"}}]
+        #matcher.add(f"LINK_{p.upper()}", [pattern])
     
     # Run matcher on document and saves it on matches
     matches = matcher(doc)
@@ -442,7 +442,7 @@ def nlp(text, model):
     ents = add_missed_entities(ents, text)
     #ents = label_parties(ents, text, doc)
     ents = label_X_entities_and_addresses(ents)
-    ents = label_social_media(ents, doc)
+    ents = label_social_media(doc, ents)
     ents = sorted(ents,key=lambda x: x.start_char)
     ents = merge(ents, text)
     return FakeDoc(ents, doc.text)
