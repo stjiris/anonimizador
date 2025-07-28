@@ -444,6 +444,7 @@ def nlp(text, model):
     ents = add_missed_entities(ents, text)
     #ents = label_parties(ents, text, doc)
     ents = label_X_entities_and_addresses(ents)
+    ents = label_social_media(ents, doc)
     ents = sorted(ents,key=lambda x: x.start_char)
     ents = merge(ents, text)
     return FakeDoc(ents, doc.text)
