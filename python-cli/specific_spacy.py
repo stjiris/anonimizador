@@ -216,32 +216,38 @@ def label_social_media(ents, doc):
     # Create matcher
     matcher = Matcher(doc.vocab)
 
+    entities = []
+
     with open("redes_sociais.txt", "r") as f:
         platforms = [line.strip().lower() for line in f]
 
     for p in platforms:
         # Create a pattern for each social media platform
-        pattern = [{"TEXT": {"REGEX": rf"(?:https?:\/\/)?(?:www\.)?{p}\.com\/[A-Za-z0-9_.-]+"}}]
+        pattern = [{"TEXT": {"REGEX": "(?:https?:\/\/)?(?:www\.)?{p}\.com\/[A-Za-z0-9_.-]+"}}]
         matcher.add(f"LINK_{p.upper()}", [pattern])
 
         # Create a pattern for social media handles (e.g., @username)
         handle_pattern = [
             {"LOWER": p},
             {"TEXT": "@"},
-            {"TEXT": {"REGEX": r"[A-Za-z0-9_.-]{1,30}"}}
+            {"TEXT": {"REGEX": "[A-Za-z0-9_.-]{1,30}"}}
         ]
         matcher.add(f"HANDLE_{p.upper()}", [handle_pattern])
     
     # Run matcher on document and saves it on matches
     matches = matcher(doc)
+
+    #Copy entities from doc to the new entity list
+    for ent in ents:
+        entities.append(ent)
         
     # Find where match is on document and adds it to entity list
     for match_id, start, end in matches:
         span = doc[start:end]
-        ents.append(FakeEntity("RED", start, end, span.text))
+        entities.append(FakeEntity("RED", start, end, span.text))
         
     # Return new entities
-    return ents
+    return entities
 
 def label_professions(doc, ents):
     #Create matcher
