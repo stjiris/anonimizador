@@ -170,7 +170,7 @@ def label_X_entities_and_addresses(ents):
         if ent.label_ == "INST":
             ent.label_ = "X-INST"
 
-        if ent.label_ == "X-PRO":
+        if ent.label_ == "PRO":
             ent.label_ = "X-PRO"    
     
     return ents
