@@ -221,15 +221,15 @@ def label_social_media(doc, ents):
     with open("redes_sociais.txt", "r") as f:
         platforms = [line.strip().lower() for line in f]
 
-    #for p in platforms:
+    for p in platforms:
         # Create a pattern for each social media platform
-        #pattern = [{"TEXT": {"REGEX": "(?:https?:\/\/)?(?:www\.)?{p}\.com\/[A-Za-z0-9_.-]+"}}]
-        #matcher.add(f"LINK_{p.upper()}", [pattern])
+        pattern = [{"TEXT": {"REGEX": "(?:https?:\/\/)?(?:www\.)?{p}\.com\/[A-Za-z0-9_.-]+"}}]
+        matcher.add(f"LINK_{p.upper()}", [pattern])
     
     # Run matcher on document and saves it on matches
     matches = matcher(doc)
 
-    #Copy entities from doc to the new entity list
+    # Copy entities from doc to the new entity list
     for ent in ents:
         entities.append(ent)
         
