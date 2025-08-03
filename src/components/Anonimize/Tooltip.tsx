@@ -64,7 +64,7 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
             return (
                 <div style={style}>
                     <div className="d-flex flex-column gap-1 bg-white p-1 border"
-                     style={{ maxHeight: 200, overflowY: "auto" }}>
+                     style={{ maxHeight: 400, overflowY: "auto" }}>
                         {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
                             <span
                                 key={i}
@@ -83,7 +83,7 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
             return (
                 <div style={style}>
                     <div className="d-flex flex-column gap-1 bg-white p-1 border"
-                     style={{ maxHeight: 200, overflowY: "auto" }}>
+                     style={{ maxHeight: 400, overflowY: "auto" }}>
                         {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
                             <span
                                 key={i}
@@ -102,7 +102,7 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
             return (
                 <div style={style}>
                     <div className="d-flex flex-column gap-1 bg-white p-1 border"
-                     style={{ maxHeight: 200, overflowY: "auto" }}>
+                     style={{ maxHeight: 400, overflowY: "auto" }}>
                         <span
                             role="button"
                             onMouseDown={() => removeType(props.pool!, sel, fileA)}
