@@ -71,6 +71,12 @@ export const processo: AnonimizeFunction = (str, ...args) => {
 //Anonymization technique that uses the leters "AA" coupled with a numerical increment;
 export const AA_inc: AnonimizeFunction = (_str, type, _idx, tidx) => "AA" + tidx.toString()
 
+//Anonymization technique that uses the leter "V" coupled with a numerical increment;
+export const matricula_inc: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) => "V" + typeIdx.toString()
+
+//Anonymization technique that uses the leter "P" coupled with a numerical increment;
+export const partido_inc: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) => "P" + typeIdx.toString()
+
 const moradasTypes = ['Rua', 'Avenida', 'Largo', 'Praça', 'Travessa', 'Estrada', 'Calçada', 'Alameda', 'Rotunda', 'Praceta', 'Beco', 'Viela']
 
 export const moradas_inc: AnonimizeFunction = (str, type, _idx, tidx, funIdx) => {
@@ -203,6 +209,18 @@ export const functionsWithDescriptionArray: AnonimizeFunctionDescription[] = [
         "name": "Ofuscação data - Manter Ano (sem reticências)",
         "description": "Substitui ocorrência por D/M/YYYY, mantendo o ano visível. Ex: 06/06/1997 => D/M/1997",
         "fun": year2
+    },
+    //Adding the new matricula increment function to the list of functions with index 17;
+    {
+        "name": "Incremental - Matrícula",
+        "description": "Substitui ocorrência por V + número incremental. Ex: V1, V2, etc.",
+        "fun": matricula_inc
+    },
+    //Adding the new partido increment function to the list of functions with index 18;
+    {
+        "name": "Incremental - Partido",
+        "description": "Substitui ocorrência por P + número incremental. Ex: P1, P2, etc.",
+        "fun": partido_inc
     }
 ]
 
