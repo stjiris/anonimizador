@@ -21,7 +21,7 @@
         "X-MAT":{"color":"#DCDCDC","functionIndex":0},
         "CEP":{"color":"#ff4133","functionIndex":1},
         "X-CEP":{"color":"#DCDCDC","functionIndex":0},
-        "TEL":{"color":"#ff5f95","functionIndex":10},
+        "TEL":{"color":"#ff5f95","functionIndex":9},
         "X-TEL":{"color":"#DCDCDC","functionIndex":0},
         "E-MAIL":{"color":"#ffeb3b","functionIndex":1},
         "X-E-MAIL":{"color":"#DCDCDC","functionIndex":0},
