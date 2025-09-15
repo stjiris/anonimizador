@@ -28,9 +28,29 @@ export default function AnonimizeContent(props: AnonimizeContentProps) {
         accessHtml(html);
     }, [html, accessHtml])
 
-    return <>
-        <div id="content" className={props.showTypes ? 'show-type' : 'show-cod'} ref={contentRef} dangerouslySetInnerHTML={{ __html: html }}></div>
-        <AnonimizeTooltip entityTypes={Object.values(entityTypes)} pool={props.file.pool} contentRef={contentRef} nodesRef={nodesRef} file={props.file} />
-    </>
+    return (
+        <>
+          <div className="doc-preview">
+            <div className="page">
+              <div className="page__content">
+                <div
+                  id="content"
+                  className={props.showTypes ? 'show-type' : 'show-cod'}
+                  ref={contentRef}
+                  dangerouslySetInnerHTML={{ __html: html }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <AnonimizeTooltip
+            entityTypes={Object.values(entityTypes)}
+            pool={props.file.pool}
+            contentRef={contentRef}
+            nodesRef={nodesRef}
+            file={props.file}
+          />
+        </>
+      );
 }
 

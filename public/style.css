@@ -122,3 +122,95 @@ img{
 .selected {
   background-color: var(--secondary-gold);
 }
+
+.doc-preview {
+  background: #f3f3f3;
+  padding: 24px 0;
+  min-height: 100vh;
+}
+
+.page {
+  width: 210mm;
+  min-height: 297mm;
+  margin: 16px auto;
+  background: #fff;
+  box-shadow:
+    0 0 0 1px rgba(0,0,0,.06),
+    0 12px 28px rgba(0,0,0,.18),
+    0 2px 6px rgba(0,0,0,.08);
+  border-radius: 4px;
+  position: relative;
+}
+
+.page__content {
+  padding: 20mm;
+}
+
+#content {
+  font-size: 12pt;
+  line-height: 1.5;
+  color: #1a1a1a;
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+#content h1 { font-size: 20pt; margin: 0 0 12pt; }
+#content h2 { font-size: 16pt; margin: 18pt 0 8pt; }
+#content h3 { font-size: 13pt; margin: 14pt 0 6pt; }
+#content p  { margin: 0 0 8pt; }
+
+#content h1,
+#content h2,
+#content h3,
+#content h4,
+#content h5,
+#content h6,
+#content table,
+#content pre,
+#content blockquote,
+#content figure,
+#content img {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+#content img,
+#content table {
+  max-width: 100%;
+}
+
+.page-break {
+  break-after: page;
+  page-break-after: always;
+  height: 0;
+  margin: 0;
+  border: 0;
+}
+
+@media print {
+
+  @page {
+    size: A4;
+    margin: 20mm;
+  }
+
+  body, html, .doc-preview {
+    background: transparent !important;
+    padding: 0 !important;
+  }
+
+  .page {
+    width: auto; 
+    min-height: auto;
+    margin: 0;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .page__content {
+    padding: 0;
+  }
+
+  #content p { orphans: 3; widows: 3; }
+}
+
