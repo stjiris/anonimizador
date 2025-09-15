@@ -212,5 +212,10 @@ img{
   }
 
   #content p { orphans: 3; widows: 3; }
+
 }
+
+.btn[disabled] { filter: saturate(0.5) opacity(0.6); cursor: not-allowed !important; }
+
+
 
