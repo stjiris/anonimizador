@@ -55,7 +55,6 @@ export function EntityTable({ file }: { file: UserFile }) {
       key="ent-table"
       columns={columns}
       data={filteredEnts}
-      enableGlobalFilter={false}
       localization={{ ...MRT_Localization_PT, noRecordsToDisplay: "Sem entidades" }}
 
       enableRowSelection
@@ -66,8 +65,8 @@ export function EntityTable({ file }: { file: UserFile }) {
       enableColumnOrdering={false}
       enableColumnDragging={false}
       enableColumnActions={false}
+      enableGlobalFilter={false}
 
-      enablePagination={false}
       enableRowVirtualization={false}
       enableColumnResizing
       columnResizeMode="onChange"
@@ -154,19 +153,24 @@ export function EntityTable({ file }: { file: UserFile }) {
 
       enableStickyHeader
       enableHiding
+      enablePagination
       enableDensityToggle={false}
       enableFullScreenToggle={false}
       muiTableBodyRowProps={() => ({
         sx: { "&:hover": { backgroundColor: "rgba(244,236,206,.35)" } },
       })}
+      muiTablePaginationProps={{
+        rowsPerPageOptions: [10, 25, 50, 100],
+      }}
       muiTablePaperProps={{
-        sx: { maxHeight: "100%", display: "flex", flexDirection: "column" },
+        sx: { display: "flex", flexDirection: "column" }, // remove o maxHeight
       }}
       positionToolbarAlertBanner="bottom"
       initialState={{
         density: "compact",
         sorting: [{ id: "count", desc: true }],
         columnPinning: { right: ["mrt-row-actions"] },
+        pagination: { pageIndex: 0, pageSize: 25 }
       }}
     />
   );
