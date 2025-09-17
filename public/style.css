@@ -217,4 +217,30 @@ img{
 
 .btn[disabled] { filter: saturate(0.5) opacity(0.6); cursor: not-allowed !important; }
 
+/*Paginação*/
 
+#content { counter-reset: pg; }
+
+.page {
+  counter-increment: pg;
+  position: relative;
+}
+
+.page__content {
+  padding-bottom: 18mm;
+}
+
+.page::after {
+  content: counter(pg);
+  position: absolute;
+  right: 12mm;
+  bottom: 10mm;
+  font-size: 10pt;
+  color: #666;
+}
+
+@media print {
+  .page::after {
+    color: #000;
+  }
+}
