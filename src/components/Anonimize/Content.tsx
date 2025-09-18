@@ -25,8 +25,9 @@ export default function AnonimizeContent(props: AnonimizeContentProps) {
     return planAutoPageBreaks(props.file.doc, 2300);
   }, [props.file.doc]);
 
-  const rawHtml = useMemo(() =>
-    renderBlock(
+  const rawHtml = useMemo(() => {
+    const breaksForThisRender = new Set(pageBreaks);
+    return renderBlock(
       props.file.doc,
       entityTypes,
       offsets,
@@ -34,16 +35,15 @@ export default function AnonimizeContent(props: AnonimizeContentProps) {
       0,
       images,
       { current: 0 },
-      pageBreaks
-    ),
-    [props.file.doc, images, props.anonimizeState, entityTypes, offsets, pageBreaks]
-  );
+      breaksForThisRender
+    );
+  }, [props.file.doc, images, props.anonimizeState, entityTypes, offsets, pageBreaks]);
 
   const normalizedHtml = useMemo(() => {
     return rawHtml
       .replace(/(?:<!--PAGEBREAK-->[\s]*){2,}/g, '<!--PAGEBREAK-->')
-      .replace(/^\s*<!--PAGEBREAK-->\s*/,'')
-      .replace(/\s*<!--PAGEBREAK-->\s*$/,'');
+      .replace(/^\s*<!--PAGEBREAK-->\s*/, '')
+      .replace(/\s*<!--PAGEBREAK-->\s*$/, '');
   }, [rawHtml]);
 
   const pages = useMemo(() => {
