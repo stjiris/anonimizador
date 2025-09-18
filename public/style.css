@@ -217,6 +217,31 @@ img{
 
 .btn[disabled] { filter: saturate(0.5) opacity(0.6); cursor: not-allowed !important; }
 
+
+#entityTable, 
+#entityTable * {
+  scrollbar-width: thin;
+  scrollbar-color: #c0c0c0 #f5f5f5;
+}
+
+#entityTable::-webkit-scrollbar,
+#entityTable *::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+#entityTable::-webkit-scrollbar-track,
+#entityTable *::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+
+#entityTable::-webkit-scrollbar-thumb,
+#entityTable *::-webkit-scrollbar-thumb {
+  background-color: #c0c0c0;
+  border-radius: 10px;
+  border: 2px solid #f5f5f5;
+}
+
 /*Paginação*/
 
 #content { counter-reset: pg; }

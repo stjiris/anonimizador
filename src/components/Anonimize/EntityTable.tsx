@@ -309,11 +309,12 @@ const COUNT_COL = (totalOcc: number): MRT_ColumnDef<Entity> => ({
 });
 
 const ENTITY_COL: (pool: EntityPool) => MRT_ColumnDef<Entity> = (pool) => ({
+  id: "entity",
   header: `Entidade (${pool.entities.length})`,
   accessorFn: (ent) => ent.offsets[0]?.preview ?? "",
   size: 360,
   minSize: 260,
-  maxSize: 9999, // elástica
+  maxSize: 280,
   enableEditing: false,
   enableColumnFilter: true,
   enableColumnDragging: false,
@@ -335,6 +336,7 @@ const ENTITY_COL: (pool: EntityPool) => MRT_ColumnDef<Entity> = (pool) => ({
 });
 
 const TYPE_COL: (types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (types) => ({
+  id: "type",
   header: "Tipo",
   accessorKey: "type",
   size: 96,
@@ -367,6 +369,7 @@ const ANONIMIZE_COL: (pool: EntityPool, types: Record<string, EntityTypeI>) => M
   pool,
   types,
 ) => ({
+  id: "anon",
   header: "Anonimização",
   accessorKey: "overwriteAnonimization",
   size: 196,
