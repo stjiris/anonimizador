@@ -64,7 +64,6 @@ export default function AnonimizeContent(props: AnonimizeContentProps) {
   return (
     <>
       <div className="doc-preview">
-        {/* Mantemos id="content" para aproveitar o teu CSS existente */}
         <div
           id="content"
           className={props.showTypes ? 'show-type' : 'show-cod'}

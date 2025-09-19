@@ -24,10 +24,13 @@ interface AnonimizeProps {
     setUserFile: (file: UserFile | undefined) => void
 }
 
-const Sep = () => <small className="text-white text-nowrap p-1 m-1 flex-grow-1 text-center"><Bicon n="dot" /></small>;
+const Sep = () => (
+  <small className="text-white text-nowrap p-1 m-1 flex-grow-1 text-center">
+    <Bicon n="dot" />
+  </small>
+);
 
 export default function Anonimize({ file, ...props }: AnonimizeProps) {
-    // States
     const [anonimizeState, setAnonimizeSate] = useState<AnonimizeStateCombined>(getAnonimizedStateCombined(AnonimizeVisualState.ALL_TYPES));
     const saved = useSave(file);
     const [requesting, setRequesting] = useState<boolean>(false);
@@ -65,12 +68,12 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
         <div id="doc" className="row w-100 m-0 p-0 bg-dark">
             <EntitiesStyle file={file} />
             <div className="col-7 p-0 m-0">
-                <div className="position-sticky top-0 bg-white p-0 m-0 d-flex" style={{ borderBottom: "5px solid #161616", zIndex: 1 }}>
+                <div className="anon-toolbar position-sticky top-0 bg-white p-0 m-0 d-flex" style={{ borderBottom: "5px solid #161616", zIndex: 1 }}>
                     {requesting ? <ForceExitButton setUserFile={props.setUserFile} /> : <ExitButton file={file} setUserFile={props.setUserFile} />}
                     <SavedBadge file={file} />
                     <ToolsButton />
                     <Button title="Gerir tipos" i="file-earmark-font" text="Tipos" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types" />
-                    <Sep />
+                    <Sep/>
                     <select title="Escolher modo" className="text-body btn m-1 p-1 text-start alert alert-primary" onChange={(ev) => setAnonimizeSate(getAnonimizedStateCombined(ev.target.value as AnonimizeVisualState))} defaultValue={AnonimizeVisualState.ALL_TYPES}>
                         <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
                         <option value={AnonimizeVisualState.REPLACE}>{AnonimizeVisualState.REPLACE}</option>
@@ -80,7 +83,7 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
                         <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
                     </select>
                     <ExportButton file={file} />
-                    <Sep />
+                    <Sep/>
                     <Button title="Pesquisar" i="search" text="Pesquisar" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-search" />
                     <SuggestButton file={file} state={anonimizeState.state} setRequesting={setRequesting} requesting={requesting} />
                     <HistoryCommands pool={file.pool} />

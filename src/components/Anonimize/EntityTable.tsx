@@ -35,7 +35,6 @@ export function EntityTable({ file }: { file: UserFile }) {
   const typesDict = useTypesDict(file);
   const typesList = useMemo(() => Object.values(typesDict), [typesDict]);
 
-  // total de ocorrências das linhas visíveis (respeita o toggle "Marcas")
   const totalOcc = useMemo(
     () => filteredEnts.reduce((acc, e) => acc + (e.offsets?.length ?? 0), 0),
     [filteredEnts]
@@ -44,7 +43,7 @@ export function EntityTable({ file }: { file: UserFile }) {
   const columns = useMemo<MRT_ColumnDef<Entity>[]>(() => {
     return [
       TYPE_COL(typesList),
-      COUNT_COL(totalOcc),             // <- header com total (string)
+      COUNT_COL(totalOcc),
       ENTITY_COL(file.pool),
       ANONIMIZE_COL(file.pool, typesDict),
     ];
@@ -163,7 +162,7 @@ export function EntityTable({ file }: { file: UserFile }) {
         rowsPerPageOptions: [10, 25, 50, 100],
       }}
       muiTablePaperProps={{
-        sx: { display: "flex", flexDirection: "column" }, // remove o maxHeight
+        sx: { display: "flex", flexDirection: "column" },
       }}
       positionToolbarAlertBanner="bottom"
       initialState={{
@@ -182,9 +181,6 @@ const toolbar =
     const selectedCount = Object.keys(table.getState().rowSelection).length;
     const isJoinDisabled = showOnlyMarks || selectedCount <= 1;
     const isSplitDisabled = showOnlyMarks || selectedCount === 0;
-
-    // total de linhas (pós-filtro do MRT)
-    const totalRows = table.getRowModel().rows.length;
 
     return (
       <div className="d-flex w-100 align-items-center gap-2">
