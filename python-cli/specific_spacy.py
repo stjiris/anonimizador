@@ -3,6 +3,7 @@ import csv
 from spacy.language import Language
 from spacy.matcher import Matcher
 from flashtext import KeywordProcessor
+
 import logging
 
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
@@ -18,13 +19,13 @@ EXCLUDE = ['Tribunal','Juízo','Secção','Vara','Arguído','Arguída','Arguído
 # Termos referentes a cargos desempenhados por agentes do poder judicial que não devem
 # ser anonimizados.
 MAGIS_JUIZES_PROC_LIST = ['Juiz', 'Juíza', 'Procurador', 'Procuradora', 'Magistrado', 'Magistrada', 
-                          'Desembargador', 'Desembargadora', "Relator", "Relatora", "Conselheiro", "Conselheira"]
+                          'Desembargador', 'Desembargadora', 'Relator', 'Relatora', 'Conselheiro', 'Conselheira']
 
 EXCLUDE = EXCLUDE + MAGIS_JUIZES_PROC_LIST
 EXCLUDE = [x.lower() for x in EXCLUDE]
 
 # Termos referentes aos diferentes designativos usandos para moradas
-MORADAS_TYPES = ["rua", "avenida", "praça", "largo", "travessa", "praceta", "estrada", "calçada", "alameda", "rotunda", "urbanização", "beco", "viela"]
+MORADAS_TYPES = ["Rua", "Avenida", "Praça", "Largo", "Travessa", "Praceta", "Estrada", "Calçada", "Alameda", "Rotunda", "Urbanização", "Beco", "Viela", "Condomínio", "Quinta"]
 
 class FakeEntity:
     def __init__(self,label,start,end,text: str):
@@ -46,7 +47,7 @@ def exclude_manual(ents):
         label,start,end,text = e.label_,e.start_char,e.end_char,e.text
         if text.lower().strip() in EXCLUDE:
             continue
-        elif len(text) <= 2:
+        elif len(text) <= 1: # Changed from 2 to 1 to accommodate acronyms for political parties;
             continue
         elif re.match(r"^\d+(º|ª)$",text):
             continue
@@ -140,18 +141,113 @@ def remove_entities_with_excluded_words(doc):
         if not (word_exclusion_condition or symbol_exclusion_condition):
             # If the entity does not meet either exclusion condition, append it to the list
             entities.append(ent)
-        
-        if ent.label_ == "LOC":
-            text_lower = ent.text.lower()
-            if any(word.lower() in text_lower for word in MORADAS_TYPES):
-                ent.label_ = "MOR"
-
-
     
     # Assign the non-excluded entities back to the document
     doc.ents = entities
 
     return doc
+
+# Labels specified instances of type "LOC" as addresses
+def label_X_entities_and_addresses(ents):
+
+    for ent in ents:
+
+        # For locations (entities of type "LOC")
+        if ent.label_ == "LOC":
+                text_lower = ent.text.lower()
+
+                if any(word.lower() in text_lower for word in MORADAS_TYPES):
+                    ent.label_ = "MOR"
+                else:
+                    ent.label_ = "X-LOC"
+
+        if ent.label_ == "ORG":
+            ent.label_ = "X-ORG"
+
+        if ent.label_ == "PROF":
+            ent.label_ = "X-PROF"
+
+        if ent.label_ == "INST":
+            ent.label_ = "X-INST"
+
+        if ent.label_ == "PRO":
+            ent.label_ = "X-PRO"    
+    
+    return ents
+
+# Labels specified organizations as political parties
+def label_parties(ents, text, doc):
+
+    #----------------------------------------------
+    # Get political parties identified by the model
+    #----------------------------------------------
+    with open("partidos.txt", "r") as f:
+        polParties = {line.strip() for line in f}
+
+    seenParties = set()
+
+    for ent in ents:
+        if ent.label_ == "ORG" and ent.text in polParties:
+            ent.label_ = "PART"
+            seenParties.add(ent.text)  
+
+    # Remove found parties 
+    polParties -= seenParties
+
+    #----------------------------------------------
+    # Get political parties missed by NER
+    #----------------------------------------------
+    matcher = Matcher(doc.vocab)
+
+    patterns = [[{"TEXT": party}] for party in polParties]
+    matcher.add("PARTIES", patterns)
+
+    matches = matcher(doc)
+
+    #Finds where match is on document and adds it to entity list
+    for match_id, start, end in matches:
+        span = doc[start:end]
+        ents.append(FakeEntity("PART", start, end, span.text))
+        
+ 
+    return ents
+
+def label_social_media(doc, ents):
+    # Create matcher
+    matcher = Matcher(doc.vocab)
+
+    entities = []
+
+    with open("redes_sociais.txt", "r") as f:
+        platforms = [line.strip().lower() for line in f]
+
+    for p in platforms:
+        # Create a pattern for each social media platform
+        pattern = [{"TEXT": {"REGEX": rf"(?:https?:\/\/)?(?:www\.)?{p}\.com\/[A-Za-z0-9_.-]+"}}]
+        matcher.add(f"LINK_{p.upper()}", [pattern])
+
+        # Create a pattern for social media handles (e.g., @username)
+        handle_pattern = [
+            {"LOWER": p},
+            {"TEXT": "@"},
+            {"TEXT": {"REGEX": "[A-Za-z0-9_.-]{1,30}"}}
+        ]
+        matcher.add(f"HANDLE_{p.upper()}", [handle_pattern])
+    
+    # Run matcher on document and saves it on matches
+    matches = matcher(doc)
+
+    #Copy entities from doc to the new entity list
+    for ent in ents:
+        entities.append(ent)
+        
+    # Find where match is on document and adds it to entity list
+    for match_id, start, end in matches:
+        span = doc[start:end]
+        entities.append(FakeEntity("RED", start, end, span.text))
+        
+    # Return new entities
+    return entities
 
 def label_professions(doc, ents):
     #Create matcher
@@ -170,7 +266,7 @@ def label_professions(doc, ents):
     #Make each profession a pattern        
     pattern=[{"LOWER": {"IN": new_professions}}]#, {"TEXT": {"REGEX": r"\b(\w+)(a|o|as|os)?\b"}}]
     #Add patterns to the matcher
-    matcher.add("PROFESSIONS",[pattern])
+    matcher.add("PROFESSIONS", [pattern])
     
     #Run matcher on document and saves it on matches
     matches = matcher(doc)
@@ -186,17 +282,6 @@ def label_professions(doc, ents):
         
     #Return new entities
     return entities
-
-def label_political_parties(doc, ents):
-    #Create matcher
-    matcher = Matcher(doc.vocab)
-    
-    #Create entity list
-    entities = []
-    
-    #Open professions file to create a list with professions
-    with open("partidos.txt", "r") as f:
-        parties = [line.strip().lower() for line in f]
 
 def process_entities(ents, text):
     with open('patterns.csv', 'r') as csvfd:
@@ -325,7 +410,8 @@ def merge(ents, text):
 def nlp(text, model):
     model.add_pipe("new_line_segmenter", before="ner")
     model.add_pipe("remove_entities_with_excluded_words", last=True)
-    #Create entity list
+
+    # Create entity list
     ents = []
     
     try:
@@ -362,6 +448,9 @@ def nlp(text, model):
     ents = label_professions(doc, ents)
     ents = process_entities(ents, text)
     ents = add_missed_entities(ents, text)
+    #ents = label_parties(ents, text, doc)
+    ents = label_X_entities_and_addresses(ents)
+    #ents = label_social_media(doc, ents)
     ents = sorted(ents,key=lambda x: x.start_char)
     ents = merge(ents, text)
     return FakeDoc(ents, doc.text)

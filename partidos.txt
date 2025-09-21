@@ -1,18 +1,21 @@
 PSD
+PPD/PSD
 Partido Social Democrata
 CDS-PP
 CDS - Partido Popular
+Centro Democrático Social - Partido Popular
 PS
 Partido Socialista
 CH
 Chega
 IL
 Iniciativa Liberal
-L
 Livre
+CDU
+Coligação Democrática Unitária
 PCP
 Partido Comunista Português
-PVE
+PEV
 Partido Ecologista "Os Verdes"
 BE
 Bloco de Esquerda
@@ -30,7 +33,6 @@ PCTP/MRPP
 Partido Comunista dos Trabalhadores Portugueses
 VP
 Volt Portugal
-E
 Ergue-te
 PTP 
 Partido Trabalhista Português

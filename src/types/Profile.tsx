@@ -10,18 +10,23 @@ export interface ProfileI {
         sumarizador?: boolean,
         descritores?: boolean,
     },
+    nerRgx: {
+        nerOn: boolean,
+        rgxOn: boolean,
+    },
     defaultEntityTypes: {
         [key: string]: {
             color: string,
             functionIndex: number,
         }
-    },
+    }
 }
 
 export function isProfileI(arg: any): arg is ProfileI {
     if (!arg) return false;
     if (typeof arg.name !== "string") return false;
     if (typeof arg.tools !== "object") return false;
+    if (typeof arg.nerRgx !== "object") return false;
     if (typeof arg.defaultEntityTypes !== "object") return false;
     for( let key in arg.defaultEntityTypes ){
         if( typeof arg.defaultEntityTypes[key] !== "object" ) return false;
@@ -58,6 +63,9 @@ export function setProfile(profile: ProfileI | null) {
         updateEntityTypeI(key, profile.defaultEntityTypes[key].color, profile.defaultEntityTypes[key].functionIndex);
     }
     
+    profile.nerRgx.nerOn = true
+    profile.nerRgx.rgxOn = true
+
     localStorage.setItem(ProfileIVersion, JSON.stringify(profile));
 }
 
@@ -151,6 +159,14 @@ export function ProfileSelector() {
                         <br />
                         <input type="checkbox" className="form-check-input" id="perfilDescritores" checked={profile.tools.descritores} onChange={e => setProfile({...profile, tools: {...profile.tools, descritores: e.target.checked}})}/>
                         <label className="form-check-label" htmlFor="perfilDescritores" title="Ferramenta de extração de descritores treinada sobre acórdãos do Supremo Tribunal de Justiça">Descritores</label>
+                    </div>
+                    <div>
+                        <p className="m-0">Versão Pro:</p>
+                        <input type="checkbox" className="form-check-input" id="nerOn" checked={profile.nerRgx.nerOn} onChange={e => setProfile({...profile, nerRgx: {...profile.nerRgx, nerOn: e.target.checked}})}/>
+                        <label className="form-check-label" htmlFor="nerOn" title="Utilização do modelo NER (Named Entity Recognition) na identificação de entidades">Modelo NER</label>
+                        <br />
+                        <input type="checkbox" className="form-check-input" id="rgxOn" checked={profile.nerRgx.rgxOn} onChange={e => setProfile({...profile, nerRgx: {...profile.nerRgx, rgxOn: e.target.checked}})}/>
+                        <label className="form-check-label" htmlFor="rgxOn" title="Utilização das regras REGEX na identificação de entidades">Regras REGEX</label>
                     </div>
                     <div>
                         <p className="m-0">Tipos padrão:</p>

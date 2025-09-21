@@ -24,7 +24,7 @@ export default function AnonimizeBlock(props: AnonimizeBlockProps){
         var token: RegExpExecArray | null;
         let remaining = props.specificOffsets;
         while((token = reg.exec(elmtStr)) !== null) {
-            let current = remaining.at(0);
+            let current = remaining[0];
             if( !current ) {
                 tokensElems.push(<AnonimizeToken key={token.index} string={token[0]} offset={props.offset+token.index} anonimizeState={props.anonimizeState} />);
                 continue

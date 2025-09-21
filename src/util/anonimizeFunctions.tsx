@@ -68,6 +68,30 @@ export const processo: AnonimizeFunction = (str, ...args) => {
     return reticiencias(str, ...args)
 }
 
+//Anonymization technique that uses the leters "AA" coupled with a numerical increment;
+export const AA_inc: AnonimizeFunction = (_str, type, _idx, tidx) => "AA" + tidx.toString()
+
+//Anonymization technique that uses the leter "V" coupled with a numerical increment;
+export const matricula_inc: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) => "V" + typeIdx.toString()
+
+//Anonymization technique that uses the leter "P" coupled with a numerical increment;
+export const partido_inc: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) => "P" + typeIdx.toString()
+
+const moradasTypes = ['Rua', 'Avenida', 'Largo', 'Praça', 'Travessa', 'Estrada', 'Calçada', 'Alameda', 'Rotunda', 'Praceta', 'Beco', 'Viela']
+
+export const moradas_inc: AnonimizeFunction = (str, type, _idx, tidx, funIdx) => {
+
+    let strLow = str
+
+    for (let morType of moradasTypes) {
+        if(strLow.includes(morType) || str.includes(morType.toLowerCase())) {
+            return morType.toString() + " " + tidx.toString();
+        }
+    }
+
+    return "Localização " + tidx.toString();
+}
+
 export const automatic: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) => {
     if (type === "PES")
         return leter(str, type, idx, typeIdx, typeIdx - 1) // overwrite funIdx, automatically only we should call it.
@@ -79,25 +103,10 @@ export const automatic: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) =>
         return matriculaLeter(str, type, idx, typeIdx, funIdx)
     if (type === "INST")
         return firstWord(str, type, idx, typeIdx, funIdx)
+    if (type === "MOR")
+        return moradas_inc(str, type, idx, typeIdx, funIdx)
+    
     return reticiencias(str, type, idx, typeIdx, funIdx)
-}
-
-//Anonymization technique that uses the leters "AA" coupled with a numerical increment;
-export const AA_inc: AnonimizeFunction = (_str, type, _idx, tidx) => "AA" + tidx.toString()
-
-const moradasTypes = ['Rua', 'Avenida', 'Largo', 'Praça', 'Travessa', 'Estrada', 'Calçada', 'Alameda', 'Rotunda', 'Praceta', 'Beco', 'Viela']
-
-export const moradas_inc: AnonimizeFunction = (str, _idx, tidx) => {
-
-    let strLow = str
-
-    for (let morType of moradasTypes) {
-        if(strLow.includes(morType) || str.includes(morType.toLowerCase())) {
-            return morType.toString() + " " + tidx.toString();
-        }
-    }
-
-    return "Localização " + tidx.toString();
 }
 
 
@@ -200,6 +209,18 @@ export const functionsWithDescriptionArray: AnonimizeFunctionDescription[] = [
         "name": "Ofuscação data - Manter Ano (sem reticências)",
         "description": "Substitui ocorrência por D/M/YYYY, mantendo o ano visível. Ex: 06/06/1997 => D/M/1997",
         "fun": year2
+    },
+    //Adding the new matricula increment function to the list of functions with index 17;
+    {
+        "name": "Incremental - Matrícula",
+        "description": "Substitui ocorrência por V + número incremental. Ex: V1, V2, etc.",
+        "fun": matricula_inc
+    },
+    //Adding the new partido increment function to the list of functions with index 18;
+    {
+        "name": "Incremental - Partido",
+        "description": "Substitui ocorrência por P + número incremental. Ex: P1, P2, etc.",
+        "fun": partido_inc
     }
 ]
 
