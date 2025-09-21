@@ -11,8 +11,8 @@ export interface ProfileI {
         descritores?: boolean,
     },
     nerRgx: {
-        nerOn: boolean,
-        rgxOn: boolean,
+        nerOn?: boolean,
+        rgxOn?: boolean,
     },
     defaultEntityTypes: {
         [key: string]: {
@@ -26,7 +26,6 @@ export function isProfileI(arg: any): arg is ProfileI {
     if (!arg) return false;
     if (typeof arg.name !== "string") return false;
     if (typeof arg.tools !== "object") return false;
-    if (typeof arg.nerRgx !== "object") return false;
     if (typeof arg.defaultEntityTypes !== "object") return false;
     for( let key in arg.defaultEntityTypes ){
         if( typeof arg.defaultEntityTypes[key] !== "object" ) return false;
@@ -125,10 +124,10 @@ export function ProfileSelector() {
         setProfile({...profile!, name: newName});
         let blob = new Blob([JSON.stringify(profile)], {type: "application/json"});
         let url = URL.createObjectURL(blob);
-        let a = document.createElement("a");
-        a.href = url;
+        let a = df = url;
         a.download = newName || "perfil.json";
-        a.click();
+        aocument.createElement("a");
+        a.hre.click();
         URL.revokeObjectURL(url);
     }, [profile]);
 
