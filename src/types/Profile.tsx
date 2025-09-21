@@ -179,16 +179,48 @@ export function ProfileSelector() {
 
 }
 
-export function useAvaiableProfiles(): ProfileI[]{
+export function useAvaiableProfiles(): ProfileI[] {
     const [profiles, setProfiles] = useState<ProfileI[]>([]);
     useEffect(() => {
         const abortController = new AbortController();
-        fetch("./profiles.json", {signal: abortController.signal}).then( r => r.json() ).then( r => {
-            if( Array.isArray(r) ){
-                setProfiles(r.filter( f => isProfileI(f) ));
+        fetch("./profiles.json", { signal: abortController.signal })
+            .then(r => {
+                if (!r.ok) {
+                    console.error("Failed to fetch profiles.json:", r.status, r.statusText);
+                    return [];
+                }
+                return r.json();
+            })
+            .then(r => {
+                console.log("Fetched profiles.json:", r);
+                if (Array.isArray(r)) {
+                    const filtered = r.filter(f => isProfileI(f));
+                    console.log("Valid profiles after filter:", filtered);
+                    setProfiles(filtered);
+                } else {
+                    console.error("profiles.json is not an array:", r);
+                }
+            })
+            .catch(e => {
+                if (e.name !== "AbortError") {
+                    console.error("Error fetching profiles.json:", e);
+                }
+            });
+        return () => abortController.abort();
+    }, []);
+    return profiles;
+}
+
+/* export function useAvaiableProfiles(): ProfileI[] {
+    const [profiles, setProfiles] = useState<ProfileI[]>([]);
+    useEffect(() => {
+        const abortController = new AbortController();
+        fetch("./profiles.json", { signal: abortController.signal }).then(r => r.json()).then(r => {
+            if (Array.isArray(r)) {
+                setProfiles(r.filter(f => isProfileI(f)));
             }
         });
         return () => abortController.abort();
     }, []);
     return profiles;
-}
+} */

@@ -24,8 +24,6 @@ function writeProfiles(profiles) {
 
 // GET /profiles
 app.get("/profiles", (req, res) => {
-  console.log("I am reading your profiles!\n")
-  console.log(readProfiles());
   res.json(readProfiles());
 });
 

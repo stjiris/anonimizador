@@ -24,4 +24,5 @@ services:
     restart: unless-stopped
     ports:
       - ${DESCRITORES_PORT:-8999}:8999
+
   

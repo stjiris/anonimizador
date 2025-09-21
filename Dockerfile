@@ -53,6 +53,3 @@ RUN mv iris-lfs-storage/model-gpt/ ./python-cli/
 EXPOSE 7998
 
 CMD [ "npm", "run", "proxy"]
-
-# Run the profiles API
-CMD [ "npm", "run", "api"] 
