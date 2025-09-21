@@ -124,10 +124,10 @@ export function ProfileSelector() {
         setProfile({...profile!, name: newName});
         let blob = new Blob([JSON.stringify(profile)], {type: "application/json"});
         let url = URL.createObjectURL(blob);
-        let a = df = url;
+        let a = document.createElement("a");
+        a.href = url;
         a.download = newName || "perfil.json";
-        aocument.createElement("a");
-        a.hre.click();
+        a.click();
         URL.revokeObjectURL(url);
     }, [profile]);
 
