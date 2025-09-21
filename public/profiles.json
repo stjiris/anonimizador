@@ -4,6 +4,10 @@
         "sumarizador": false,
         "descritores": false
     },
+    "nerRgx": {
+        "nerOn": true,
+        "rgxOn": true
+    },
     "defaultEntityTypes": {
         "PES":{"color":"#00e2ff","functionIndex":1},
         "X-PES":{"color":"#DCDCDC","functionIndex":0},
@@ -40,6 +44,10 @@
         "sumarizador": false,
         "descritores": false
     },
+    "nerRgx": {
+        "nerOn": true,
+        "rgxOn": true
+    },
     "defaultEntityTypes": {
         "PES":{"color":"#00e2ff","functionIndex":1},
         "X-PES":{"color":"#DCDCDC","functionIndex":1},
@@ -72,6 +80,10 @@
     "tools": {
         "sumarizador": false,
         "descritores": false
+    },
+    "nerRgx": {
+        "nerOn": true,
+        "rgxOn": true
     },
     "defaultEntityTypes": {
         "PES":{"color":"#00e2ff","functionIndex":1},
