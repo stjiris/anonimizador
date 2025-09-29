@@ -259,7 +259,7 @@ const splitSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPoo
 const removeSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
   pool.removeEntities(selectedIndexes(table));
   removeTableSelection(table);
-  console.log("Selected indexes:", selectedIndexes(table));
+  console.log("Selected indexes:", selectedIndexes(table).length);
   file.checkCountPES();
 };
 
