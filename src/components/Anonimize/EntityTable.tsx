@@ -94,7 +94,7 @@ export function EntityTable({ file }: { file: UserFile }) {
       }}
       muiTableBodyCellProps={{ sx: { py: 0.75, px: 1, lineHeight: 1.25 } }}
 
-      getRowId={(r) => `${r.type}-${r.index}`}
+      getRowId={(r) => r.index.toString()}
 
       renderDetailPanel={entityDetails(file.pool)}
 
@@ -237,13 +237,13 @@ const toolbar =
     );
   };
 
-//const selectedIndexes = (table: MRT_TableInstance<Entity>) =>
-//  Object.keys(table.getState().rowSelection)
-//    .map((k) => parseInt(k))
-//    .filter((k) => !isNaN(k));
-
 const selectedIndexes = (table: MRT_TableInstance<Entity>) =>
-  table.getSelectedRowModel().rows.map((row) => row.original.index);
+  Object.keys(table.getState().rowSelection)
+    .map((k) => parseInt(k))
+    .filter((k) => !isNaN(k));
+
+//const selectedIndexes = (table: MRT_TableInstance<Entity>) =>
+//  table.getSelectedRowModel().rows.map((row) => row.original.index);
 
 const removeTableSelection = (table: MRT_TableInstance<Entity>) => table.setRowSelection({});
 
