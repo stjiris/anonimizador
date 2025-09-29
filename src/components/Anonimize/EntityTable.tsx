@@ -243,7 +243,7 @@ const toolbar =
 //    .filter((k) => !isNaN(k));
 
 const selectedIndexes = (table: MRT_TableInstance<Entity>) =>
-  table.getSelectedRowModel().rows;
+  table.getSelectedRowModel().rows.map((row) => row.original.index);
 
 const removeTableSelection = (table: MRT_TableInstance<Entity>) => table.setRowSelection({});
 
