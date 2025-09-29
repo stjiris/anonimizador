@@ -237,10 +237,13 @@ const toolbar =
     );
   };
 
+//const selectedIndexes = (table: MRT_TableInstance<Entity>) =>
+//  Object.keys(table.getState().rowSelection)
+//    .map((k) => parseInt(k))
+//    .filter((k) => !isNaN(k));
+
 const selectedIndexes = (table: MRT_TableInstance<Entity>) =>
-  Object.keys(table.getState().rowSelection)
-    .map((k) => parseInt(k))
-    .filter((k) => !isNaN(k));
+  table.getSelectedRowModel().rows;
 
 const removeTableSelection = (table: MRT_TableInstance<Entity>) => table.setRowSelection({});
 
