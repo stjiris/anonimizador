@@ -4,12 +4,15 @@ Partido Social Democrata
 CDS-PP
 CDS - Partido Popular
 Centro Democrático Social - Partido Popular
+Centro Democrático Social - PP
 PS
 Partido Socialista
 CH
+CHEGA
 Chega
 IL
 Iniciativa Liberal
+LIVRE
 Livre
 CDU
 Coligação Democrática Unitária
@@ -20,7 +23,7 @@ Partido Ecologista "Os Verdes"
 BE
 Bloco de Esquerda
 PAN
-Pessoas-Animais-Natureza
+Pessoas - Animais - Natureza
 ADN
 Alternativa Democrática Nacional
 RIR

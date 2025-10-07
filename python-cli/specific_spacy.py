@@ -180,6 +180,10 @@ def label_parties(ents, text, doc):
     with open("partidos.txt", "r") as f:
         polParties = [line.strip() for line in f]
 
+    for ent in ents:
+        if ent.label_ == "ORG" and ent.text.lower() in polParties.lower():
+            ent.label_ = "PART"  # Relabel
+
     matcher = Matcher(doc.vocab)
     patterns = []
     for party in polParties:
