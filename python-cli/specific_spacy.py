@@ -1,8 +1,9 @@
 import re
 import csv
 from spacy.language import Language
-from spacy.matcher import Matcher, RegexMatcher
+from spacy.matcher import Matcher
 from flashtext import KeywordProcessor
+import string
 
 import logging
 
@@ -184,12 +185,14 @@ def label_parties(ents, text, doc):
     with open("partidos.txt", "r") as f:
         polParties = {line.strip() for line in f}
 
+    polParties_lower = {p.lower() for p in polParties}
     seenParties = set()
 
     for ent in ents:
-        if ent.label_ == "ORG" and ent.text in polParties:
-            ent.label_ = "PART"
-            seenParties.add(ent.text)  
+        clean = ent.text.strip(string.punctuation + " ").lower()
+        if ent.label_ == "ORG" and clean in polParties_lower:
+                ent.label_ = "PART"
+                seenParties.add(ent.text)
 
     # Remove found parties 
     # polParties -= seenParties
@@ -198,22 +201,6 @@ def label_parties(ents, text, doc):
     # Get political parties missed by NER
     #----------------------------------------------
 
-    matcher = RegexMatcher(doc.vocab)
-
-    for party in polParties:
-        # Ensures word boundaries and case insensitivity
-        pattern = fr"(?i)\b{party}\b"
-        matcher.add("PARTIES", [pattern])
-    
-    matches = matcher(doc)
-
-    # Finds where match is on document and adds it to entity list
-    for match_id, start, end in matches:
-        span = doc[start:end]
-        ents.append(FakeEntity("PART", start, end, span.text))
-        
- 
-    return ents
 
 def label_social_media(doc, ents):
     # Create matcher
