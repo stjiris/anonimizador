@@ -448,7 +448,7 @@ def nlp(text, model):
     ents = label_professions(doc, ents)
     ents = process_entities(ents, text)
     ents = add_missed_entities(ents, text)
-    #ents = label_parties(ents, text, doc)
+    ents = label_parties(ents, text, doc)
     ents = label_X_entities_and_addresses(ents)
     #ents = label_social_media(doc, ents)
     ents = sorted(ents,key=lambda x: x.start_char)
