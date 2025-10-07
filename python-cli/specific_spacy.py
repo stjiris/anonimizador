@@ -189,7 +189,7 @@ def label_parties(ents, text, doc):
     seenParties = set()
 
     for ent in ents:
-        clean = ent.text.strip(string.punctuation + " ").lower()
+        #clean = ent.text.strip(string.punctuation + " ").lower()
         if ent.label_ == "ORG" and clean in polParties_lower:
                 ent.label_ = "PART"
                 seenParties.add(ent.text)
