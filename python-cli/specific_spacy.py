@@ -176,26 +176,12 @@ def label_X_entities_and_addresses(ents):
     
     return ents
 
-# Labels specified organizations as political parties
-def label_parties2(ents, text, doc):
-
-    #----------------------------------------------
-    # Get political parties identified by the model
-    #----------------------------------------------
+def label_parties(ents, text, doc):
     with open("partidos.txt", "r") as f:
-        polParties = {line.strip() for line in f}
+        polParties = [line.strip() for line in f]
 
-    # Remove found parties 
-    # polParties -= seenParties
-
-    #----------------------------------------------
-    # Get political parties missed by NER
-    #----------------------------------------------
-    
     matcher = Matcher(doc.vocab)
-
     patterns = []
-
     for party in polParties:
         patterns.append([{"ORTH": party}])
     
@@ -204,23 +190,6 @@ def label_parties2(ents, text, doc):
     # Runs matcher on document and saves it on matches
     matches = matcher(doc)
 
-    # Finds where match is on document and adds it to entity list
-    for match_id, start, end in matches:
-        span = doc[start:end]
-        ents.append(FakeEntity("PART", start, end, span.text))
-        
-    return ents
-
-def label_parties(ents, text, doc):
-    with open("partidos.txt", "r") as f:
-        polParties = [line.strip() for line in f]
-
-    matcher = PhraseMatcher(doc.vocab, attr="ORTH")
-    patterns = [doc.vocab.make_doc(party) for party in polParties]
-    matcher.add("PARTIES", patterns)
-    
-    matches = matcher(doc)
-    
     for match_id, start, end in matches:
         span = doc[start:end]        
         ents.append(FakeEntity("PART", start, end, span.text))
