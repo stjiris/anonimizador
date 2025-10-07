@@ -221,11 +221,8 @@ def label_parties(ents, text, doc):
     
     matches = matcher(doc)
     
-    print("Matches found:")
     for match_id, start, end in matches:
-        span = doc[start:end]
-        print(f"  '{span.text}' at positions {start}-{end}")
-        
+        span = doc[start:end]        
         ents.append(FakeEntity("PART", start, end, span.text))
         
     return ents
