@@ -182,8 +182,10 @@ def label_parties(ents, text, doc):
     
     polParties_lower = set(p.lower() for p in polParties)
 
-     for ent in ents:
+    for ent in ents:
+
         text_lower = ent.text.lower()
+
         if ent.label_ == "ORG":
             ent.label_ = "PART"  # Relabel
             
