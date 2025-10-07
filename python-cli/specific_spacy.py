@@ -200,7 +200,8 @@ def label_parties(ents, text, doc):
     #----------------------------------------------
     # Get political parties missed by NER
     #----------------------------------------------
-
+ 
+    return ents
 
 def label_social_media(doc, ents):
     # Create matcher
