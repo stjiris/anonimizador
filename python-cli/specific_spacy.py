@@ -1,7 +1,7 @@
 import re
 import csv
 from spacy.language import Language
-from spacy.matcher import Matcher
+from spacy.matcher import Matcher, RegexMatcher
 from flashtext import KeywordProcessor
 
 import logging
@@ -192,19 +192,22 @@ def label_parties(ents, text, doc):
             seenParties.add(ent.text)  
 
     # Remove found parties 
-    polParties -= seenParties
+    # polParties -= seenParties
 
     #----------------------------------------------
     # Get political parties missed by NER
     #----------------------------------------------
-    matcher = Matcher(doc.vocab)
 
-    patterns = [[{"TEXT": party}] for party in polParties]
-    matcher.add("PARTIES", patterns)
+    matcher = RegexMatcher(doc.vocab)
 
+    for party in polParties:
+        # Ensures word boundaries and case insensitivity
+        pattern = fr"(?i)\b{party}\b"
+        matcher.add("PARTIES", [pattern])
+    
     matches = matcher(doc)
 
-    #Finds where match is on document and adds it to entity list
+    # Finds where match is on document and adds it to entity list
     for match_id, start, end in matches:
         span = doc[start:end]
         ents.append(FakeEntity("PART", start, end, span.text))
@@ -448,7 +451,7 @@ def nlp(text, model):
     ents = label_professions(doc, ents)
     ents = process_entities(ents, text)
     ents = add_missed_entities(ents, text)
-    #ents = label_parties(ents, text, doc)
+    ents = label_parties(ents, text, doc)
     ents = label_X_entities_and_addresses(ents)
     #ents = label_social_media(doc, ents)
     ents = sorted(ents,key=lambda x: x.start_char)
