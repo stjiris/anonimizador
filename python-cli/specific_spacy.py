@@ -179,9 +179,14 @@ def label_X_entities_and_addresses(ents):
 def label_parties(ents, text, doc):
     with open("partidos.txt", "r") as f:
         polParties = [line.strip() for line in f]
-        
+    
     polParties_lower = set(p.lower() for p in polParties)
 
+     for ent in ents:
+        text_lower = ent.text.lower()
+        if ent.label_ == "ORG":
+            ent.label_ = "PART"  # Relabel
+            
     matcher = Matcher(doc.vocab)
     patterns = []
     for party in polParties:
