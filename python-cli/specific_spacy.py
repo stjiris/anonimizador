@@ -185,22 +185,30 @@ def label_parties(ents, text, doc):
     with open("partidos.txt", "r") as f:
         polParties = {line.strip() for line in f}
 
-    polParties_lower = {p.lower() for p in polParties}
-    seenParties = set()
-
-    for ent in ents:
-        #clean = ent.text.strip(string.punctuation + " ").lower()
-        if ent.label_ == "ORG" and clean in polParties_lower:
-                ent.label_ = "PART"
-                seenParties.add(ent.text)
-
     # Remove found parties 
     # polParties -= seenParties
 
     #----------------------------------------------
     # Get political parties missed by NER
     #----------------------------------------------
- 
+    
+    matcher = Matcher(doc.vocab)
+
+    patterns = []
+
+    for party in polParties:
+        patterns.append([{"ORTH": party}])
+    
+    matcher.add("PARTIES", patterns)
+
+    # Runs matcher on document and saves it on matches
+    matches = matcher(doc)
+
+    # Finds where match is on document and adds it to entity list
+    for match_id, start, end in matches:
+        span = doc[start:end]
+        ents.append(FakeEntity("PART", start, end, span.text))
+        
     return ents
 
 def label_social_media(doc, ents):
