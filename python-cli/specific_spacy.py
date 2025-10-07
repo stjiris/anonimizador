@@ -187,7 +187,8 @@ def label_parties(ents, text, doc):
         text_lower = ent.text.lower()
 
         if ent.label_ == "ORG":
-            ent.label_ = "PART"  # Relabel
+            if text_lower in polParties_lower:
+                ent.label_ = "PART"  # Relabel
             
     matcher = Matcher(doc.vocab)
     patterns = []
