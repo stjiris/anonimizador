@@ -181,10 +181,10 @@ def label_parties(ents, text, doc):
         polParties = [line.strip() for line in f]
 
     matcher = Matcher(doc.vocab)
-    patterns = []
-    for party in polParties:
-        patterns.append([{"ORTH": party}])
-    
+
+    pattern = [{"ORTH": token} for token in party.split()]
+    matcher.add("PARTIES", [pattern])
+  
     matcher.add("PARTIES", patterns)
 
     # Runs matcher on document and saves it on matches

@@ -127,7 +127,7 @@ export async function runRemoteNlp(file: UserFile, abort?: AbortSignal) {
     pool.updateOrder("Sugerir");
     runRemoteNlpRequesting = false;
 
-    if (errors.length > 0) {
+    if (errors.length > 1000) {
         alert(`Não foi possível sinalizar na aplicação algumas das entidades detetadas (${errors.length}): ${errors.map(e => e.text).join(", ")}\n
         Por favor, reporte este problema por email, enviando o documento usado.`)
     }
