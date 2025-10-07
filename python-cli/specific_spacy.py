@@ -1,7 +1,7 @@
 import re
 import csv
 from spacy.language import Language
-from spacy.matcher import Matcher
+from spacy.matcher import Matcher, PhraseMatcher
 from flashtext import KeywordProcessor
 import string
 
@@ -177,7 +177,7 @@ def label_X_entities_and_addresses(ents):
     return ents
 
 # Labels specified organizations as political parties
-def label_parties(ents, text, doc):
+def label_parties2(ents, text, doc):
 
     #----------------------------------------------
     # Get political parties identified by the model
@@ -207,6 +207,25 @@ def label_parties(ents, text, doc):
     # Finds where match is on document and adds it to entity list
     for match_id, start, end in matches:
         span = doc[start:end]
+        ents.append(FakeEntity("PART", start, end, span.text))
+        
+    return ents
+
+def label_parties(ents, text, doc):
+    with open("partidos.txt", "r") as f:
+        polParties = [line.strip() for line in f]
+
+    matcher = PhraseMatcher(doc.vocab, attr="ORTH")
+    patterns = [doc.vocab.make_doc(party) for party in polParties]
+    matcher.add("PARTIES", patterns)
+    
+    matches = matcher(doc)
+    
+    print("Matches found:")
+    for match_id, start, end in matches:
+        span = doc[start:end]
+        print(f"  '{span.text}' at positions {start}-{end}")
+        
         ents.append(FakeEntity("PART", start, end, span.text))
         
     return ents
