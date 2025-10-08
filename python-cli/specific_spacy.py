@@ -222,15 +222,8 @@ def label_social_media(doc, ents):
         text_lower = ent.text.lower()
 
         if ent.label_ == "RED":
-
-            if len(ent.text) < 5:
+            if len(text_lower) < 5:
                 ents.remove(ent)
-
-            for p in platforms_lower:
-                if p in text_lower:
-                    continue
-                else:
-                    ents.remove(ent)
 
     return ents
 
