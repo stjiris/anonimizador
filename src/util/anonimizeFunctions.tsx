@@ -77,14 +77,28 @@ export const matricula_inc: AnonimizeFunction = (str, type, idx, typeIdx, funIdx
 //Anonymization technique that uses the leter "P" coupled with a numerical increment;
 export const partido_inc: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) => "P" + typeIdx.toString()
 
+const redesSociais = ['Facebook', 'Instagram', 'Twitter', 'WhatsApp', 'Tiktok', 'LinkedIn', 'Snapchat', 'X.', 'Reddit', 'Youtube', 'Discord', 'Telegram']
+
+export const redes_inc: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) => {
+    let strLow = str.toLowerCase()
+
+    for (let rede of redesSociais) {
+        if(strLow.includes(rede.toLowerCase())) {
+            return "nome" + typeIdx.toString() + "@" + rede.toLowerCase() + ".com";
+        }
+    }
+
+    return "nome" + typeIdx.toString() + "@domínio" + typeIdx.toString() + ".com";
+}
+
 const moradasTypes = ['Rua', 'Avenida', 'Largo', 'Praça', 'Travessa', 'Estrada', 'Calçada', 'Alameda', 'Rotunda', 'Praceta', 'Beco', 'Viela']
 
 export const moradas_inc: AnonimizeFunction = (str, type, _idx, tidx, funIdx) => {
 
-    let strLow = str
+    let strLow = str.toLowerCase()
 
     for (let morType of moradasTypes) {
-        if(strLow.includes(morType) || str.includes(morType.toLowerCase())) {
+        if(strLow.includes(morType.toLowerCase())) {
             return morType.toString() + " " + tidx.toString();
         }
     }
@@ -105,6 +119,10 @@ export const automatic: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) =>
         return firstWord(str, type, idx, typeIdx, funIdx)
     if (type === "MOR")
         return moradas_inc(str, type, idx, typeIdx, funIdx)
+    if (type === "PAR")
+        return partido_inc(str, type, idx, typeIdx, funIdx)
+    if (type === "RED")
+        return redes_inc(str, type, idx, typeIdx, funIdx)
     
     return reticiencias(str, type, idx, typeIdx, funIdx)
 }
@@ -221,6 +239,12 @@ export const functionsWithDescriptionArray: AnonimizeFunctionDescription[] = [
         "name": "Incremental - Partido",
         "description": "Substitui ocorrência por P + número incremental. Ex: P1, P2, etc.",
         "fun": partido_inc
+    },
+    //Adding the new social media anonymization function to the list of functions with index 19;
+    {
+        "name": "Incremental - Rede Social",
+        "description": "Substitui ocorrência por nome + número incremental + @ + rede social + .com. Ex: nome@facebook.com",
+        "fun": redes_inc
     }
 ]
 
