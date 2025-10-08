@@ -221,7 +221,7 @@ def label_social_media(doc, ents):
 
     for p in platforms:
         # Create a pattern for each social media platform
-        linkPatterns.append([{"TEXT": {"REGEX": rf"(?:https?:\/\/)?(?:www\.)?{p}\.com\/[A-Za-z0-9_.-]+"}}])
+        linkPatterns.append([{"TEXT": {"REGEX": rf"(?i)\b\w*{re.escape(p)}\w*\b"}}])
 
     matcher.add("LINKS", linkPatterns)
     #matcher.add("HANDLES", handlePatterns)
