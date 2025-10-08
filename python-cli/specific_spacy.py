@@ -230,7 +230,7 @@ def label_social_media(doc, ents):
     for match_id, start, end in matches:
         span = doc[start:end]
         ents.append(FakeEntity("RED", start, end, span.text))
-        
+
     # Return new entities
     return ents
 
@@ -435,7 +435,7 @@ def nlp(text, model):
     ents = add_missed_entities(ents, text)
     ents = label_parties(ents, text, doc)
     ents = label_X_entities_and_addresses(ents)
-    ents = label_social_media(doc, ents)
+    #ents = label_social_media(doc, ents)
     ents = sorted(ents,key=lambda x: x.start_char)
     ents = merge(ents, text)
     return FakeDoc(ents, doc.text)
