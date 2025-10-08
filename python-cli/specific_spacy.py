@@ -219,19 +219,6 @@ def label_social_media(doc, ents):
     linkPatterns = []
     handlePatterns = []
 
-    for p in platforms:
-        # Create a pattern for each social media platform
-        linkPatterns.append([{"TEXT": {"REGEX": rf"(?:https?:\/\/)?(?:www\.)?{p}\.com\/[A-Za-z0-9_.-]+"}}])
-        matcher.add("LINKS", linkPatterns)
-
-        # Create a pattern for social media handles (e.g., @username)
-        patterns.append([
-            {"LOWER": p},
-            {"TEXT": "@"},
-            {"TEXT": {"REGEX": "[A-Za-z0-9_.-]{1,30}"}}
-        ])
-
-        matcher.add("HANDLES", handlePatterns)
     
     # Run matcher on document and saves it on matches
     matches = matcher(doc)
