@@ -229,9 +229,12 @@ def label_social_media(doc, ents):
     # Find where match is on document and adds it to entity list
     for match_id, start, end in matches:
         span = doc[start:end]
-        # Check if URL contains any social media keyword
-        if any(p in text for p in platforms):
-            ents.append(FakeEntity("RED", start, end, span.text))
+
+        text_lower = ent.text.lower()
+        
+        for p in platforms:
+            if p in text_lower:
+                ents.append(FakeEntity("RED", start, end, span.text))
         
     # Return new entities
     return ents
