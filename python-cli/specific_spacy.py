@@ -219,19 +219,16 @@ def label_social_media(doc, ents):
     linkPatterns = []
     handlePatterns = []
 
-    url_pattern = [{"TEXT": {"REGEX": r"(?i)\b(?:https?:\/\/|www\.)\S+\b"}}]
-    matcher.add("URL", [url_pattern])
+    linkPatterns.append([{"TEXT": {"REGEX": rf"(?i)\b(?:https?:\/\/|www\.)\S+\b"}}])
+    matcher.add("LINKS", linkPatterns)
 
-    #matcher.add("LINKS", linkPatterns)
     #matcher.add("HANDLES", handlePatterns)
     # Run matcher on document and saves it on matches
     matches = matcher(doc)
         
     # Find where match is on document and adds it to entity list
     for match_id, start, end in matches:
-        
         span = doc[start:end]
-
         # Check if URL contains any social media keyword
         if any(p in text for p in platforms):
             ents.append(FakeEntity("RED", start, end, span.text))
