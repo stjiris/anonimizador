@@ -7,4 +7,4 @@
 "\+?(\d\ *){8,}\d"	"TEL"	"Telemóveis com pelo menos 9 digitos e indicativo opcional - ignora todos os espaços"
 "[A-Z]{2}[a-zA-Z0-9]{2}\s?([0-9]{4}\s?){5}([0-9]{1})[\.,]?\s?"	"IDP"	"Idenficadores pessoais"
 "(?i)(?:referência|ref\.?)(?:\s+CITIUS)?(?:\s+(?:n\.?|n\.º|num\.|nº))?\s+(\d{6,9})" "IDP" "Referências CITIUS entre 6 a 9 dígitos"
-"(?=(?:.*[A-Za-z]){3,})(https?:\/\/)?(www\.)?[\w-]+(\.[\w-]+)+([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?"    "RED"   "Endereços de links/URLs HTTP, HTTPS ou com www"
+"(https?:\/\/)?(www\.)?[\w-]*[A-Za-z][\w-]*[A-Za-z][\w-]*[A-Za-z][\w-]*(\.[\w-]+)+([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?"   "RED"   "Endereços de links/URLs HTTP, HTTPS ou com www com pelo menos 3 letras"
