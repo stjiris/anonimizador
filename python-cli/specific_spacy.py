@@ -226,16 +226,6 @@ def label_social_media(doc, ents):
     # Run matcher on document and saves it on matches
     matches = matcher(doc)
         
-    # Find where match is on document and adds it to entity list
-    for match_id, start, end in matches:
-        span = doc[start:end]
-
-        text_lower = ent.text.lower()
-        
-        for p in platforms:
-            if p in text_lower:
-                ents.append(FakeEntity("RED", start, end, span.text))
-        
     # Return new entities
     return ents
 
