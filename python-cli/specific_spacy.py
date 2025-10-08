@@ -220,15 +220,13 @@ def label_social_media(doc, ents):
 
     # Loops through existing entities of type "RED" and relabels them if they match a social media platform
     for ent in ents:
-
+        match = False
         if ent.label_ == "RED":
             text_lower = ent.text.lower()
-            match = False
 
             for p in platforms_lower:
                 if p in text_lower:
                     match = True
-                    break
 
             if match and len(ent.text) >= 10:
                 newEnts.append(FakeEntity("RED", ent.start_char, ent.end_char, ent.text))
