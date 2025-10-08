@@ -212,26 +212,26 @@ def label_parties(ents, text, doc):
 def label_social_media(doc, ents):
 
     with open("redes_sociais.txt", "r") as f:
-        platforms = [line.strip().lower() for line in f]
+        platforms = [line.strip()for line in f]
     
-    # Create matcher
-    matcher = Matcher(doc.vocab)
-    linkPatterns = []
-    handlePatterns = []
+    platforms_lower = set(p.lower() for p in platforms)
 
-    linkPatterns.append([{"TEXT": {"REGEX": rf"(?i)\b(?:https?:\/\/|www\.)\S+\b"}}])
-    matcher.add("LINKS", linkPatterns)
+    # Loops through existing entities of type "RED" and relabels them if they match a social media platform
+    for ent in ents:
 
-    #matcher.add("HANDLES", handlePatterns)
-    # Run matcher on document and saves it on matches
-    matches = matcher(doc)
+        text_lower = ent.text.lower()
 
-    # Find where match is on document and adds it to entity list
-    for match_id, start, end in matches:
-        span = doc[start:end]
-        ents.append(FakeEntity("RED", start, end, span.text))
+        if ent.label_ == "RED":
 
-    # Return new entities
+            if len(ent.text) < 5:
+                ents.remove(ent)
+
+            for p in platforms_lower:
+                if p in text_lower:
+                    continue
+                else:
+                    ents.remove(ent)
+
     return ents
 
 def label_professions(doc, ents):
