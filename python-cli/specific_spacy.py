@@ -182,6 +182,7 @@ def label_parties(ents, text, doc):
     
     polParties_lower = set(p.lower() for p in polParties)
 
+    # Loops through existing entities of type "ORG" and relabels them if they match a political party
     for ent in ents:
 
         text_lower = ent.text.lower()
@@ -192,6 +193,7 @@ def label_parties(ents, text, doc):
             
     matcher = Matcher(doc.vocab)
     patterns = []
+
     for party in polParties:
         patterns.append([{"ORTH": party}])
     
@@ -208,41 +210,39 @@ def label_parties(ents, text, doc):
     return ents
 
 def label_social_media(doc, ents):
-    # Create matcher
-    matcher = Matcher(doc.vocab)
-
-    entities = []
 
     with open("redes_sociais.txt", "r") as f:
         platforms = [line.strip().lower() for line in f]
+    
+    # Create matcher
+    matcher = Matcher(doc.vocab)
+    linkPatterns = []
+    handlePatterns = []
 
     for p in platforms:
         # Create a pattern for each social media platform
-        pattern = [{"TEXT": {"REGEX": rf"(?:https?:\/\/)?(?:www\.)?{p}\.com\/[A-Za-z0-9_.-]+"}}]
-        matcher.add(f"LINK_{p.upper()}", [pattern])
+        linkPatterns.append([{"TEXT": {"REGEX": rf"(?:https?:\/\/)?(?:www\.)?{p}\.com\/[A-Za-z0-9_.-]+"}}])
+        matcher.add("LINKS", linkPatterns)
 
         # Create a pattern for social media handles (e.g., @username)
-        handle_pattern = [
+        patterns.append([
             {"LOWER": p},
             {"TEXT": "@"},
             {"TEXT": {"REGEX": "[A-Za-z0-9_.-]{1,30}"}}
-        ]
-        matcher.add(f"HANDLE_{p.upper()}", [handle_pattern])
+        ])
+
+        matcher.add("HANDLES", handlePatterns)
     
     # Run matcher on document and saves it on matches
     matches = matcher(doc)
-
-    #Copy entities from doc to the new entity list
-    for ent in ents:
-        entities.append(ent)
         
     # Find where match is on document and adds it to entity list
     for match_id, start, end in matches:
         span = doc[start:end]
-        entities.append(FakeEntity("RED", start, end, span.text))
+        ents.append(FakeEntity("RED", start, end, span.text))
         
     # Return new entities
-    return entities
+    return ents
 
 def label_professions(doc, ents):
     #Create matcher
@@ -445,7 +445,7 @@ def nlp(text, model):
     ents = add_missed_entities(ents, text)
     ents = label_parties(ents, text, doc)
     ents = label_X_entities_and_addresses(ents)
-    #ents = label_social_media(doc, ents)
+    ents = label_social_media(doc, ents)
     ents = sorted(ents,key=lambda x: x.start_char)
     ents = merge(ents, text)
     return FakeDoc(ents, doc.text)
