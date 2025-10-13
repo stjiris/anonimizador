@@ -1,8 +1,9 @@
 import re
 import csv
 from spacy.language import Language
-from spacy.matcher import Matcher
+from spacy.matcher import Matcher, PhraseMatcher
 from flashtext import KeywordProcessor
+import string
 
 import logging
 
@@ -175,79 +176,67 @@ def label_X_entities_and_addresses(ents):
     
     return ents
 
-# Labels specified organizations as political parties
 def label_parties(ents, text, doc):
-
-    #----------------------------------------------
-    # Get political parties identified by the model
-    #----------------------------------------------
     with open("partidos.txt", "r") as f:
-        polParties = {line.strip() for line in f}
+        polParties = [line.strip() for line in f]
+    
+    polParties_lower = set(p.lower() for p in polParties)
 
-    seenParties = set()
-
+    # Loops through existing entities of type "ORG" and relabels them if they match a political party
     for ent in ents:
-        if ent.label_ == "ORG" and ent.text in polParties:
-            ent.label_ = "PART"
-            seenParties.add(ent.text)  
 
-    # Remove found parties 
-    polParties -= seenParties
+        text_lower = ent.text.lower()
 
-    #----------------------------------------------
-    # Get political parties missed by NER
-    #----------------------------------------------
+        if ent.label_ == "ORG":
+            if text_lower in polParties_lower:
+                ent.label_ = "PART"  # Relabel
+            
     matcher = Matcher(doc.vocab)
+    patterns = []
 
-    patterns = [[{"TEXT": party}] for party in polParties]
+    for party in polParties:
+        patterns.append([{"ORTH": party}])
+    
     matcher.add("PARTIES", patterns)
 
+    # Runs matcher on document and saves it on matches
     matches = matcher(doc)
 
-    #Finds where match is on document and adds it to entity list
     for match_id, start, end in matches:
         span = doc[start:end]
-        ents.append(FakeEntity("PART", start, end, span.text))
+        if len(span.text) <= 5:        
+            ents.append(FakeEntity("PART", start, end, span.text))
         
- 
     return ents
 
 def label_social_media(doc, ents):
-    # Create matcher
-    matcher = Matcher(doc.vocab)
-
-    entities = []
 
     with open("redes_sociais.txt", "r") as f:
-        platforms = [line.strip().lower() for line in f]
-
-    for p in platforms:
-        # Create a pattern for each social media platform
-        pattern = [{"TEXT": {"REGEX": rf"(?:https?:\/\/)?(?:www\.)?{p}\.com\/[A-Za-z0-9_.-]+"}}]
-        matcher.add(f"LINK_{p.upper()}", [pattern])
-
-        # Create a pattern for social media handles (e.g., @username)
-        handle_pattern = [
-            {"LOWER": p},
-            {"TEXT": "@"},
-            {"TEXT": {"REGEX": "[A-Za-z0-9_.-]{1,30}"}}
-        ]
-        matcher.add(f"HANDLE_{p.upper()}", [handle_pattern])
+        platforms = [line.strip()for line in f]
     
-    # Run matcher on document and saves it on matches
-    matches = matcher(doc)
+    platforms_lower = set(p.lower() for p in platforms)
 
-    #Copy entities from doc to the new entity list
+    newEnts = []
+
+    # Loops through existing entities of type "RED" and relabels them if they match a social media platform
     for ent in ents:
-        entities.append(ent)
-        
-    # Find where match is on document and adds it to entity list
-    for match_id, start, end in matches:
-        span = doc[start:end]
-        entities.append(FakeEntity("RED", start, end, span.text))
-        
-    # Return new entities
-    return entities
+
+        if ent.label_ == "RED":
+            text_lower = ent.text.lower()
+            match = False
+
+            for p in platforms_lower:
+                if p in text_lower:
+                    match = True
+                    break
+
+            if match and len(ent.text) >= 1:
+                newEnts.append(FakeEntity("RED", ent.start_char, ent.end_char, ent.text))
+            
+        else:
+            newEnts.append(ent)
+
+    return newEnts
 
 def label_professions(doc, ents):
     #Create matcher
