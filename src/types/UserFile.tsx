@@ -281,7 +281,7 @@ export class UserFile {
     }
 
     checkCountPES() {
-        if(this.profile == "STJ - Principal") {
+        if(this.profile == "STJ - Principal" || this.profile == "CSM - Principal") { //Checks if the user is using a legal profile;
 
             let PES_count = this.pool.countPES;
             
