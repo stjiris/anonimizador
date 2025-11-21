@@ -49,6 +49,7 @@ RUN REACT_APP_VERSION_DATE=${VERSION_DATE} \
 
 RUN mv iris-lfs-storage/model-best/ ./python-cli/
 RUN mv iris-lfs-storage/model-gpt/ ./python-cli/
+RUN mv iris-lfs-storage/model-ep/ ./python-cli/
 
 EXPOSE 7998
 
