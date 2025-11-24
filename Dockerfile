@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install nodejs -y
 RUN apt-get install poppler-utils -y
 
 RUN git clone https://gitlab.com/diogoalmiro/iris-lfs-storage.git
-RUN cd iris-lfs-storage && git lfs pull
+RUN cd iris-lfs-storage && git lfs install && git lfs fetch --all && git lfs pull
 
 RUN python -m venv env
 
