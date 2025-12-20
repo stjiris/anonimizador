@@ -37,8 +37,10 @@ import unicodedata
     "-m",
     "--model",
     help="model to use",
-    type=click.Choice(["model-ep", "model-gpt", "model-best", "spacy-pt", "none"]),
-    default="model-ep",
+    type=click.Choice(
+        ["model-extended", "model-gpt", "model-best", "spacy-pt", "none"]
+    ),
+    default="model-extended",
     show_default=True,
 )
 def process(input_file, output_file, format, model):
