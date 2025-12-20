@@ -44,8 +44,8 @@ import unicodedata
 def process(input_file, output_file, format, model):
     with input_file:
         contents = input_file.read()
-    if model == "model-ep":
-        model = spacy.load("./python-cli/model-ep")
+    if model == "model-extended":
+        model = spacy.load("./python-cli/model-extended")
     if model == "model-gpt":
         model = spacy.load("./python-cli/model-gpt/model-best")
     if model == "model-best":
