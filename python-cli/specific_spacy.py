@@ -198,8 +198,11 @@ def remove_entities_with_excluded_words(doc):
             word in ent.text.lower() for word in excluded_words
         )
 
-        # Check if the entity contains the symbol "º" and is not labeled as "LOC"
-        symbol_exclusion_condition = "º" in ent.text.lower() and ent.label_ != "LOC"
+        # Check if the entity contains the symbol "º" and is not labeled as "LOC" or "ADDR"
+        symbol_exclusion_condition = "º" in ent.text.lower() and ent.label_ not in [
+            "LOC",
+            "ADDR",
+        ]
 
         if not (word_exclusion_condition or symbol_exclusion_condition):
             # If the entity does not meet either exclusion condition, append it to the list
