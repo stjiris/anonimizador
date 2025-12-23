@@ -1,13 +1,15 @@
-import { UserFile } from "../../types/UserFile";
-import MaterialReactTable, { MRT_ColumnDef } from "material-react-table";
-import { functionsWithDescriptionArray } from "../../util/anonimizeFunctions";
+import { UserFile } from "@/client-utils/UserFile";
+import { MRT_ColumnDef, MRT_Row, MRT_TableInstance, MaterialReactTable } from "material-react-table";
+import { functionsWithDescriptionArray } from "@/client-utils/anonimizeFunctions";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
-import { EntityTypeIDefaults, EntityTypeI } from "../../types/EntityTypes";
-import { Bicon, Button } from "../../util/BootstrapIcons";
-import { useTypes } from "../../util/uses";
-import { ProfileI, useProfile } from "../../types/Profile";
+import { EntityTypeIDefaults, EntityTypeI } from "@/types/EntityType";
+import { Bicon, Button } from "@/client-utils/BootstrapIcons";
+import { useTypes } from "@/client-utils/uses";
+import { ProfileI } from "@/types/ProfileType";
+import { useProfile } from "@/client-utils/ProfileTypeLogic";
+import { UserFileInterface } from "@/types/UserFile";
 
-export function TypesModalContent({file}:{file: UserFile}){
+export function TypesModalContent({file}:{file: UserFileInterface}){
     let types = useTypes(file).filter(type => !type.name.startsWith("X"));
     let [profile, setProfile] = useProfile();
     return <>
@@ -30,8 +32,7 @@ export function TypesModalContent({file}:{file: UserFile}){
                     enableGlobalFilter={false}
                     enableFullScreenToggle={false}
                     enableColumnActions={false}
-                    editingMode="cell"
-                    columns={[TYPE_COLUMN(file, profile, setProfile),ANON_COLUMN(file),EXAMPLE_COLUMN]} 
+                    columns={[TYPE_COLUMN(file, profile, setProfile), ANON_COLUMN(file),EXAMPLE_COLUMN]} 
                     data={types}
                     localization={MRT_Localization_PT}
                     renderTopToolbarCustomActions={() => [
@@ -66,15 +67,15 @@ export function TypesModalContent({file}:{file: UserFile}){
     </>
 }
 
-const TYPE_COLUMN: (file: UserFile, profile: ProfileI | null, setProfile: (p:ProfileI) => void) => MRT_ColumnDef<EntityTypeI> = (file, profile, setProfile) => ({
+const TYPE_COLUMN: (file: UserFileInterface, profile: ProfileI | null, setProfile: (p:ProfileI) => void) => MRT_ColumnDef<EntityTypeI> = (file, profile, setProfile) => ({
     header: "Tipo",
     Header: <><Bicon n="pencil"/> Tipo</>,
     accessorKey: "color",
     enableEditing: true,
-    muiTableBodyCellEditTextFieldProps: ({row, table}) => ({
+    muiTableBodyCellEditTextFieldProps: ({row, table}: { row: MRT_Row<EntityTypeI>; table: MRT_TableInstance<EntityTypeI> }) => ({
         type: "color",
         name: "color",
-        onBlur: (evt) => {
+        onBlur: (evt: React.FocusEvent<HTMLInputElement>) => {
             file.updateType(row.original.name, evt.target.value, row.original.functionIndex)
             if(profile){
                 setProfile({...profile, defaultEntityTypes: {...profile.defaultEntityTypes, [row.original.name]: {color: evt.target.value, functionIndex: row.original.functionIndex}}});
@@ -85,19 +86,19 @@ const TYPE_COLUMN: (file: UserFile, profile: ProfileI | null, setProfile: (p:Pro
     Cell: ({row}) => <span className='badge text-body' style={{background: row.original.color}}>{row.original.name}</span>    
 })
 
-const ANON_COLUMN: (file: UserFile) => MRT_ColumnDef<EntityTypeI> = (file) => ({
+const ANON_COLUMN: (file: UserFileInterface) => MRT_ColumnDef<EntityTypeI> = (file) => ({
     header: "Anonimização",
     Header: <><Bicon n="pencil"/> Anonimização</>,
     accessorFn: (ent) => functionsWithDescriptionArray[ent.functionIndex].name,
     enableEditing: true,
-    muiTableBodyCellEditTextFieldProps: ({row,table}) => ({
+    muiTableBodyCellEditTextFieldProps: ({row,table}: { row: MRT_Row<EntityTypeI>; table: MRT_TableInstance<EntityTypeI> }) => ({
         select: true,
         children: functionsWithDescriptionArray.map( (desc,i) => <option key={i} label={desc.name} value={i}>{desc.name}</option>),
         SelectProps: {
             native: true,
             defaultValue: row.original.functionIndex
         },
-        onChange: (evt) => file.updateType(row.original.name, row.original.color, parseInt(evt.target.value))
+        onChange: (evt: React.FocusEvent<HTMLInputElement>) => file.updateType(row.original.name, row.original.color, parseInt(evt.target.value))
     })
 })
 

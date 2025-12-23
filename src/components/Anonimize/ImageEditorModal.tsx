@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
-import { UserFile } from "../../types/UserFile";
-import BootstrapModal from "../../util/BootstrapModal";
-import { Bicon, Button } from "../../util/BootstrapIcons";
-import { AnonimizeImage } from "../../types/AnonimizeImage";
-import { normalizeEntityString } from "../../types/Entity";
+import { UserFile } from "@/client-utils/UserFile";
+import BootstrapModal from "@/client-utils/BootstrapModal";
+import { Bicon, Button } from "@/client-utils/BootstrapIcons";
+import { AnonimizeImage } from "@/types/AnonimizeImage";
+import { normalizeEntityString } from "@/types/Entity";
+import { UserFileInterface } from "@/types/UserFile";
 
 
-export function ImageEditorModal(props: { file: UserFile }) {
+export function ImageEditorModal(props: { file: UserFileInterface }) {
     const preparingWorkerRef = useRef<boolean>(false);
     const workerRef = useRef<any>(null);
     if (!preparingWorkerRef.current) {
@@ -50,13 +51,13 @@ export function ImageEditorModal(props: { file: UserFile }) {
     </BootstrapModal>
 }
 
-function ImageEditor(props: { file: UserFile, imageElmt: HTMLImageElement, worker: any }) {
+function ImageEditor(props: { file: UserFileInterface, imageElmt: HTMLImageElement, worker: any }) {
     let canvasBackgroundRef = useRef<HTMLCanvasElement>(null)
     let canvasForegroundRef = useRef<HTMLCanvasElement>(null)
     let ctxBackgroundRef = useRef<CanvasRenderingContext2D | null>(null)
     let ctxForegroundRef = useRef<CanvasRenderingContext2D | null>(null)
     let originalImage = useRef<HTMLImageElement | null>(null)
-    let animFrameRequest = useRef<number>()
+    let animFrameRequest = useRef<number>(0)
     let boxStart = useRef<number[] | null>(null)
     let mousePos = useRef<number[] | null>(null)
     let boxes = useRef<[number, number, number, number][]>([])

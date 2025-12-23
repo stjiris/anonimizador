@@ -1,9 +1,9 @@
 import React, { ChangeEvent, useEffect, useState } from "react";
-import { createUserFile, deleteUserFile, readSavedUserFile, listUserFile } from "../util/UserFileCRUDL";
-import { isSavedUserFile, SavedUserFile, UserFile } from "../types/UserFile";
-import MaterialReactTable, { MRT_ColumnDef } from "material-react-table";
+import { createUserFile, deleteUserFile, readSavedUserFile, listUserFile } from "@/client-utils/UserFileCRUDL";
+import { isSavedUserFile, SavedUserFile, UserFile } from "@/client-utils/UserFile";
+import { MRT_ColumnDef, MaterialReactTable } from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
-import { Bicon, Button } from "../util/BootstrapIcons";
+import { Bicon, Button } from "@/client-utils/BootstrapIcons";
 
 // https://stackoverflow.com/a/18650828/2573422
 export function formatBytes(a: number, b = 2) { if (!+a) return "0 Bytes"; const c = 0 > b ? 0 : b, d = Math.floor(Math.log(a) / Math.log(1024)); return `${parseFloat((a / Math.pow(1024, d)).toFixed(c))} ${["Bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"][d]}` }
@@ -126,7 +126,7 @@ async function onFile(event: React.ChangeEvent<HTMLInputElement>): Promise<UserF
     }
 
     event.target.disabled = true;
-    return fetch("./html", { method: "POST", body: formData }).then(async r => {
+    return fetch("/api/html", { method: "POST", body: formData }).then(async r => {
         let content = await r.text();
 
         if (r.status !== 200) return Promise.reject(new Error(content));
@@ -152,7 +152,6 @@ export function AddUserFileAction({ setUserFile }: { setUserFile: (file: UserFil
         await onFile(e).then(f => f ? setUserFile(f) : null)
         setUploading(false);
     }
-    window._paq.push(['trackEvent', 'Anonymization', 'click', 'AnonymizeButton',]);
     return <>
         <label htmlFor="file" role="button" className={`btn btn-primary m-auto ${uploading ? "disabled" : ""}`}>{uploading ? <><span className="spinner-border spinner-border-sm" role="status"></span> A carregar ficheiro...</> : <><Bicon n="file-earmark-plus" /> Adicionar Ficheiro</>}</label>
         <input hidden type="file" name="file" id="file" onChange={onChange}></input>

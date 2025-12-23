@@ -1,16 +1,18 @@
-import { EntityPool } from "../../types/EntityPool"
-import { Button } from "../../util/BootstrapIcons"
-import MaterialReactTable, { MRT_ColumnDef, MRT_Row, MRT_TableInstance } from "material-react-table";
-import { Entity } from "../../types/Entity";
+import { MRT_ColumnDef, MRT_Row, MRT_TableInstance, MaterialReactTable } from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
-import { UserFile } from "../../types/UserFile";
-import { EntityTypeI } from "../../types/EntityTypes";
-import { FULL_ANONIMIZE } from "../../util/anonimizeFunctions";
-import { useEntities, useTypesDict } from "../../util/uses";
+
+import { EntityPool } from "@/types/EntityPool"
+import { Button } from "@/client-utils/BootstrapIcons"
+import { Entity } from "@/types/Entity";
+import { UserFile } from "@/client-utils/UserFile";
+import { EntityTypeI } from "@/types/EntityType";
+import { FULL_ANONIMIZE } from "@/client-utils/anonimizeFunctions";
+import { useEntities, useTypesDict } from "@/client-utils/uses";
 import { useMemo, useState } from "react";
+import { UserFileInterface } from "@/types/UserFile";
 
 
-export function EntityTable({ file }: { file: UserFile }) {
+export function EntityTable({ file }: { file: UserFileInterface }) {
     const [showOnlyMarks, setShowOnlyMarks] = useState(false);
 
     const ents = useEntities(file.pool);
@@ -33,7 +35,6 @@ export function EntityTable({ file }: { file: UserFile }) {
         enableColumnOrdering
         enableEditing
         positionActionsColumn="last"
-        editingMode="cell"
         enableDensityToggle={false}
         enableHiding
         enableStickyHeader
@@ -76,7 +77,7 @@ export function EntityTable({ file }: { file: UserFile }) {
         }} />;
 }
 
-const toolbar = ( pool: EntityPool, file: UserFile, showOnlyMarks: boolean, setShowOnlyMarks: (v: boolean) => void ) => ({ table }: { table: MRT_TableInstance<Entity> }) => {
+const toolbar = ( pool: EntityPool, file: UserFileInterface, showOnlyMarks: boolean, setShowOnlyMarks: (v: boolean) => void ) => ({ table }: { table: MRT_TableInstance<Entity> }) => {
     let selectedeKeys = selectedIndexes(table).length;
 
     const isJoinDisabled = showOnlyMarks || selectedeKeys <= 1;
@@ -101,18 +102,18 @@ const selectedIndexes = (table: MRT_TableInstance<Entity>) => Object.keys(table.
 
 const removeTableSelection = (table: MRT_TableInstance<Entity>) => table.setRowSelection({})
 
-const joinSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
+const joinSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFileInterface) => {
     pool.joinEntities(selectedIndexes(table));
     removeTableSelection(table);
     file.checkCountPES();
 }
-const splitSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
+const splitSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFileInterface) => {
     pool.splitEntities(selectedIndexes(table));
     removeTableSelection(table);
     file.checkCountPES();
 }
 
-const removeSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
+const removeSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFileInterface) => {
     pool.removeEntities(selectedIndexes(table));
     removeTableSelection(table);
     file.checkCountPES();
@@ -157,13 +158,13 @@ const TYPE: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<Entity> = 
         let color = types.find(t => t.name === row.original.type) || { name: `${row.original.type}*`, color: "red", functionIndex: FULL_ANONIMIZE };
         return <span className='badge text-body' onClick={() => table.setEditingCell(cell)} style={{ background: color.color }}>{color.name}</span>
     },
-    muiTableBodyCellEditTextFieldProps: ({ row }) => ({
+    muiTableBodyCellEditTextFieldProps: ({ row }: { row: MRT_Row<Entity> }) => ({
         select: true,
         children: types.map(t => <option key={t.name} label={t.name} value={t.name}>{t.name}</option>),
         SelectProps: {
             native: true
         },
-        onChange: (event) => {
+        onChange: (event: React.ChangeEvent<HTMLSelectElement>) => {
             let o = row.original.type;
             row.original.type = event.target.value;
             if (o !== row.original.type) pool.notify("Modificar tipo");
@@ -187,9 +188,9 @@ const ANONIMIZE: (pool: EntityPool, types: Record<string, EntityTypeI>) => MRT_C
     muiTableBodyCellProps: ({ cell, table }) => ({
         onClick: () => table.setEditingCell(cell)
     }),
-    muiTableBodyCellEditTextFieldProps: ({ row }) => ({
+    muiTableBodyCellEditTextFieldProps: ({ row }: { row: MRT_Row<Entity> }) => ({
         placeholder: row.original.anonimizingFunction(types[row.original.type])(row.original.offsets[0].preview, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex),
-        onBlur: (event) => {
+        onBlur: (event: React.ChangeEvent<HTMLSelectElement>) => {
             let o = row.original.overwriteAnonimization;
             row.original.overwriteAnonimization = event.target.value;
             if (o !== row.original.overwriteAnonimization) pool.updateOrder("Modificar anonimização de entidade");

@@ -1,7 +1,8 @@
 import { useMemo, useRef, useState } from "react";
-import { UserFile } from "../../types/UserFile";
-import { useTypes } from "../../util/uses";
-import { AddEntityDryRun } from "../../types/EntityPool";
+import { UserFile } from "@/client-utils/UserFile";
+import { useTypes } from "@/client-utils/uses";
+import { AddEntityDryRun } from "@/types/EntityPool";
+import { UserFileInterface } from "@/types/UserFile";
 
 // We want exact matches
 // https://stackoverflow.com/a/3561711/2573422
@@ -9,7 +10,7 @@ function escapeRegex(string: string) {
     return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, '\\$&');
 }
 
-export function SearchModalContent({file}: {file:UserFile}){
+export function SearchModalContent({file}: {file:UserFileInterface}){
     let text = useMemo(() => file.doc.textContent || "", [file])
     let types = useTypes(file);
     let [search, setSearch] = useState<string>("")

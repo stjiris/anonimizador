@@ -5,15 +5,26 @@ services:
   anonimizador:
     build:
       context: .
-      dockerfile: ./Dockerfile
+      dockerfile: ./Dockerfile_dev
       args:
-        - TITLE=${ANONIMIZADOR_TITLE:-Anonimizador}
-        - MATOMO_URL=${MATOMO_URL}
+        - NEXT_PUBLIC_TITLE=${ANONIMIZADOR_TITLE:-Anonimizador}
+        - NEXT_PUBLIC_VERSION_COMMIT=${VERSION_COMMIT:-0000000}
+        - NEXT_PUBLIC_VERSION_DATE=${VERSION_DATE:-01/01/1990}
+    environment:
+      - ANONIMIZADOR_SECRET=${ANONIMIZADOR_SECRET}
+    env_file:
+      - .env
     ports:
       - ${ANONIMIZADOR_PORT:-7999}:7999
     volumes:
-      - logs:/opt/app/logs  # Mount logs directory for persistence
+      - logs:/opt/app/logs
+      #- ./iris-lfs-storage/model-best:/opt/app/src/scripts/model-best
+      #- ./iris-lfs-storage/model-gpt:/opt/app/src/scripts/model-gpt
+      #- .:/opt/app
+      #- /opt/app/node_modules
     restart: unless-stopped
+    networks:
+      - juris-network
   sumarizador:
     build: https://github.com/stjiris/sumarizador.git#493187b33aea6cd68881b3a31d9199be9044de07
     restart: unless-stopped
@@ -25,3 +36,6 @@ services:
     ports:
       - ${DESCRITORES_PORT:-8999}:8999
   
+networks:
+  juris-network:
+    external: true

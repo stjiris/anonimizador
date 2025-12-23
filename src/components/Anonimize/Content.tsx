@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { AnonimizeStateState } from '../../types/AnonimizeState'
+import { AnonimizeStateState } from '@/types/AnonimizeState'
 import AnonimizeTooltip from './Tooltip';
-import { UserFile } from '../../types/UserFile';
-import { useImages, useSpecificOffsets, useTypesDict } from '../../util/uses';
+import { UserFile } from '@/client-utils/UserFile';
+import { useImages, useSpecificOffsets, useTypesDict } from '@/client-utils/uses';
 import { renderBlock } from './render';
 
 interface AnonimizeContentProps {
@@ -13,7 +13,7 @@ interface AnonimizeContentProps {
 }
 
 export default function AnonimizeContent(props: AnonimizeContentProps) {
-    const contentRef = useRef<HTMLDivElement>(null);
+    const contentRef = useRef<HTMLDivElement>(null!);
     const nodesRef = useRef<HTMLElement[]>([]);
 
     const offsets = useSpecificOffsets(props.file.pool)

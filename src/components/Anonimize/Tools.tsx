@@ -1,9 +1,11 @@
 import { useState } from "react";
-import { UserFile } from "../../types/UserFile";
-import { DescritoresModalBody } from "../../util/runRemoteDescritores";
-import { Button } from "../../util/BootstrapIcons";
-import { SumarizadorModalBody } from "../../util/runRemoteSumarizador";
-import { ProfileI, useProfile } from "../../types/Profile";
+import { UserFile } from "@/client-utils/UserFile";
+import { DescritoresModalBody } from "@/client-utils/runRemoteDescritores";
+import { Button } from "@/client-utils/BootstrapIcons";
+import { SumarizadorModalBody } from "@/client-utils/runRemoteSumarizador";
+import { useProfile } from "@/client-utils/ProfileTypeLogic";
+import { ProfileI } from "@/types/ProfileType";
+import { UserFileInterface } from "@/types/UserFile";
 
 
 const TOOLS = {
@@ -17,7 +19,7 @@ export function ToolsButton(){
     return <Button title="Outras ferramentas" i="tools" text="Ferramentas" className="btn btn-sm text-body  alert alert-gray m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-tools" />
 }
 
-export function ToolsModalBody({ file }: { file: UserFile }) {
+export function ToolsModalBody({ file }: { file: UserFileInterface }) {
     let [tool, setTool] = useState<keyof typeof TOOLS | undefined>();
 
     let Tool = tool ? TOOLS[tool].node : ListTools.bind(null, setTool);

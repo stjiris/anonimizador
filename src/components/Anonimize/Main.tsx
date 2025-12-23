@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import { AnonimizeStateCombined, AnonimizeStateState, AnonimizeVisualState, getAnonimizedStateCombined } from "../../types/AnonimizeState";
-import { UserFile } from "../../types/UserFile";
-import { Bicon, Button } from "../../util/BootstrapIcons";
-import BootstrapModal from "../../util/BootstrapModal";
-import { EntitiesStyle } from "../../util/entitiesStyle";
-import { ExitButton, ForceExitButton } from "../../util/exitButton";
-import { InfoModalContent } from "../../util/infoModalContent";
-import { SuggestButton } from "../../util/runRemoteNlp";
-import { SavedBadge } from "../../util/savedBadge";
-import { useSave } from "../../util/uses";
+import { AnonimizeStateCombined, AnonimizeStateState, AnonimizeVisualState, getAnonimizedStateCombined } from "@/types/AnonimizeState";
+import { UserFile } from "@/client-utils/UserFile";
+import { Bicon, Button } from "@/client-utils/BootstrapIcons";
+import BootstrapModal from "@/client-utils/BootstrapModal";
+import { EntitiesStyle } from "@/client-utils/entitiesStyle";
+import { ExitButton, ForceExitButton } from "@/components/Anonimize/exitButton";
+import { InfoModalContent } from "@/client-utils/infoModalContent";
+import { SuggestButton } from "@/client-utils/runRemoteNlp";
+import { SavedBadge } from "@/client-utils/savedBadge";
+import { useSave } from "@/client-utils/uses";
 import AnonimizeContent from "./Content";
 import { EntityTable } from "./EntityTable";
 import { HistoryCommands } from "./HistoryCommands";
@@ -17,10 +17,11 @@ import { SearchModalContent } from "./SearchModalContent";
 import { TypesModalContent } from "./TypesModalContent";
 import { ToolsButton, ToolsModalBody } from "./Tools";
 import { ExportButton } from "./ExportButton";
-import { loadAnonimizeProfiles, getAnonimizeProfiles, AnonimizeProfile } from "../../util/AnonimizeProfiles";
+import { loadAnonimizeProfiles, getAnonimizeProfiles, AnonimizeProfile } from "@/client-utils/AnonimizeProfiles";
+import { UserFileInterface } from "@/types/UserFile";
 
 interface AnonimizeProps {
-    file: UserFile
+    file: UserFileInterface
     setUserFile: (file: UserFile | undefined) => void
 }
 

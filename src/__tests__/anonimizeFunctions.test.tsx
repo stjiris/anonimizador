@@ -1,4 +1,4 @@
-import { identity, increment, leter, year, reticiencias, processo, firstWord, ofuscateFirst, ofuscateFirstTwo, ofuscateLast, ofuscateLastTwo, matriculaLeter, matriculaNumber } from "../util/anonimizeFunctions"
+import { identity, increment, leter, year, reticiencias, processo, firstWord, ofuscateFirst, ofuscateFirstTwo, ofuscateLast, ofuscateLastTwo, matriculaLeter, matriculaNumber } from "../client-utils/anonimizeFunctions"
 
 
 test("Não anonimizar", () => {

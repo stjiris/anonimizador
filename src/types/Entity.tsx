@@ -1,5 +1,5 @@
-import { AnonimizeFunction, AnonimizeFunctionDescription, functionsWithDescriptionArray } from "../util/anonimizeFunctions";
-import { EntityTypeFunction } from "./EntityTypes";
+import { AnonimizeFunction, AnonimizeFunctionDescription, functionsWithDescriptionArray } from "../client-utils/anonimizeFunctions";
+import { EntityTypeFunction } from "./EntityType";
 
 export const normalizeEntityString = (str: string): string => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]/g, "");
 

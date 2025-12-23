@@ -1,6 +1,6 @@
-import { AnonimizeStateState } from "../../types/AnonimizeState"
-import { EntityTypeI } from "../../types/EntityTypes"
-import { SpecificOffsetRange } from "../../util/uses"
+import { AnonimizeStateState } from "@/types/AnonimizeState"
+import { EntityTypeI } from "@/types/EntityType"
+import { SpecificOffsetRange } from "@/client-utils/uses"
 
 
 type AnonimizeTokenProps = {

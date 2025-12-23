@@ -1,15 +1,16 @@
-import { AnonimizeStateState } from "../../types/AnonimizeState";
-import { EntityTypeI } from "../../types/EntityTypes";
-import { UserFile } from "../../types/UserFile";
-import { Button } from "../../util/BootstrapIcons";
-import { SpecificOffsetRange, useTypesDict } from "../../util/uses";
+import { AnonimizeStateState } from "@/types/AnonimizeState";
+import { EntityTypeI } from "@/types/EntityType";
+import { UserFile } from "@/client-utils/UserFile";
+import { Button } from "@/client-utils/BootstrapIcons";
+import { SpecificOffsetRange, useTypesDict } from "@/client-utils/uses";
 import { renderBlock } from "./render";
+import { UserFileInterface } from "@/types/UserFile";
 
-export function ExportButton({ file }: { file: UserFile }) {
+export function ExportButton({ file }: { file: UserFileInterface }) {
     const entityTypes = useTypesDict(file);
     const _exportFile = (anonimize: boolean, type: "DOCX" | "PDF" | "JSON") => exportFile(file, entityTypes, anonimize, type);
     return <>
-        <Button i="download" title="Exportar" className="red-link btn m-1 p-1" data-bs-toggle="dropdown" aria-expanded="false" />
+        <Button i="download" title="Exportar" className="btn m-1 p-1" data-bs-toggle="dropdown" aria-expanded="false" />
         <ul className="dropdown-menu">
             <li><button onClick={() => _exportFile(true, "JSON")} className="dropdown-item">Ficheiro de trabalho (JSON)</button></li>
             <li><button onClick={() => _exportFile(false, "DOCX")} className="dropdown-item">Original (DOCX)</button></li>
@@ -20,7 +21,7 @@ export function ExportButton({ file }: { file: UserFile }) {
     </>
 }
 
-function exportFile(file: UserFile, entityTypes: Record<string, EntityTypeI>, anonimized: boolean, type: "DOCX" | "PDF" | "JSON") {
+function exportFile(file: UserFileInterface, entityTypes: Record<string, EntityTypeI>, anonimized: boolean, type: "DOCX" | "PDF" | "JSON") {
     if (type === "JSON") {
         let blobToDownload = new Blob([JSON.stringify(file.toSavedFile())]);
         let stubAnchor = document.createElement("a");
@@ -78,5 +79,5 @@ function makeDocxDowload(html: string) {
 
     formData.append("file", htmlFile);
 
-    return fetch("./docx", { method: "POST", body: formData }).then(r => r.status === 200 ? r.blob() : null)
+    return fetch("/api/docx", { method: "POST", body: formData }).then(r => r.status === 200 ? r.blob() : null)
 }

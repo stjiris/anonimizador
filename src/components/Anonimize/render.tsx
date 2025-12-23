@@ -1,7 +1,7 @@
-import { AnonimizeImage } from "../../types/AnonimizeImage";
-import { AnonimizeStateState } from "../../types/AnonimizeState";
-import { EntityTypeI } from "../../types/EntityTypes";
-import { SpecificOffsetRange } from "../../util/uses";
+import { AnonimizeImage } from "@/types/AnonimizeImage";
+import { AnonimizeStateState } from "@/types/AnonimizeState";
+import { EntityTypeI } from "@/types/EntityType";
+import { SpecificOffsetRange } from "@/client-utils/uses";
 
 const TAGS_TO_IGNORE = "script,style,link,meta,head,html,svg,iframe,canvas,object,embed,applet,frameset,frame,noembed,noscript,param,source,track".split(",");
 

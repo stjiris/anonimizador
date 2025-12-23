@@ -1,5 +1,5 @@
-import { ProfileSelector, useProfile } from "../types/Profile";
-import { Bicon, Button } from "../util/BootstrapIcons";
+import { useProfile } from "@/client-utils/ProfileTypeLogic";
+import { Bicon, Button } from "../client-utils/BootstrapIcons";
 
 export default function Header() {
     const [profile] = useProfile();
@@ -7,11 +7,11 @@ export default function Header() {
         <a className="align-items-center d-flex flex-wrap text-decoration-none nav-link" href="./">
             <img src="./stj-logo.png" style={{ maxHeight: 70 }} alt="Logotipo Supremo Tribunal de Justiça" />
             <div className="ps-2 d-flex flex-column align-items-center">
-                <h5 className="m-0 fancy-font">{process.env.REACT_APP_TITLE}</h5>
+                <h5 className="m-0 fancy-font">{process.env.NEXT_PUBLIC_TITLE}</h5>
             </div>
         </a>
-        <pre className="m-0">Versão: {process.env.REACT_APP_VERSION_COMMIT} ({process.env.REACT_APP_VERSION_DATE})</pre>
-        <Button title="Perfil" i="palette2" text={`Perfil${profile?.name? `: ${profile.name}` : ''}`} className="btn btn-sm text-body  alert alert-gray m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-profile" />
+        <pre className="m-0"> Versão: {process.env.NEXT_PUBLIC_VERSION_COMMIT} ({process.env.NEXT_PUBLIC_VERSION_DATE})</pre>
+        <Button title="Perfil" i="palette2" text={`Perfil${profile?.name ? `: ${profile.name}` : ''}`} className="btn btn-sm text-body  alert alert-gray m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-profile" />
         <div className="flex-fill d-none d-lg-block"></div>
         <nav className="d-print-none">
             <ul className="container d-flex nav align-items-center justify-content-evenly flex-wrap">

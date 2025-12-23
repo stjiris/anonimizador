@@ -1,9 +1,9 @@
 import { useMemo } from "react";
 import { useState } from "react";
 import { useEffect } from "react";
-import { Entity, EntityI } from "../../types/Entity";
-import { EntityPool } from "../../types/EntityPool";
-import { Button } from "../../util/BootstrapIcons";
+import { Entity, EntityI } from "@/types/Entity";
+import { EntityPool } from "@/types/EntityPool";
+import { Button } from "@/client-utils/BootstrapIcons";
 
 interface HistoryCommandsProps {
     pool: EntityPool
