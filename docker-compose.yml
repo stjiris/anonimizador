@@ -5,13 +5,14 @@ services:
   anonimizador:
     build:
       context: .
-      dockerfile: ./Dockerfile_dev
+      dockerfile: ./Dockerfile
       args:
         - NEXT_PUBLIC_TITLE=${ANONIMIZADOR_TITLE:-Anonimizador}
         - NEXT_PUBLIC_VERSION_COMMIT=${VERSION_COMMIT:-0000000}
         - NEXT_PUBLIC_VERSION_DATE=${VERSION_DATE:-01/01/1990}
     environment:
       - ANONIMIZADOR_SECRET=${ANONIMIZADOR_SECRET}
+      - PORT=${ANONIMIZADOR_PORT:-7999}
     env_file:
       - .env
     ports:
