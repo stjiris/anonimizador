@@ -197,7 +197,7 @@ def label_X_entities_and_addresses(ents):
 
 
 def label_parties(ents, text, doc):
-	with open("src/config/partidos.txt", "r") as f:
+	with open("src/regex/partidos.txt", "r") as f:
 		polParties = [line.strip() for line in f]
 
 	polParties_lower = set(p.lower() for p in polParties)
@@ -232,7 +232,7 @@ def label_parties(ents, text, doc):
 
 def label_social_media(doc, ents):
 
-	with open("./src/config/redes_sociais.txt", "r") as f:
+	with open("./src/regex/redes_sociais.txt", "r") as f:
 		platforms = [line.strip() for line in f]
 
 	platforms_lower = set(p.lower() for p in platforms)
@@ -268,7 +268,7 @@ def label_professions(doc, ents):
 	entities = []
 
 	#Open professions file to create a list with professions
-	with open("./src/config/profissoes.txt", "r") as f:
+	with open("./src/regex/profissoes.txt", "r") as f:
 		professions = [line.strip().lower() for line in f]
 
 	#Create new professions list with both genders
@@ -296,13 +296,13 @@ def label_professions(doc, ents):
 
 
 def process_entities(ents, text):
-	with open('./src/config/patterns.csv', 'r') as csvfd:
+	with open('./src/regex/patterns.csv', 'r') as csvfd:
 		reader = csv.DictReader(csvfd, delimiter="\t")
 		for r in reader:
 			add_ent_by_pattern(ents, text, r['Pattern'], r['Label'])
 
 	ents = correct_ent(ents)
-	with open('./src/config/exclude.csv', 'r') as csvfd:
+	with open('./src/regex/exclude.csv', 'r') as csvfd:
 		reader = csv.DictReader(csvfd, delimiter="\t")
 		for r in reader:
 			p = re.compile(r['Pattern'])

@@ -79,5 +79,5 @@ function makeDocxDowload(html: string) {
 
     formData.append("file", htmlFile);
 
-    return fetch("/api/docx", { method: "POST", body: formData }).then(r => r.status === 200 ? r.blob() : null)
+    return fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/docx`, { method: "POST", body: formData }).then(r => r.status === 200 ? r.blob() : null)
 }

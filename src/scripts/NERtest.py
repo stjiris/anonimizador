@@ -157,7 +157,7 @@ def label_professions(doc, ents):
 	entities = []
 
 	#Open professions file to create a list with professions
-	with open("../src/config/profissoes.txt", "r") as f:
+	with open("../src/regex/profissoes.txt", "r") as f:
 		professions = [line.strip().lower() for line in f]
 
 	#Create new professions list with both genders
@@ -244,7 +244,7 @@ def split_into_chunks(text, tokenizer, max_length=512):
 
 def process_entities(ents, text):
 	#Include entities by their pattern
-	with open('../src/config/patterns.csv', 'r') as csvfd:
+	with open('../src/regex/patterns.csv', 'r') as csvfd:
 		reader = csv.DictReader(csvfd, delimiter="\t")
 		for r in reader:
 			add_ent_by_pattern(ents, text, r['Pattern'], r['Label'])

@@ -13,7 +13,7 @@ let profiles: AnonimizeProfile[] = [];
 //Carrega os perfis definidos em memória
 export async function loadAnonimizeProfiles(): Promise<void> {
   if (profiles.length === 0) {
-    const res = await fetch(`/api/profiles`);
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/profiles`);
     console.log(res);
     if (!res.ok) throw new Error("Erro ao carregar perfis");
     profiles = await res.json();
@@ -42,7 +42,7 @@ export async function addProfile(newProfile: AnonimizeProfile): Promise<void> {
     throw new Error(`O perfil com o nome "${newProfile.name}" já existe.`);
   }
 
-  const res = await fetch(`/api/profiles`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/profiles`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(newProfile)
@@ -60,7 +60,7 @@ export async function updateProfileByName(name: string, changes: Partial<Anonimi
     throw new Error(`O perfil com nome "${name}" não foi encontrado.`);
   }
 
-  const res = await fetch(`/api/profiles/${name}`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/profiles/${name}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(changes)
@@ -79,7 +79,7 @@ export async function deleteProfile(name: string): Promise<void> {
     throw new Error(`Profile with name "${name}" not found.`);
   }
 
-  const res = await fetch(`/api/profiles/${name}`, {
+  const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/profiles/${name}`, {
     method: "DELETE"
   });
 

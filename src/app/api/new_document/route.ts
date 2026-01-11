@@ -37,7 +37,7 @@ export async function POST(request: Request) {
         saveDocument(token, document, 3600);
         return NextResponse.json({ ok: true });
     } catch (err) {
-        console.error("💥 Error in /api/new_document:", err);
+        console.error("Error in /api/new_document:", err);
         return NextResponse.json(
             { ok: false, message: "Invalid JSON or server error" },
             { status: 500 }

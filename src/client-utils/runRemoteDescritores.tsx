@@ -98,7 +98,7 @@ export async function requestDescriptors(file: UserFileInterface, abort?: AbortS
         fd.append("area", file.area)
     }
 
-    let resArray: RemoteEntity[] = await fetch("/api/descritores", {
+    let resArray: RemoteEntity[] = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/descritores`, {
         method: "POST",
         body: fd,
         signal: abort

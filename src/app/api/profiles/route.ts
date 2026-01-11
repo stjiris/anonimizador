@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import fs from 'fs';
-import { CONFIG_DIR } from '@/global';
+import { CONFIG_DIR } from '@/server_constants';
 
 const profilesFilePath = path.join(CONFIG_DIR, 'profiles.json');
 

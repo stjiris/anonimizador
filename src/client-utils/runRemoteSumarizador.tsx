@@ -77,7 +77,7 @@ export async function requestSummary(file: UserFile, abort?: AbortSignal) {
     let fd = new FormData()
     fd.append("file", new Blob([text]), "input.txt")
 
-    let resArray: RemoteEntity[] = await fetch("/api/sumarizador", {
+    let resArray: RemoteEntity[] = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/sumarizador`, {
         method: "POST",
         body: fd,
         signal: abort

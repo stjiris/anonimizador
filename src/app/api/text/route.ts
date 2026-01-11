@@ -4,7 +4,7 @@ import os from "os";
 import { promises as fsp } from "fs";
 import { spawn } from "child_process";
 import { randomUUID } from "crypto";
-import { PYTHON_COMMAND } from "@/global";
+import { PYTHON_COMMAND } from "@/server_constants";
 
 export const runtime = "nodejs";
 

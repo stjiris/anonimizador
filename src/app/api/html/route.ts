@@ -3,10 +3,17 @@ import path from 'path';
 import os from 'os';
 import { promises as fsp } from 'fs';
 import { spawnSync } from 'child_process';
-import { CONFIG_DIR, getTempFilePath } from '@/global';
+import { CONFIG_DIR } from '@/server_constants';
 
 export const runtime = 'nodejs';
 const XEMF_LUA = path.join(CONFIG_DIR, 'xemf-to-png.lua');
+
+export function getTempFilePath(prefix = '') {
+    const os = require('os');
+    const crypto = require('crypto');
+    const path = require('path');
+    return path.join(os.tmpdir(), `${Date.now()}-${crypto.randomUUID()}${prefix}`);
+}
 
 function decodeBufferWithFallback(buf: Buffer): string {
     const utf8 = buf.toString('utf8');

@@ -1,8 +1,7 @@
-// src/app/api/types/route.ts
 import fs from 'fs'
 import path from 'path'
 import { NextResponse } from 'next/server'
-import { CONFIG_DIR } from '@/global'
+import { CONFIG_DIR } from '@/server_constants'
 
 export const runtime = 'nodejs'
 

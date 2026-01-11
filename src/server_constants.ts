@@ -1,10 +1,9 @@
 import { execSync } from 'child_process';
 import path from 'path';
 
-export { CONFIG_DIR, PYTHON_COMMAND, ANONIMIZADOR_SECRET };
+export { CONFIG_DIR, PYTHON_COMMAND };
 
-const CONFIG_DIR = path.join(process.cwd(), 'src', 'config')
-const ANONIMIZADOR_SECRET = process.env.ANONIMIZADOR_SECRET;
+const CONFIG_DIR = path.join(process.cwd(), 'src', 'regex')
 
 let PYTHON_COMMAND: string;
 try {
@@ -18,11 +17,4 @@ declare global {
     interface Window {
         currentFile?: import('@/client-utils/UserFile').UserFile;
     }
-}
-
-export function getTempFilePath(prefix = '') {
-    const os = require('os');
-    const crypto = require('crypto');
-    const path = require('path');
-    return path.join(os.tmpdir(), `${Date.now()}-${crypto.randomUUID()}${prefix}`);
 }

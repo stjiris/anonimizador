@@ -9,21 +9,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en">
       <head>
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" href={`${process.env.NEXT_PUBLIC_BASE_PATH}/favicon.ico`} />
+        <Script src={`${process.env.NEXT_PUBLIC_BASE_PATH}/vendor/tesseract.min.js`} strategy="afterInteractive"/>
+        <Script src={`${process.env.NEXT_PUBLIC_BASE_PATH}/vendor/bootstrap.bundle.min.js`} strategy="afterInteractive"/>
       </head>
 
       <body>
-        {children}
-
-        <Script
-          src="/vendor/tesseract.min.js"
-          strategy="afterInteractive"
-        />
-
-        <Script
-          src="/vendor/bootstrap.bundle.min.js"
-          strategy="afterInteractive"
-        />
+        {children}        
       </body>
     </html>
   );

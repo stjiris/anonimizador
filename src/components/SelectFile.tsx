@@ -126,7 +126,7 @@ async function onFile(event: React.ChangeEvent<HTMLInputElement>): Promise<UserF
     }
 
     event.target.disabled = true;
-    return fetch("/api/html", { method: "POST", body: formData }).then(async r => {
+    return fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/html`, { method: "POST", body: formData }).then(async r => {
         let content = await r.text();
 
         if (r.status !== 200) return Promise.reject(new Error(content));

@@ -19,8 +19,8 @@ RUN apt-get install poppler-utils -y
 COPY requirements.txt ./
 
 # clone this repo manually and put it inside the folder of the app and it'll work
-RUN git clone https://gitlab.com/diogoalmiro/iris-lfs-storage.git
-RUN cd iris-lfs-storage &&  git lfs pull
+#RUN git clone https://gitlab.com/diogoalmiro/iris-lfs-storage.git
+#RUN cd iris-lfs-storage &&  git lfs pull
 
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -32,19 +32,21 @@ RUN npm ci
 
 ENV PUBLIC_URL="."
 
+ARG NEXT_PUBLIC_VERSION_COMMIT
 ARG NEXT_PUBLIC_TITLE
 ARG NEXT_PUBLIC_VERSION_DATE
-ARG NEXT_PUBLIC_VERSION_COMMIT
+ARG NEXT_PUBLIC_BASE_PATH
 
 ENV NEXT_PUBLIC_TITLE=${NEXT_PUBLIC_TITLE} \
     NEXT_PUBLIC_VERSION_DATE=${NEXT_PUBLIC_VERSION_DATE} \
-    NEXT_PUBLIC_VERSION_COMMIT=${NEXT_PUBLIC_VERSION_COMMIT}
+    NEXT_PUBLIC_VERSION_COMMIT=${NEXT_PUBLIC_VERSION_COMMIT}\
+    NEXT_PUBLIC_BASE_PATH=${NEXT_PUBLIC_BASE_PATH}
 
 COPY . .
 
 # if the line above is commented make sure to run this:
-#COPY iris-lfs-storage/model-best ./src/scripts/model-best
-#COPY iris-lfs-storage/model-gpt ./src/scripts/model-gpt
+COPY iris-lfs-storage/model-best ./src/scripts/model-best
+COPY iris-lfs-storage/model-gpt ./src/scripts/model-gpt
 
 RUN npm run build
 

@@ -30,3 +30,5 @@ yarn-error.log*
 next-env.d.ts
 
 iris-lfs-storage/
+
+__pycache__/

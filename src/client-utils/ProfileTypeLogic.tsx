@@ -166,7 +166,7 @@ export function useAvaiableProfiles(): ProfileI[] {
     const [profiles, setProfiles] = useState<ProfileI[]>([]);
     useEffect(() => {
         const abortController = new AbortController();
-        fetch("/api/profiles", { signal: abortController.signal })
+        fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/profiles`, { signal: abortController.signal })
             .then(r => {
                 if (!r.ok) {
                     console.error("Failed to fetch profiles:", r.status, r.statusText);

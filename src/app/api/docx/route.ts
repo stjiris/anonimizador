@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
         const buf = Buffer.from(await file.arrayBuffer());
         await fsp.writeFile(inPath, buf);
 
-        const ref = path.join(process.cwd(), 'src', 'config', 'reference.docx');
+        const ref = path.join(process.cwd(), 'src', 'regex', 'reference.docx');
         const refArg = fs.existsSync(ref) ? [`--reference-doc=${ref}`] : [];
 
         const sub = spawnSync('pandoc', [inPath, '-t', 'docx', '-o', outPath, ...refArg]);
