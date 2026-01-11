@@ -21,7 +21,8 @@ COPY requirements.txt ./
 # clone this repo manually and put it inside the folder of the app and it'll work
 RUN git clone https://gitlab.com/diogoalmiro/iris-lfs-storage.git
 RUN cd iris-lfs-storage &&  git lfs pull
-
+RUN cp -r iris-lfs-storage/model-best ./src/scripts/model-best
+RUN cp -r iris-lfs-storage/model-gpt ./src/scripts/model-gpt
 
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -46,8 +47,8 @@ ENV NEXT_PUBLIC_TITLE=${NEXT_PUBLIC_TITLE} \
 COPY . .
 
 # if the line above is commented make sure to run this:
-COPY iris-lfs-storage/model-best ./src/scripts/model-best
-COPY iris-lfs-storage/model-gpt ./src/scripts/model-gpt
+#COPY iris-lfs-storage/model-best ./src/scripts/model-best
+#COPY iris-lfs-storage/model-gpt ./src/scripts/model-gpt
 
 RUN npm run build
 
