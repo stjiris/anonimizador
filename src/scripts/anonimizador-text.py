@@ -29,7 +29,7 @@ import click
               '--model',
               help="model to use",
               type=click.Choice(['model-gpt', 'model-best', 'spacy-pt', 'none']),
-              default='model-gpt',
+              default='model-best',
               show_default=True)
 def process(input_file, output_file, format, model):
 	with input_file:
