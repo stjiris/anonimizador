@@ -11,6 +11,11 @@ export function isProfileI(arg: any): arg is ProfileI {
     if (typeof arg.name !== "string") return false;
     if (typeof arg.tools !== "object") return false;
     if (typeof arg.defaultEntityTypes !== "object") return false;
+    
+    if (!arg.nerRgx || typeof arg.nerRgx !== "object") return false;
+    if (typeof arg.nerRgx.nerOn !== "boolean") return false;
+    if (typeof arg.nerRgx.rgxOn !== "boolean") return false;
+    
     for( let key in arg.defaultEntityTypes ){
         if( typeof arg.defaultEntityTypes[key] !== "object" ) return false;
         if( typeof arg.defaultEntityTypes[key].color !== "string" ) return false;
@@ -20,7 +25,6 @@ export function isProfileI(arg: any): arg is ProfileI {
         }
     }
     return true;
-
 }
 
 export const ProfileIVersion = "ProfileI.v0.1";
@@ -46,8 +50,12 @@ export function setProfile(profile: ProfileI | null) {
         updateEntityTypeI(key, profile.defaultEntityTypes[key].color, profile.defaultEntityTypes[key].functionIndex);
     }
     
-    profile.nerRgx.nerOn = true
-    profile.nerRgx.rgxOn = true
+    if (!profile.nerRgx) {
+        profile.nerRgx = { nerOn: true, rgxOn: true };
+    } else {
+        profile.nerRgx.nerOn = true;
+        profile.nerRgx.rgxOn = true;
+    }
 
     localStorage.setItem(ProfileIVersion, JSON.stringify(profile));
 }
@@ -145,10 +153,9 @@ export function ProfileSelector() {
                     </div>
                     <div>
                         <p className="m-0">Versão Pro:</p>
-                        <input type="checkbox" className="form-check-input" id="nerOn" checked={profile.nerRgx.nerOn} onChange={e => setProfile({...profile, nerRgx: {...profile.nerRgx, nerOn: e.target.checked}})}/>
-                        <label className="form-check-label" htmlFor="nerOn" title="Utilização do modelo NER (Named Entity Recognition) na identificação de entidades">Modelo NER</label>
+                        <input type="checkbox" className="form-check-input" id="nerOn" checked={profile.nerRgx?.nerOn ?? true} onChange={e => setProfile({...profile, nerRgx: {...(profile.nerRgx || {}), nerOn: e.target.checked}})}/>
                         <br />
-                        <input type="checkbox" className="form-check-input" id="rgxOn" checked={profile.nerRgx.rgxOn} onChange={e => setProfile({...profile, nerRgx: {...profile.nerRgx, rgxOn: e.target.checked}})}/>
+                        <input type="checkbox" className="form-check-input" id="rgxOn" checked={profile.nerRgx?.rgxOn ?? true} onChange={e => setProfile({...profile, nerRgx: {...(profile.nerRgx || {}), rgxOn: e.target.checked}})}/>
                         <label className="form-check-label" htmlFor="rgxOn" title="Utilização das regras REGEX na identificação de entidades">Regras REGEX</label>
                     </div>
                     <div>
