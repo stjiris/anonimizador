@@ -28,8 +28,8 @@ import click
 @click.option('-m',
               '--model',
               help="model to use",
-              type=click.Choice(['model-gpt', 'model-best', 'spacy-pt', 'none']),
-              default='model-best',
+              type=click.Choice(['model-gpt', 'model-best', 'model-extended', 'spacy-pt', 'none']),
+              default='model-extended',
               show_default=True)
 def process(input_file, output_file, format, model):
 	with input_file:
@@ -38,6 +38,8 @@ def process(input_file, output_file, format, model):
 		model = spacy.load("./src/scripts/model-gpt/model-best")
 	if model == 'model-best':
 		model = spacy.load("./src/scripts/model-best")
+	if model == 'model-extended':
+		model = spacy.load("./src/scripts/model-extended")
 	if model == 'spacy-pt':
 		model = spacy.load("pt_core_news_lg")
 	if model == 'none':

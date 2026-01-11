@@ -27,6 +27,32 @@ services:
     restart: unless-stopped
     #networks:
     #  - juris-network
+  anonimizador_dev:
+    build:
+      context: .
+      dockerfile: ./Dockerfile_dev
+      args:
+        - NEXT_PUBLIC_BASE_PATH=${BASE_PATH:-/anonimizador}
+        - NEXT_PUBLIC_TITLE=${ANONIMIZADOR_TITLE:-Anonimizador}
+        - NEXT_PUBLIC_VERSION_COMMIT=${VERSION_COMMIT:-0000000}
+        - NEXT_PUBLIC_VERSION_DATE=${VERSION_DATE:-01/01/1990}
+    environment:
+      - ANONIMIZADOR_SECRET=${ANONIMIZADOR_SECRET}
+      - PORT=${ANONIMIZADOR_PORT:-7999}
+    env_file:
+      - .env
+    ports:
+      - ${ANONIMIZADOR_PORT:-7999}:7999
+    volumes:
+      - logs:/opt/app/logs
+      - ./iris-lfs-storage/model-best:/opt/app/src/scripts/model-best
+      - ./iris-lfs-storage/model-gpt:/opt/app/src/scripts/model-gpt
+      - ./iris-lfs-storage/model-extended:/opt/app/src/scripts/model-extended
+      - .:/opt/app
+      - /opt/app/node_modules
+    restart: unless-stopped
+    #networks:
+    #  - juris-network
   sumarizador:
     build: https://github.com/stjiris/sumarizador.git#493187b33aea6cd68881b3a31d9199be9044de07
     restart: unless-stopped
