@@ -20,10 +20,6 @@ services:
       - ${ANONIMIZADOR_PORT:-7999}:7999
     volumes:
       - logs:/opt/app/logs
-      #- ./iris-lfs-storage/model-best:/opt/app/src/scripts/model-best
-      #- ./iris-lfs-storage/model-gpt:/opt/app/src/scripts/model-gpt
-      #- .:/opt/app
-      #- /opt/app/node_modules
     restart: unless-stopped
     #networks:
     #  - juris-network

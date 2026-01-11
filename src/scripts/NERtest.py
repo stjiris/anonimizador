@@ -3,7 +3,7 @@ import re
 import sys
 import csv
 
-spacy_model = "../../ner_fine_tuning/model-gpt/model-best"
+spacy_model = "../../ner_fine_tuning/model-gpt/model-extended"
 from spacy.language import Language
 from spacy.matcher import Matcher
 import json

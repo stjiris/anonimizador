@@ -184,16 +184,48 @@ const ANONIMIZE: (pool: EntityPool, types: Record<string, EntityTypeI>) => MRT_C
     enableColumnDragging: false,
     enableColumnActions: false,
     size: 40,
-    Cell: ({ row }) => row.original.overwriteAnonimization ? row.original.overwriteAnonimization : <span className="text-muted">{row.original.anonimizingFunction(types[row.original.type])(row.original.offsets[0].preview, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex)}</span>,
+    Cell: ({ row }) => {
+        const entityType = types[row.original.type] || { 
+            name: `${row.original.type}*`, 
+            color: "red", 
+            functionIndex: FULL_ANONIMIZE 
+        };
+        
+        return row.original.overwriteAnonimization 
+            ? row.original.overwriteAnonimization 
+            : <span className="text-muted">
+                {row.original.anonimizingFunction(entityType)(
+                    row.original.offsets[0].preview, 
+                    row.original.type, 
+                    row.original.index, 
+                    row.original.typeIndex, 
+                    row.original.funcIndex
+                )}
+              </span>
+    },
     muiTableBodyCellProps: ({ cell, table }) => ({
         onClick: () => table.setEditingCell(cell)
     }),
-    muiTableBodyCellEditTextFieldProps: ({ row }: { row: MRT_Row<Entity> }) => ({
-        placeholder: row.original.anonimizingFunction(types[row.original.type])(row.original.offsets[0].preview, row.original.type, row.original.index, row.original.typeIndex, row.original.funcIndex),
-        onBlur: (event: React.ChangeEvent<HTMLSelectElement>) => {
-            let o = row.original.overwriteAnonimization;
-            row.original.overwriteAnonimization = event.target.value;
-            if (o !== row.original.overwriteAnonimization) pool.updateOrder("Modificar anonimização de entidade");
+    muiTableBodyCellEditTextFieldProps: ({ row }: { row: MRT_Row<Entity> }) => {
+        const entityType = types[row.original.type] || { 
+            name: `${row.original.type}*`, 
+            color: "red", 
+            functionIndex: FULL_ANONIMIZE 
+        };
+        
+        return {
+            placeholder: row.original.anonimizingFunction(entityType)(
+                row.original.offsets[0].preview, 
+                row.original.type, 
+                row.original.index, 
+                row.original.typeIndex, 
+                row.original.funcIndex
+            ),
+            onBlur: (event: React.ChangeEvent<HTMLSelectElement>) => {
+                let o = row.original.overwriteAnonimization;
+                row.original.overwriteAnonimization = event.target.value;
+                if (o !== row.original.overwriteAnonimization) pool.updateOrder("Modificar anonimização de entidade");
+            }
         }
-    })
+    }
 })
