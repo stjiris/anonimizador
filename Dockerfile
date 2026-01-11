@@ -19,8 +19,8 @@ RUN apt-get install poppler-utils -y
 COPY requirements.txt ./
 
 # clone this repo manually and put it inside the folder of the app and it'll work
-#RUN git clone https://gitlab.com/diogoalmiro/iris-lfs-storage.git
-#RUN cd iris-lfs-storage &&  git lfs pull
+RUN git clone https://gitlab.com/diogoalmiro/iris-lfs-storage.git
+RUN cd iris-lfs-storage &&  git lfs pull
 
 RUN pip install --no-cache-dir -r requirements.txt
 
