@@ -1,6 +1,6 @@
 "use client";
 import { formatBytes } from "@/components/SelectFile";
-import { UserFile } from "@/client-utils/UserFile";
+import { UserFile } from "@/core/UserFile";
 import { MaterialReactTable } from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { useArea, useDescriptors, useEntities, useImages, useSave, useSummary, useTypes } from "./uses";

@@ -2,12 +2,12 @@ import { MRT_ColumnDef, MRT_Row, MRT_TableInstance, MaterialReactTable } from "m
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 
 import { EntityPool } from "@/types/EntityPool"
-import { Button } from "@/client-utils/BootstrapIcons"
+import { Button } from "@/core/BootstrapIcons"
 import { Entity } from "@/types/Entity";
-import { UserFile } from "@/client-utils/UserFile";
+import { UserFile } from "@/core/UserFile";
 import { EntityTypeI } from "@/types/EntityType";
-import { FULL_ANONIMIZE } from "@/client-utils/anonimizeFunctions";
-import { useEntities, useTypesDict } from "@/client-utils/uses";
+import { FULL_ANONIMIZE } from "@/core/anonimizeFunctions";
+import { useEntities, useTypesDict } from "@/core/uses";
 import { useMemo, useState } from "react";
 import { UserFileInterface } from "@/types/UserFile";
 

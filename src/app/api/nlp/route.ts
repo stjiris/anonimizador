@@ -68,7 +68,7 @@ export async function POST(req: NextRequest) {
                 const end = new Date();
                 console.error(
                     JSON.stringify({
-                        requestPath: "/api/text",
+                        requestPath: "/api/nlp",
                         startTime: start.toISOString(),
                         endTime: end.toISOString(),
                         durationMs: end.getTime() - start.getTime(),

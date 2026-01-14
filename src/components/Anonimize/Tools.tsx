@@ -1,9 +1,9 @@
 import { useState } from "react";
-import { UserFile } from "@/client-utils/UserFile";
-import { DescritoresModalBody } from "@/client-utils/runRemoteDescritores";
-import { Button } from "@/client-utils/BootstrapIcons";
-import { SumarizadorModalBody } from "@/client-utils/runRemoteSumarizador";
-import { useProfile } from "@/client-utils/ProfileTypeLogic";
+import { UserFile } from "@/core/UserFile";
+import { DescritoresModalBody } from "@/core/runRemoteDescritores";
+import { Button } from "@/core/BootstrapIcons";
+import { SumarizadorModalBody } from "@/core/runRemoteSumarizador";
+import { useProfile } from "@/core/ProfileTypeLogic";
 import { ProfileI } from "@/types/ProfileType";
 import { UserFileInterface } from "@/types/UserFile";
 

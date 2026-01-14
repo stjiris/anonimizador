@@ -6,8 +6,8 @@ import Anonimize from "@/components/Anonimize/Main";
 import Header from "@/components/Header";
 import SelectFile from "@/components/SelectFile";
 import { Banner } from "@/components/Banner";
-import BootstrapModal from "@/client-utils/BootstrapModal";
-import { ProfileProvider, ProfileSelector } from "@/client-utils/ProfileTypeLogic";
+import BootstrapModal from "@/core/BootstrapModal";
+import { ProfileProvider, ProfileSelector } from "@/core/ProfileTypeLogic";
 import { UserFileInterface } from "@/types/UserFile";
 
 export default function ClientRoot() {

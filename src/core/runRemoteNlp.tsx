@@ -74,7 +74,7 @@ export async function runRemoteNlp(file: UserFileInterface, abort?: AbortSignal)
     let fd = new FormData()
     fd.append("file", new Blob([text]), "input.txt")
 
-    let resArray: RemoteEntity[] = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/text`, {
+    let resArray: RemoteEntity[] = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/nlp`, {
         method: "POST",
         body: fd,
         signal: abort

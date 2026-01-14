@@ -1,5 +1,5 @@
-import { useProfile } from "@/client-utils/ProfileTypeLogic";
-import { Bicon, Button } from "../client-utils/BootstrapIcons";
+import { useProfile } from "@/core/ProfileTypeLogic";
+import { Bicon, Button } from "../core/BootstrapIcons";
 
 export default function Header() {
     const [profile] = useProfile();

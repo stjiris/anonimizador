@@ -1,6 +1,6 @@
 import { useMemo, useRef, useState } from "react";
-import { UserFile } from "@/client-utils/UserFile";
-import { useTypes } from "@/client-utils/uses";
+import { UserFile } from "@/core/UserFile";
+import { useTypes } from "@/core/uses";
 import { AddEntityDryRun } from "@/types/EntityPool";
 import { UserFileInterface } from "@/types/UserFile";
 

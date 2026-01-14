@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { UserFile } from "@/client-utils/UserFile";
+import { UserFile } from "@/core/UserFile";
 import { Button } from "./BootstrapIcons";
 import { useSummary } from "./uses";
 

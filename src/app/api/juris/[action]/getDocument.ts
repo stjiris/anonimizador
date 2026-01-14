@@ -1,8 +1,21 @@
 import { NextResponse } from "next/server";
-import { getAndDeleteDocument } from "@/server-utils/document_store";
+import { getAndDeleteDocument } from "./aux";
 
-export async function GET(request: Request) {
+export async function getDocumentEndpoint(request: Request): Promise<NextResponse<unknown>> {
     try {
+        const expectedSecret = process.env.ANONIMIZADOR_SECRET;
+
+        if (expectedSecret) {
+            const got = request.headers.get("x-service-secret");
+            if (!got || got !== expectedSecret) {
+                console.warn("Invalid or missing x-service-secret");
+                return NextResponse.json(
+                    { ok: false, message: "Unauthorized" },
+                    { status: 401 }
+                );
+            }
+        }
+
         const { searchParams } = new URL(request.url);
         const token = searchParams.get("token");
 
@@ -33,3 +46,5 @@ export async function GET(request: Request) {
         );
     }
 }
+
+

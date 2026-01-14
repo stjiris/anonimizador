@@ -1,4 +1,4 @@
-import { AUTO_ANONIMIZE, DONT_ANONIMIZE } from "@/client-utils/anonimizeFunctions"
+import { AUTO_ANONIMIZE, DONT_ANONIMIZE } from "@/core/anonimizeFunctions"
 
 export interface EntityTypeI extends EntityTypeColor, EntityTypeFunction { }
 

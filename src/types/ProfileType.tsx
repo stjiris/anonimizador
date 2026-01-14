@@ -1,8 +1,8 @@
 import { ChangeEventHandler, createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { isAnonimizeFunctionIndex } from "@/client-utils/anonimizeFunctions";
-import { Button } from "@/client-utils/BootstrapIcons";
+import { isAnonimizeFunctionIndex } from "@/core/anonimizeFunctions";
+import { Button } from "@/core/BootstrapIcons";
 import { ProfileTypesTable } from "../components/Anonimize/ProfileTypesTable";
-import { updateEntityTypeI } from "@/client-utils/EntityTypeLogic";
+import { updateEntityTypeI } from "@/core/EntityTypeLogic";
 
 export interface ProfileI {
     name: string,

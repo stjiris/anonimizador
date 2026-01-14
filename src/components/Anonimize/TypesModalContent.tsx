@@ -1,12 +1,12 @@
-import { UserFile } from "@/client-utils/UserFile";
+import { UserFile } from "@/core/UserFile";
 import { MRT_ColumnDef, MRT_Row, MRT_TableInstance, MaterialReactTable } from "material-react-table";
-import { functionsWithDescriptionArray } from "@/client-utils/anonimizeFunctions";
+import { functionsWithDescriptionArray } from "@/core/anonimizeFunctions";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { EntityTypeIDefaults, EntityTypeI } from "@/types/EntityType";
-import { Bicon, Button } from "@/client-utils/BootstrapIcons";
-import { useTypes } from "@/client-utils/uses";
+import { Bicon, Button } from "@/core/BootstrapIcons";
+import { useTypes } from "@/core/uses";
 import { ProfileI } from "@/types/ProfileType";
-import { useProfile } from "@/client-utils/ProfileTypeLogic";
+import { useProfile } from "@/core/ProfileTypeLogic";
 import { UserFileInterface } from "@/types/UserFile";
 
 export function TypesModalContent({file}:{file: UserFileInterface}){

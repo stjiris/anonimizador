@@ -4,7 +4,7 @@ import { AnonimizeImage } from "@/types/AnonimizeImage";
 import { Entity, OffsetRange } from "@/types/Entity";
 import { EntityPool } from "@/types/EntityPool";
 import { EntityTypeI } from "@/types/EntityType";
-import { UserFile } from "@/client-utils/UserFile";
+import { UserFile } from "@/core/UserFile";
 import { DescriptorI } from "@/types/Descriptor";
 import { SummaryI } from "@/types/Summary";
 import { UserFileInterface } from "@/types/UserFile";

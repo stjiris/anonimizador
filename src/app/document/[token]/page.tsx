@@ -1,8 +1,8 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { createUserFile, readSavedUserFile, deleteUserFile } from "@/client-utils/UserFileCRUDL";
-import { UserFile } from "@/client-utils/UserFile";
+import { createUserFile, readSavedUserFile, deleteUserFile } from "@/core/UserFileCRUDL";
+import { UserFile } from "@/core/UserFile";
 
 interface ApiDocument {
   id: string;
@@ -49,7 +49,7 @@ export default function DocumentPage() {
           return;
         }
 
-        const existingFile = readSavedUserFile(fileName);
+        const existingFile = await readSavedUserFile(fileName);
         if (existingFile != null) {
           const usrConfirm = window.confirm(
             `Existe um ficheiro guardado localmente com o mesmo nome. Confirma que quer apagar ficheiro antigo?`

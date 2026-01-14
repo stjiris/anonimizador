@@ -15,6 +15,6 @@ try {
 
 declare global {
     interface Window {
-        currentFile?: import('@/client-utils/UserFile').UserFile;
+        currentFile?: import('@/core/UserFile').UserFile;
     }
 }

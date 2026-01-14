@@ -4,13 +4,11 @@ import { DescriptorI } from "@/types/Descriptor"
 import { EntityPool } from "@/types/EntityPool"
 import { EntityTypeI } from "@/types/EntityType"
 import { SummaryI } from "@/types/Summary"
-import { SavedUserFile } from "@/client-utils/UserFile"
+import { SavedUserFile } from "@/core/UserFile"
 import { addEntityTypeI, getEntityTypeI, getEntityTypeIs, restoreEntityTypesColors, updateEntityTypeI } from "./EntityTypeLogic"
 import { Entity } from "@/types/Entity"
 import { updateUserFile } from "./UserFileCRUDL"
 import { AUTO_ANONIMIZE } from "./anonimizeFunctions"
-
-"use client";
 
 export class UserFile {
     name: string

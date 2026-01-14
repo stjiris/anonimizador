@@ -1,6 +1,6 @@
-import { UserFile } from "@/client-utils/UserFile";
-import { Button } from "../../client-utils/BootstrapIcons";
-import { useSave } from "../../client-utils/uses";
+import { UserFile } from "@/core/UserFile";
+import { Button } from "../../core/BootstrapIcons";
+import { useSave } from "../../core/uses";
 
 
 export function ExitButton({file, setUserFile}: {file: UserFile, setUserFile: (f: UserFile | undefined) => void}){

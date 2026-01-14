@@ -1,8 +1,8 @@
 import { AnonimizeStateState } from "@/types/AnonimizeState";
 import { EntityTypeI } from "@/types/EntityType";
-import { UserFile } from "@/client-utils/UserFile";
-import { Button } from "@/client-utils/BootstrapIcons";
-import { SpecificOffsetRange, useTypesDict } from "@/client-utils/uses";
+import { UserFile } from "@/core/UserFile";
+import { Button } from "@/core/BootstrapIcons";
+import { SpecificOffsetRange, useTypesDict } from "@/core/uses";
 import { renderBlock } from "./render";
 import { UserFileInterface } from "@/types/UserFile";
 
@@ -37,6 +37,7 @@ function exportFile(file: UserFileInterface, entityTypes: Record<string, EntityT
                 offsets.push({ ...o, ent: e })
             })
         })
+
         offsets.sort((a, b) => a.start - b.start);
         let html = renderBlock(file.doc, entityTypes, offsets, anonimized ? AnonimizeStateState.ANONIMIZED : AnonimizeStateState.ORIGINAL, 0, file.images, { current: 0 })
         makeDocxDowload(html).then(blob => {
@@ -79,5 +80,5 @@ function makeDocxDowload(html: string) {
 
     formData.append("file", htmlFile);
 
-    return fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/docx`, { method: "POST", body: formData }).then(r => r.status === 200 ? r.blob() : null)
+    return fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/export_docx`, { method: "POST", body: formData }).then(r => r.status === 200 ? r.blob() : null)
 }

@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { AnonimizeStateState } from '@/types/AnonimizeState'
 import AnonimizeTooltip from './Tooltip';
-import { UserFile } from '@/client-utils/UserFile';
-import { useImages, useSpecificOffsets, useTypesDict } from '@/client-utils/uses';
+import { UserFile } from '@/core/UserFile';
+import { useImages, useSpecificOffsets, useTypesDict } from '@/core/uses';
 import { renderBlock } from './render';
 
 interface AnonimizeContentProps {

@@ -1,10 +1,10 @@
 import { MRT_ColumnDef, MRT_Row, MRT_TableInstance, MaterialReactTable } from "material-react-table";
-import { functionsWithDescriptionArray } from "@/client-utils/anonimizeFunctions";
+import { functionsWithDescriptionArray } from "@/core/anonimizeFunctions";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { EntityTypeIDefaults, EntityTypeI } from "@/types/EntityType";
-import { Bicon, Button } from "@/client-utils/BootstrapIcons";
+import { Bicon, Button } from "@/core/BootstrapIcons";
 import { useMemo } from "react";
-import { useAvaiableProfiles, useProfile } from "@/client-utils/ProfileTypeLogic";
+import { useAvaiableProfiles, useProfile } from "@/core/ProfileTypeLogic";
 import { ProfileI } from "@/types/ProfileType";
 
 export function ProfileTypesTable(){

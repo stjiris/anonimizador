@@ -1,5 +1,5 @@
 "use client";
-import { UserFile } from "@/client-utils/UserFile";
+import { UserFile } from "@/core/UserFile";
 import { useTypes } from "./uses";
 import { UserFileInterface } from "@/types/UserFile";
 

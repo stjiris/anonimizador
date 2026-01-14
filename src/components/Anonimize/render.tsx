@@ -1,13 +1,12 @@
 import { AnonimizeImage } from "@/types/AnonimizeImage";
 import { AnonimizeStateState } from "@/types/AnonimizeState";
 import { EntityTypeI } from "@/types/EntityType";
-import { SpecificOffsetRange } from "@/client-utils/uses";
+import { SpecificOffsetRange } from "@/core/uses";
 
 const TAGS_TO_IGNORE = "script,style,link,meta,head,html,svg,iframe,canvas,object,embed,applet,frameset,frame,noembed,noscript,param,source,track".split(",");
 
 export function renderBlock(doc: ChildNode, entityTypes: Record<string, EntityTypeI>, offsets: SpecificOffsetRange[], anonimizeState: AnonimizeStateState, offset: number, images: Record<number, AnonimizeImage>, imageIndex: { current: number }) {
     let elmt = doc;
-
     if (elmt.nodeType === Node.TEXT_NODE) {
         let elmtStr = elmt.nodeValue || ""; // should never be null tho...
         let tokenFragment = "";

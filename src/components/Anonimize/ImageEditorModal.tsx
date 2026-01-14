@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { UserFile } from "@/client-utils/UserFile";
-import BootstrapModal from "@/client-utils/BootstrapModal";
-import { Bicon, Button } from "@/client-utils/BootstrapIcons";
+import { UserFile } from "@/core/UserFile";
+import BootstrapModal from "@/core/BootstrapModal";
+import { Bicon, Button } from "@/core/BootstrapIcons";
 import { AnonimizeImage } from "@/types/AnonimizeImage";
 import { normalizeEntityString } from "@/types/Entity";
 import { UserFileInterface } from "@/types/UserFile";

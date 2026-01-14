@@ -1,7 +1,7 @@
-import { saveDocument } from "@/server-utils/document_store";
 import { NextResponse } from "next/server";
+import { saveDocument } from "./aux";
 
-export async function POST(request: Request) {
+export async function saveDocumentEndpoint(request: Request): Promise<NextResponse<unknown>> {
     const expectedSecret = process.env.ANONIMIZADOR_SECRET;
 
     if (expectedSecret) {

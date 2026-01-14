@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { AnonimizeStateCombined, AnonimizeStateState, AnonimizeVisualState, getAnonimizedStateCombined } from "@/types/AnonimizeState";
-import { UserFile } from "@/client-utils/UserFile";
-import { Bicon, Button } from "@/client-utils/BootstrapIcons";
-import BootstrapModal from "@/client-utils/BootstrapModal";
-import { EntitiesStyle } from "@/client-utils/entitiesStyle";
+import { UserFile } from "@/core/UserFile";
+import { Bicon, Button } from "@/core/BootstrapIcons";
+import BootstrapModal from "@/core/BootstrapModal";
+import { EntitiesStyle } from "@/core/entitiesStyle";
 import { ExitButton, ForceExitButton } from "@/components/Anonimize/exitButton";
-import { InfoModalContent } from "@/client-utils/infoModalContent";
-import { SuggestButton } from "@/client-utils/runRemoteNlp";
-import { SavedBadge } from "@/client-utils/savedBadge";
-import { useSave } from "@/client-utils/uses";
+import { InfoModalContent } from "@/core/infoModalContent";
+import { SuggestButton } from "@/core/runRemoteNlp";
+import { SavedBadge } from "@/core/savedBadge";
+import { useSave } from "@/core/uses";
 import AnonimizeContent from "./Content";
 import { EntityTable } from "./EntityTable";
 import { HistoryCommands } from "./HistoryCommands";
@@ -17,7 +17,7 @@ import { SearchModalContent } from "./SearchModalContent";
 import { TypesModalContent } from "./TypesModalContent";
 import { ToolsButton, ToolsModalBody } from "./Tools";
 import { ExportButton } from "./ExportButton";
-import { loadAnonimizeProfiles, getAnonimizeProfiles, AnonimizeProfile } from "@/client-utils/AnonimizeProfiles";
+import { loadAnonimizeProfiles, getAnonimizeProfiles, AnonimizeProfile } from "@/core/AnonimizeProfiles";
 import { UserFileInterface } from "@/types/UserFile";
 
 interface AnonimizeProps {

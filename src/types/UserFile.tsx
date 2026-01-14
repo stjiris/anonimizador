@@ -1,4 +1,4 @@
-import { SavedUserFile } from "@/client-utils/UserFile"
+import { SavedUserFile } from "@/core/UserFile"
 import { AnonimizeImage } from "./AnonimizeImage"
 import { DescriptorI } from "./Descriptor"
 import { EntityPool } from "./EntityPool"

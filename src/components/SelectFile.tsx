@@ -1,9 +1,10 @@
+'use client'
 import React, { ChangeEvent, useEffect, useState } from "react";
-import { createUserFile, deleteUserFile, readSavedUserFile, listUserFile } from "@/client-utils/UserFileCRUDL";
-import { isSavedUserFile, SavedUserFile, UserFile } from "@/client-utils/UserFile";
+import { createUserFile, deleteUserFile, readSavedUserFile, listUserFile } from "@/core/UserFileCRUDL";
+import { isSavedUserFile, SavedUserFile, UserFile } from "@/core/UserFile";
 import { MRT_ColumnDef, MaterialReactTable } from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
-import { Bicon, Button } from "@/client-utils/BootstrapIcons";
+import { Bicon, Button } from "@/core/BootstrapIcons";
 
 // https://stackoverflow.com/a/18650828/2573422
 export function formatBytes(a: number, b = 2) { if (!+a) return "0 Bytes"; const c = 0 > b ? 0 : b, d = Math.floor(Math.log(a) / Math.log(1024)); return `${parseFloat((a / Math.pow(1024, d)).toFixed(c))} ${["Bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"][d]}` }
@@ -34,43 +35,55 @@ const cols: MRT_ColumnDef<SavedUserFile>[] = [
     }
 ]
 
-
 export default function SelectFile({ setUserFile }: { setUserFile: (file: UserFile) => void }) {
-    const [list, setList] = useState<SavedUserFile[]>(listUserFile());
+    const [list, setList] = useState<SavedUserFile[]>([]);
 
     useEffect(() => {
-        const update = () => setList(listUserFile());
+        (async () => {
+            const files = await listUserFile();
+            setList(files);
+        })();
+    }, []);
+
+    useEffect(() => {
+        const update = () => {
+            (async () => {
+                const files = await listUserFile();
+                setList(files);
+            })();
+        };
         window.addEventListener("AlertUpdateListUserFile", update);
-        return () => {
-            window.removeEventListener("AlertUpdateListUserFile", update);
-        }
-    }, [])
+        return () => window.removeEventListener("AlertUpdateListUserFile", update);
+    }, []);
 
-
-    return <MaterialReactTable
-        muiTablePaperProps={{ className: "container" }}
-        renderTopToolbarCustomActions={({ table }) => <AddUserFileAction setUserFile={setUserFile} />}
-        columns={cols}
-        data={list}
-        localization={{ ...MRT_Localization_PT, noRecordsToDisplay: "Sem ficheiros" }}
-        enableRowActions={true}
-        renderRowActions={({ row }) => <UserFileActions file={row.original} setUserFile={setUserFile} />}
-        positionActionsColumn="first"
-        enablePagination={false}
-        enableDensityToggle={false}
-        enableHiding={false}
-        enableColumnResizing={false}
-        enableRowSelection={false}
-        enableColumnOrdering={false}
-        enableStickyHeader={false}
-        enableEditing={true}
-        enableColumnFilters={false}
-        enableSorting={false}
-        enableGlobalFilter={false}
-        enableFullScreenToggle={false}
-        enableColumnActions={false}
-        muiTableBodyRowProps={({ row }) => ({ onClick: (e) => setUserFile(new UserFile(row.original)) })}
-    />
+    return (
+        <MaterialReactTable
+            muiTablePaperProps={{ className: "container" }}
+            columns={cols}
+            data={list}
+            localization={{ ...MRT_Localization_PT, noRecordsToDisplay: "Sem ficheiros" }}
+            enableRowActions
+            renderRowActions={({ row }) => <UserFileActions file={row.original} setUserFile={setUserFile} />}
+            positionActionsColumn="first"
+            muiTableBodyRowProps={({ row }) => ({
+                onClick: () => setUserFile(new UserFile(row.original))
+            })}
+            renderTopToolbarCustomActions={() => <AddUserFileAction setUserFile={setUserFile} />}
+            enablePagination={false}
+            enableDensityToggle={false}
+            enableHiding={false}
+            enableColumnResizing={false}
+            enableRowSelection={false}
+            enableColumnOrdering={false}
+            enableStickyHeader={false}
+            enableEditing={true}
+            enableColumnFilters={false}
+            enableSorting={false}
+            enableGlobalFilter={false}
+            enableFullScreenToggle={false}
+            enableColumnActions={false}
+        />
+    );
 }
 
 async function onFile(event: React.ChangeEvent<HTMLInputElement>): Promise<UserFile | undefined> {
@@ -96,7 +109,7 @@ async function onFile(event: React.ChangeEvent<HTMLInputElement>): Promise<UserF
             return null;
         });
         if (loadedUserFile) {
-            let savedUserFile = readSavedUserFile(loadedUserFile.name);
+            let savedUserFile = await readSavedUserFile(loadedUserFile.name);
             if (savedUserFile != null) {
                 let usrConfirm = window.confirm("Existe um ficheiro guardado localmente com o mesmo nome. Confirma que quer apagar ficheiro antigo?");
                 if (!usrConfirm) {
@@ -115,7 +128,7 @@ async function onFile(event: React.ChangeEvent<HTMLInputElement>): Promise<UserF
         }
     }
 
-    let savedUserFile = readSavedUserFile(file.name);
+    let savedUserFile = await readSavedUserFile(file.name);
     if (savedUserFile != null) {
         let usrConfirm = window.confirm("Existe um ficheiro guardado localmente com o mesmo nome. Confirma que quer apagar ficheiro antigo?");
         if (!usrConfirm) {
@@ -126,10 +139,11 @@ async function onFile(event: React.ChangeEvent<HTMLInputElement>): Promise<UserF
     }
 
     event.target.disabled = true;
-    return fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/html`, { method: "POST", body: formData }).then(async r => {
+    return fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/to_html`, { method: "POST", body: formData }).then(async r => {
         let content = await r.text();
 
-        if (r.status !== 200) return Promise.reject(new Error(content));
+        if (r.status !== 200)
+            return Promise.reject(new Error(content));
 
         let documentDom = new DOMParser().parseFromString(content, "text/html");
 
