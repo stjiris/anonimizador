@@ -47,8 +47,8 @@ services:
       - .:/opt/app
       - /opt/app/node_modules
     restart: unless-stopped
-    #networks:
-    #  - juris-network
+    networks:
+      - juris-network
   sumarizador:
     build: https://github.com/stjiris/sumarizador.git#493187b33aea6cd68881b3a31d9199be9044de07
     restart: unless-stopped
@@ -60,6 +60,6 @@ services:
     ports:
       - ${DESCRITORES_PORT:-8999}:8999
   
-#networks:
-#  juris-network:
-#    external: true
+networks:
+  juris-network:
+    external: true

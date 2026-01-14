@@ -32,7 +32,7 @@ export default function DocumentPage() {
     async function fetchAndSaveDocument() {
       try {
         setStatus('A obter documento do servidor...');
-        const res = await fetch(`/api/get_document?token=${token}`);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/juris/get_document?token=${token}`);
         const data = await res.json();
 
         if (!data.ok) {
@@ -58,7 +58,7 @@ export default function DocumentPage() {
             setError('Importação cancelada pelo utilizador');
             return;
           }
-          deleteUserFile(existingFile);
+          await deleteUserFile(existingFile);
         }
 
         setStatus('A criar ficheiro...');
@@ -66,13 +66,13 @@ export default function DocumentPage() {
 
         setStatus('A guardar documento localmente...');
         try {
-          createUserFile(userFile.toSavedFile());
+          await createUserFile(userFile.toSavedFile());
           window.dispatchEvent(new Event('AlertUpdateListUserFile'));
           sessionStorage.setItem('autoSelectFile', fileName);
-          
+
           setStatus('Documento guardado! A redirecionar...');
           setTimeout(() => router.push('/'), 1000);
-          
+
         } catch (e) {
           console.error(e);
           alert('Aviso! Ficheiro grande demais para ser guardado no browser. Poderá trabalhar nele à mesma.');
@@ -112,8 +112,8 @@ export default function DocumentPage() {
             <h1 className="h2 mb-2">Erro</h1>
             <p>{error}</p>
           </div>
-          <button 
-            onClick={() => router.push('/')} 
+          <button
+            onClick={() => router.push('/')}
             className="btn btn-primary"
           >
             Voltar ao Início
