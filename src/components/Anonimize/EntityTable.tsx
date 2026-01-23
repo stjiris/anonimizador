@@ -69,7 +69,7 @@ export function EntityTable({ file }: { file: UserFile }) {
       enableRowVirtualization={false}
       enableColumnResizing
       columnResizeMode="onChange"
-      muiTableProps={{ sx: { tableLayout: "fixed", width: "100%" } }}
+      muiTableProps={{ sx: { tableLayout: "grid", width: "100%" } }}
       displayColumnDefOptions={{
         "mrt-row-select": { size: 44, minSize: 44, maxSize: 44, enableResizing: false },
         "mrt-row-expand": { size: 44, minSize: 44, maxSize: 44, enableResizing: false },
