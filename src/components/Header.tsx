@@ -13,12 +13,12 @@ export default function Header() {
         <pre className="m-0">Versão: {process.env.REACT_APP_VERSION_COMMIT} ({process.env.REACT_APP_VERSION_DATE})</pre>
         <Button title="Perfil" i="palette2" text={`Perfil${profile?.name? `: ${profile.name}` : ''}`}   className="btn m-1 ms-3" style={{
             backgroundColor: "#a58f3c",
-            borderWidth: "3px",
+            borderWidth: "2px",
             borderColor: "#55491fff",
             color: "#6d1b2a",
             fontWeight: 600,
             fontSize: "0.9rem",
-            padding: "1px 4px"
+            padding: "2px 6px"
         }} data-bs-toggle="modal" data-bs-target="#modal-profile" />
         <div className="flex-fill d-none d-lg-block"></div>
         <nav className="d-print-none">
