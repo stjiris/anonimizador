@@ -18,7 +18,7 @@ export default function Header() {
             color: "#6d1b2a",
             fontWeight: 600,
             fontSize: "0.9rem",
-            padding: "6px 10px"
+            padding: "1px 4px"
         }} data-bs-toggle="modal" data-bs-target="#modal-profile" />
         <div className="flex-fill d-none d-lg-block"></div>
         <nav className="d-print-none">
