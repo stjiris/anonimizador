@@ -11,7 +11,7 @@ export default function Header() {
             </div>
         </a>
         <pre className="m-0">Versão: {process.env.REACT_APP_VERSION_COMMIT} ({process.env.REACT_APP_VERSION_DATE})</pre>
-        <Button title="Perfil" i="palette2" text={`Perfil${profile?.name? `: ${profile.name}` : ''}`}   className="btn m-1" style={{
+        <Button title="Perfil" i="palette2" text={`Perfil${profile?.name? `: ${profile.name}` : ''}`}   className="btn m-1 ms-3" style={{
             backgroundColor: "#a58f3c",
             borderWidth: "3px",
             borderColor: "#55491fff",
