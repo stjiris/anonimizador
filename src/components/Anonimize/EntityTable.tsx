@@ -313,7 +313,7 @@ const ENTITY_COL: (pool: EntityPool) => MRT_ColumnDef<Entity> = (pool) => ({
   id: "entity",
   header: `Entidade (${pool.entities.length})`,
   accessorFn: (ent) => ent.offsets[0]?.preview ?? "",
-  size: 360,
+  size: 270,
   minSize: 260,
   maxSize: 280,
   enableEditing: false,
