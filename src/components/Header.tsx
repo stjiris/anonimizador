@@ -11,7 +11,12 @@ export default function Header() {
             </div>
         </a>
         <pre className="m-0">Versão: {process.env.REACT_APP_VERSION_COMMIT} ({process.env.REACT_APP_VERSION_DATE})</pre>
-        <Button title="Perfil" i="palette2" text={`Perfil${profile?.name? `: ${profile.name}` : ''}`} className="btn btn-sm text-body  alert alert-gray m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-profile" />
+        <Button title="Perfil" i="palette2" text={`Perfil${profile?.name? `: ${profile.name}` : ''}`}   className="btn m-1" style={{
+            backgroundColor: "#a58f3c",
+            color: "#aa4243",
+            fontSize: "0.9rem",
+            padding: "6px 10px"
+        }} data-bs-toggle="modal" data-bs-target="#modal-profile" />
         <div className="flex-fill d-none d-lg-block"></div>
         <nav className="d-print-none">
             <ul className="container d-flex nav align-items-center justify-content-evenly flex-wrap">
