@@ -239,7 +239,7 @@ const toolbar =
 
 const selectedIndexes = (table: MRT_TableInstance<Entity>) =>
   Object.keys(table.getState().rowSelection)
-    .map((k) => parseInt(k))
+    .map((k) => parseInt(k, 10) - 1)
     .filter((k) => !isNaN(k));
 
 //const selectedIndexes = (table: MRT_TableInstance<Entity>) =>
