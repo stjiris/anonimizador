@@ -1,13 +1,12 @@
-"use client";
 import { useEffect, useRef } from "react";
-import { AnonimizeStateState } from "@/types/AnonimizeState";
-import { Entity, normalizeEntityString } from "../types/Entity";
+import { AnonimizeStateState } from "../types/AnonimizeState";
 import { Button } from "./BootstrapIcons";
 import { useEntities } from "./uses";
+import { UserFile } from "./UserFile";
 import { useProfile } from "./ProfileTypeLogic";
-import { UserFileInterface } from "@/types/UserFile";
+import { Entity, normalizeEntityString } from "@/types/EntityType";
 
-export function SuggestButton({ setRequesting, file, requesting, state }: { setRequesting: (b: boolean) => void, file: UserFileInterface, requesting: boolean, state: AnonimizeStateState }) {
+export function SuggestButton({ setRequesting, file, requesting, state }: { setRequesting: (b: boolean) => void, file: UserFile, requesting: boolean, state: AnonimizeStateState }) {
     let ents = useEntities(file.pool)
     const disabled = ents.length > 0 || requesting || state !== AnonimizeStateState.TAGGED;
     const signal = useRef<AbortController>(null)
@@ -28,20 +27,20 @@ export function SuggestButton({ setRequesting, file, requesting, state }: { setR
         return <button className="btn btn-small btn-primary m-1 p-1" disabled><span className="spinner-border spinner-border-sm" role="status"></span> A sugerir...</button>
     }
 
-    return <Button i="file-earmark-play" text="Sugerir" className={`btn btn-small btn-primary m-1 p-1 ${disabled ? "border-0 bg-white text-muted" : ""}`} 
-    onClick={() => {
+    return <Button i="file-earmark-play" text="Sugerir" className={`btn btn-small btn-primary m-1 p-1 ${disabled ? "border-0 bg-white text-muted" : ""}`}
+        onClick={() => {
 
-        setRequesting(true);
-        runRemoteNlp(file, signal.current?.signal)
-            .then(() => { //This code runs after a list of entities and instances is returned by the remoteNLP process;
-                setRequesting(false);
+            setRequesting(true);
+            runRemoteNlp(file, signal.current?.signal)
+                .then(() => { //This code runs after a list of entities and instances is returned by the remoteNLP process;
+                    setRequesting(false);
 
-                file.profile = profile?.name;
-                file.checkCountPES();
-            });
-    }}
+                    file.profile = profile?.name;
+                    file.checkCountPES();
+                });
+        }}
 
-    disabled={disabled} />
+        disabled={disabled} />
 }
 
 
@@ -63,7 +62,7 @@ function textFrom(html: Element): string {
 }
 
 let runRemoteNlpRequesting = false;
-export async function runRemoteNlp(file: UserFileInterface, abort?: AbortSignal) {
+export async function runRemoteNlp(file: UserFile, abort?: AbortSignal) {
     if (runRemoteNlpRequesting) return;
     runRemoteNlpRequesting = true;
 
@@ -128,4 +127,8 @@ export async function runRemoteNlp(file: UserFileInterface, abort?: AbortSignal)
     pool.updateOrder("Sugerir");
     runRemoteNlpRequesting = false;
 
+    if (errors.length > 1000) {
+        alert(`Não foi possível sinalizar na aplicação algumas das entidades detetadas (${errors.length}): ${errors.map(e => e.text).join(", ")}\n
+        Por favor, reporte este problema por email, enviando o documento usado.`)
+    }
 }

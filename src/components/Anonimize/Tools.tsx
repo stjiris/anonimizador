@@ -5,17 +5,17 @@ import { Button } from "@/core/BootstrapIcons";
 import { SumarizadorModalBody } from "@/core/runRemoteSumarizador";
 import { useProfile } from "@/core/ProfileTypeLogic";
 import { ProfileI } from "@/types/ProfileType";
-import { UserFileInterface } from "@/types/UserFile";
+import { UserFileInterface } from "@/types/UserFileInterfaceType";
 
 
 const TOOLS = {
-    "Descritores": {node: DescritoresModalBody, enabled: (profile: ProfileI) => profile.tools.descritores},
-    "Sumarizador": {node: SumarizadorModalBody, enabled: (profile: ProfileI) => profile.tools.sumarizador}
+    "Descritores": { node: DescritoresModalBody, enabled: (profile: ProfileI) => profile.tools.descritores },
+    "Sumarizador": { node: SumarizadorModalBody, enabled: (profile: ProfileI) => profile.tools.sumarizador }
 } as const;
 
-export function ToolsButton(){
+export function ToolsButton() {
     let [profile] = useProfile();
-    if ( profile && !profile.tools.descritores && !profile.tools.sumarizador ) return null;
+    if (profile && !profile.tools.descritores && !profile.tools.sumarizador) return null;
     return <Button title="Outras ferramentas" i="tools" text="Ferramentas" className="btn btn-sm text-body  alert alert-gray m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-tools" />
 }
 

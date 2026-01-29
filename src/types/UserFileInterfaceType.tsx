@@ -1,9 +1,9 @@
 import { SavedUserFile } from "@/core/UserFile"
 import { AnonimizeImage } from "./AnonimizeImage"
-import { DescriptorI } from "./Descriptor"
+import { DescriptorI } from "./DescriptorType"
 import { EntityPool } from "./EntityPool"
 import { EntityTypeI } from "./EntityType"
-import { SummaryI } from "./Summary"
+import { SummaryI } from "./SummaryType"
 
 export interface UserFileInterface {
     name: string

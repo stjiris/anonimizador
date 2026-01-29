@@ -1,4 +1,4 @@
-import { Entity, EntityI, normalizeEntityString, OffsetRange } from "./Entity";
+import { Entity, EntityI, normalizeEntityString, OffsetRange } from "./EntityType";
 
 export enum AddEntityDryRun {
     CHANGE_TYPE,
@@ -105,7 +105,7 @@ export class EntityPool {
         });
         this.notify(action)
 
-        if(typeCounts["PES"]) {
+        if (typeCounts["PES"]) {
             this.countPES = typeCounts["PES"];
         }
     }

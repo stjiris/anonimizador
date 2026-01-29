@@ -1,11 +1,11 @@
-"use client";
-import { Button } from "./BootstrapIcons"
-import { useSave } from "./uses";
-import { UserFileInterface } from "@/types/UserFile";
+import { Button } from "../core/BootstrapIcons"
+import { UserFile } from "../core/UserFile";
+import { useSave } from "../core/uses";
 
-export function SavedBadge({ file }: { file: UserFileInterface }) {
+export function SavedBadge({ file }: { file: UserFile }) {
     const saved = useSave(file);
-    const name = file.name.length > 30 ? file.name.slice(0, 15) + '...' + file.name.slice(-15) : file.name;
+    //const name = file.name.length > 30 ? file.name.slice(0, 15) + '...' + file.name.slice(-15) : file.name;
+    const name = "";
 
     const title = saved ? "Guardado automaticamente." : "Não guardado"
     const icon = saved ? "file-earmark-check-fill" : "file-earmark-x-fill"

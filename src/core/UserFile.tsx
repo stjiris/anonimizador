@@ -1,15 +1,11 @@
-"use client";
-import { AnonimizeImage, SaveAnonimizeImage } from "../types/AnonimizeImage";
-import { Entity, EntityI } from "../types/Entity";
-import { EntityPool } from "../types/EntityPool";
-import { DescriptorI } from "../types/Descriptor";
-import { SummaryI } from "../types/Summary";
-import { EntityTypeFunction, EntityTypeI } from "@/types/EntityType";
-import { addEntityTypeI, getEntityTypeI, getEntityTypeIs, restoreEntityTypesColors, updateEntityTypeI } from "./EntityTypeLogic";
-import { updateUserFile } from "./UserFileCRUDL";
-import { AUTO_ANONIMIZE } from "./anonimizeFunctions";
-import { useState } from "react";
-import { UserFileInterface } from "@/types/UserFile";
+import { AnonimizeImage, SaveAnonimizeImage } from "@/types/AnonimizeImage"
+import { DescriptorI } from "@/types/DescriptorType"
+import { EntityPool } from "@/types/EntityPool"
+import { Entity, EntityI, EntityTypeFunction, EntityTypeI } from "@/types/EntityType"
+import { SummaryI } from "@/types/SummaryType"
+import { addEntityTypeI, getEntityTypeI, getEntityTypeIs, restoreEntityTypesColors, updateEntityTypeI } from "./EntityTypeLogic"
+import { updateUserFile } from "./UserFileCRUDL"
+import { AUTO_ANONIMIZE } from "./anonimizeFunctions"
 
 export interface SavedUserFile {
     name: string
@@ -26,7 +22,7 @@ export interface SavedUserFile {
     profile?: string
 }
 
-export class UserFile implements UserFileInterface {
+export class UserFile {
     name: string
     html_contents: string
     types: EntityTypeI[]
@@ -61,7 +57,7 @@ export class UserFile implements UserFileInterface {
         this.types = obj.functions.map(f => ({ color: getEntityTypeI(f.name).color, name: f.name, functionIndex: f.functionIndex }))
         this.imported = new Date(obj.imported)
         this.modified = new Date(obj.modified)
-        
+
         let dom = new DOMParser().parseFromString(this.html_contents, "text/html");
         this.doc = dom.body;
 
@@ -285,17 +281,17 @@ export class UserFile implements UserFileInterface {
     }
 
     checkCountPES() {
-        if(this.profile == "STJ - Principal" || this.profile == "CSM - Principal") { //Checks if the user is using a legal profile;
+        if (this.profile == "STJ - Principal") {
 
             let PES_count = this.pool.countPES;
-            
-            if(PES_count > 26) { //Checks if there are over 26 entities of type PES;
+
+            if (PES_count > 26) { //Checks if there are over 26 entities of type PES;
                 this.updateType("PES", "#00e2ff", 14); //If so, it updates the anonymization technique to be used;
             }
             else {
                 this.updateType("PES", "#00e2ff", AUTO_ANONIMIZE);
             }
-        } 
+        }
     }
 
     static newFrom(name: string, innerHTML: string) {
@@ -327,22 +323,3 @@ export function isSavedUserFile(obj: any): obj is SavedUserFile {
 export function isUserFile(obj: any): obj is UserFile {
     return obj instanceof UserFile
 }
-
-export function setUserFileProxy(file: UserFile | undefined) {
-    const [userFile, setUserFile] = useState<UserFile | undefined>(file);
-    const [loading, setLoading] = useState<boolean>(false);
-    
-    if (!file) {
-      setUserFile(undefined);
-      setLoading(false);
-      try {
-        delete (window as any).currentFile;
-      } catch {}
-    } else {
-      setLoading(true);
-      setTimeout(() => {
-        setUserFile(file);
-        (window as any).currentFile = file;
-      }, 200);
-    }
-  };

@@ -1,14 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { AnonimizeStateCombined, AnonimizeStateState, AnonimizeVisualState, getAnonimizedStateCombined } from "@/types/AnonimizeState";
-import { UserFile } from "@/core/UserFile";
-import { Bicon, Button } from "@/core/BootstrapIcons";
-import BootstrapModal from "@/core/BootstrapModal";
-import { EntitiesStyle } from "@/core/entitiesStyle";
-import { ExitButton, ForceExitButton } from "@/components/Anonimize/exitButton";
-import { InfoModalContent } from "@/core/infoModalContent";
-import { SuggestButton } from "@/core/runRemoteNlp";
-import { SavedBadge } from "@/core/savedBadge";
-import { useSave } from "@/core/uses";
+import { AnonimizeStateCombined, AnonimizeStateState, AnonimizeVisualState, getAnonimizedStateCombined } from "../../types/AnonimizeState";
 import AnonimizeContent from "./Content";
 import { EntityTable } from "./EntityTable";
 import { HistoryCommands } from "./HistoryCommands";
@@ -17,32 +8,43 @@ import { SearchModalContent } from "./SearchModalContent";
 import { TypesModalContent } from "./TypesModalContent";
 import { ToolsButton, ToolsModalBody } from "./Tools";
 import { ExportButton } from "./ExportButton";
-import { loadAnonimizeProfiles, getAnonimizeProfiles, AnonimizeProfile } from "@/core/AnonimizeProfiles";
-import { UserFileInterface } from "@/types/UserFile";
+import { UserFile } from "@/core/UserFile";
+import { Bicon, Button } from "@/core/BootstrapIcons";
+import { useSave } from "@/core/uses";
+import { getAnonimizeProfiles, loadAnonimizeProfiles } from "@/core/AnonimizeProfiles";
+import { EntitiesStyle } from "@/core/entitiesStyle";
+import { ExitButton, ForceExitButton } from "./ExitButton";
+import { SavedBadge } from "@/components/SavedBadge";
+import { SuggestButton } from "@/core/runRemoteNlp";
+import BootstrapModal from "@/core/BootstrapModal";
+import { InfoModalContent } from "@/core/infoModalContent";
 
 interface AnonimizeProps {
-    file: UserFileInterface
+    file: UserFile
     setUserFile: (file: UserFile | undefined) => void
 }
 
-const Sep = () => <small className="text-white text-nowrap p-1 m-1 flex-grow-1 text-center"><Bicon n="dot" /></small>;
+const Sep = () => (
+    <small className="text-white text-nowrap p-1 m-1 flex-grow-1 text-center">
+        <Bicon n="dot" />
+    </small>
+);
 
 export default function Anonimize({ file, ...props }: AnonimizeProps) {
-    // States
     const [anonimizeState, setAnonimizeSate] = useState<AnonimizeStateCombined>(getAnonimizedStateCombined(AnonimizeVisualState.ALL_TYPES));
     const saved = useSave(file);
     const [requesting, setRequesting] = useState<boolean>(false);
 
     const anonimizedHTML = useRef<string>("");
     const [profiles, setProfiles] = useState<{ name: string; label: string }[]>([]);
-  
+
     useEffect(() => {
-      loadAnonimizeProfiles()
-        .then(() => {
-          const perfis = getAnonimizeProfiles();
-          setProfiles(perfis); // Isto vai desencadear um re-render com os dados
-        })
-        .catch((err) => console.error("Erro ao carregar perfis:", err));
+        loadAnonimizeProfiles()
+            .then(() => {
+                const perfis = getAnonimizeProfiles();
+                setProfiles(perfis); // Isto vai desencadear um re-render com os dados
+            })
+            .catch((err) => console.error("Erro ao carregar perfis:", err));
     }, []);
 
     useEffect(() => {
@@ -65,8 +67,8 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
     return <>
         <div id="doc" className="row w-100 m-0 p-0 bg-dark">
             <EntitiesStyle file={file} />
-            <div className="col-9 p-0 m-0">
-                <div className="position-sticky top-0 bg-white p-0 m-0 d-flex" style={{ borderBottom: "5px solid #161616", zIndex: 1 }}>
+            <div className="col-7 p-0 m-0">
+                <div className="anon-toolbar position-sticky top-0 bg-white p-0 m-0 d-flex" style={{ borderBottom: "5px solid #161616", zIndex: 1 }}>
                     {requesting ? <ForceExitButton setUserFile={props.setUserFile} /> : <ExitButton file={file} setUserFile={props.setUserFile} />}
                     <SavedBadge file={file} />
                     <ToolsButton />
@@ -95,7 +97,7 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
                     }
                 </div>
             </div>
-            <div id="entityTable" className="col-3 p-1 m-0">
+            <div id="entityTable" className="col-5 p-1 m-0">
                 <div className="m-0 position-sticky top-0">
                     <EntityTable file={file} />
                 </div>

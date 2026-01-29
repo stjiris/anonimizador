@@ -1,7 +1,7 @@
 import { Component, ReactNode } from "react";
 import { UserFile } from "../core/UserFile";
 import { Bicon, Button } from "../core/BootstrapIcons";
-import { UserFileInterface } from "@/types/UserFile";
+import { UserFileInterface } from "@/types/UserFileInterfaceType";
 
 interface CatchErrorProps {
 	userFile: UserFileInterface

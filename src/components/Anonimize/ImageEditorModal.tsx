@@ -1,10 +1,9 @@
 import { useEffect, useRef, useState } from "react";
-import { UserFile } from "@/core/UserFile";
 import BootstrapModal from "@/core/BootstrapModal";
 import { Bicon, Button } from "@/core/BootstrapIcons";
 import { AnonimizeImage } from "@/types/AnonimizeImage";
-import { normalizeEntityString } from "@/types/Entity";
-import { UserFileInterface } from "@/types/UserFile";
+import { UserFileInterface } from "@/types/UserFileInterfaceType";
+import { normalizeEntityString } from "@/types/EntityType";
 
 
 export function ImageEditorModal(props: { file: UserFileInterface }) {

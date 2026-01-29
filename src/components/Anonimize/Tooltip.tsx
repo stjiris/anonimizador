@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react"
+import { UserFile } from "@/core/UserFile"
 import { AddEntityDryRun, EntityPool } from "@/types/EntityPool"
 import { EntityTypeColor } from "@/types/EntityType"
-import { TokenSelection } from "@/types/Selection"
-import { UserFile } from "@/core/UserFile"
+import { TokenSelection } from "@/types/SelectionType"
+import { useEffect, useState } from "react"
 
 interface AnonimizeTooltipProps {
     entityTypes: EntityTypeColor[]
@@ -64,7 +64,7 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
             return (
                 <div style={style}>
                     <div className="d-flex flex-column gap-1 bg-white p-1 border"
-                     style={{ maxHeight: 400, overflowY: "auto" }}>
+                        style={{ maxHeight: 400, overflowY: "auto" }}>
                         {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
                             <span
                                 key={i}
@@ -79,11 +79,11 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
                     </div>
                 </div>
             );
-        case AddEntityDryRun.CHANGE_OFFSET:     
+        case AddEntityDryRun.CHANGE_OFFSET:
             return (
                 <div style={style}>
                     <div className="d-flex flex-column gap-1 bg-white p-1 border"
-                     style={{ maxHeight: 400, overflowY: "auto" }}>
+                        style={{ maxHeight: 400, overflowY: "auto" }}>
                         {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
                             <span
                                 key={i}
@@ -102,7 +102,7 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
             return (
                 <div style={style}>
                     <div className="d-flex flex-column gap-1 bg-white p-1 border"
-                     style={{ maxHeight: 400, overflowY: "auto" }}>
+                        style={{ maxHeight: 400, overflowY: "auto" }}>
                         <span
                             role="button"
                             onMouseDown={() => removeType(props.pool!, sel, fileA)}

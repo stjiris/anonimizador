@@ -4,7 +4,7 @@ import { UserFile } from "@/core/UserFile";
 import { Button } from "@/core/BootstrapIcons";
 import { SpecificOffsetRange, useTypesDict } from "@/core/uses";
 import { renderBlock } from "./render";
-import { UserFileInterface } from "@/types/UserFile";
+import { UserFileInterface } from "@/types/UserFileInterfaceType";
 
 export function ExportButton({ file }: { file: UserFileInterface }) {
     const entityTypes = useTypesDict(file);

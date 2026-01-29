@@ -1,13 +1,10 @@
-"use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { AnonimizeImage } from "@/types/AnonimizeImage";
-import { Entity, OffsetRange } from "@/types/Entity";
 import { EntityPool } from "@/types/EntityPool";
-import { EntityTypeI } from "@/types/EntityType";
-import { UserFile } from "@/core/UserFile";
-import { DescriptorI } from "@/types/Descriptor";
-import { SummaryI } from "@/types/Summary";
-import { UserFileInterface } from "@/types/UserFile";
+import { Entity, EntityTypeI, OffsetRange } from "@/types/EntityType";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { UserFile } from "./UserFile";
+import { AnonimizeImage } from "@/types/AnonimizeImage";
+import { DescriptorI } from "@/types/DescriptorType";
+import { SummaryI } from "@/types/SummaryType";
 
 export function useEntities(pool: EntityPool) {
     const [ents, setEnts] = useState(() => [...pool.entities])
@@ -39,7 +36,7 @@ export function useSpecificOffsets(pool: EntityPool) {
     return specific;
 }
 
-export function useImages(file: UserFileInterface) {
+export function useImages(file: UserFile) {
     const [images, setImages] = useState<Record<number, AnonimizeImage>>(() => ({ ...file.images }))
     const update = useCallback(() => setImages({ ...file.images }), [file])
     useEffect(() => {
@@ -51,7 +48,7 @@ export function useImages(file: UserFileInterface) {
     return images
 }
 
-export function useTypesDict(file: UserFileInterface) {
+export function useTypesDict(file: UserFile) {
     const getTypes = useCallback(() => {
         let obj: Record<string, EntityTypeI> = {};
         file.types.forEach(t => obj[t.name] = t)
@@ -68,7 +65,7 @@ export function useTypesDict(file: UserFileInterface) {
     return types
 }
 
-export function useTypes(file: UserFileInterface) {
+export function useTypes(file: UserFile) {
     const [types, setTypes] = useState<EntityTypeI[]>(() => [...file.types])
     const update = useCallback(() => setTypes([...file.types]), [file])
     useEffect(() => {
@@ -81,10 +78,9 @@ export function useTypes(file: UserFileInterface) {
 }
 
 
-export function useSave(file: UserFileInterface) {
+export function useSave(file: UserFile) {
     const [saved, setSaved] = useState<boolean>(() => file.saved)
     const update = useCallback(() => setSaved(file.saved), [file])
-
     useEffect(() => {
         file.onSave(update);
         return () => {
@@ -94,7 +90,7 @@ export function useSave(file: UserFileInterface) {
     return saved;
 }
 
-export function useDescriptors(file: UserFileInterface) {
+export function useDescriptors(file: UserFile) {
     const [desc, setDesc] = useState<DescriptorI[] | undefined>(() => file.descriptors)
     const update = useCallback(() => setDesc(file.descriptors), [file])
     useEffect(() => {
@@ -106,7 +102,7 @@ export function useDescriptors(file: UserFileInterface) {
     return desc;
 }
 
-export function useArea(file: UserFileInterface) {
+export function useArea(file: UserFile) {
     const [area, setArea] = useState<string | undefined>(() => file.area)
     const update = useCallback(() => setArea(file.area), [file])
     useEffect(() => {
@@ -118,7 +114,7 @@ export function useArea(file: UserFileInterface) {
     return area;
 }
 
-export function useSummary(file: UserFileInterface) {
+export function useSummary(file: UserFile) {
     const [summary, setSummary] = useState<SummaryI[] | undefined>(() => file.summary);
     const update = useCallback(() => setSummary(file.summary), [file])
     useEffect(() => {

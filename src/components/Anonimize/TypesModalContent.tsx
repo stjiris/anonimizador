@@ -7,9 +7,9 @@ import { Bicon, Button } from "@/core/BootstrapIcons";
 import { useTypes } from "@/core/uses";
 import { ProfileI } from "@/types/ProfileType";
 import { useProfile } from "@/core/ProfileTypeLogic";
-import { UserFileInterface } from "@/types/UserFile";
+import { UserFileInterface } from "@/types/UserFileInterfaceType";
 
-export function TypesModalContent({file}:{file: UserFileInterface}){
+export function TypesModalContent({ file }: { file: UserFileInterface }) {
     let types = useTypes(file).filter(type => !type.name.startsWith("X"));
     let [profile, setProfile] = useProfile();
     return <>
@@ -18,34 +18,34 @@ export function TypesModalContent({file}:{file: UserFileInterface}){
         </div>
         <div className="modal-body p-0">
             <MaterialReactTable
-                    key="type-table"
-                    enableColumnResizing={false}
-                    enableRowSelection={false}
-                    enableColumnOrdering={false}
-                    enableDensityToggle={false}
-                    enableHiding={false}
-                    enableStickyHeader={false}
-                    enablePagination={false}
-                    enableEditing={true}
-                    enableColumnFilters={false}
-                    enableSorting={false}
-                    enableGlobalFilter={false}
-                    enableFullScreenToggle={false}
-                    enableColumnActions={false}
-                    columns={[TYPE_COLUMN(file, profile, setProfile), ANON_COLUMN(file),EXAMPLE_COLUMN]} 
-                    data={types}
-                    localization={MRT_Localization_PT}
-                    renderTopToolbarCustomActions={() => [
-                        <Button key="reset" className="btn btn-warning" i="arrow-clockwise" text="Repor" onClick={() => file.resetTypes()}/>
-                    ]}
-                    muiTableBodyCellProps={({table, cell}) => ({
-                        onClick: () => {table.setEditingCell(cell);}
-                    })}
-                    enableRowActions={true}
-                    renderRowActions={({row}) => EntityTypeIDefaults[row.original.name] ? <></> : <Button className="btn text-danger" onClick={() => {file.deleteType(row.original.name)}} i='trash' title="Eliminar"/>}
-                />
+                key="type-table"
+                enableColumnResizing={false}
+                enableRowSelection={false}
+                enableColumnOrdering={false}
+                enableDensityToggle={false}
+                enableHiding={false}
+                enableStickyHeader={false}
+                enablePagination={false}
+                enableEditing={true}
+                enableColumnFilters={false}
+                enableSorting={false}
+                enableGlobalFilter={false}
+                enableFullScreenToggle={false}
+                enableColumnActions={false}
+                columns={[TYPE_COLUMN(file, profile, setProfile), ANON_COLUMN(file), EXAMPLE_COLUMN]}
+                data={types}
+                localization={MRT_Localization_PT}
+                renderTopToolbarCustomActions={() => [
+                    <Button key="reset" className="btn btn-warning" i="arrow-clockwise" text="Repor" onClick={() => file.resetTypes()} />
+                ]}
+                muiTableBodyCellProps={({ table, cell }) => ({
+                    onClick: () => { table.setEditingCell(cell); }
+                })}
+                enableRowActions={true}
+                renderRowActions={({ row }) => EntityTypeIDefaults[row.original.name] ? <></> : <Button className="btn text-danger" onClick={() => { file.deleteType(row.original.name) }} i='trash' title="Eliminar" />}
+            />
             <form className="d-flex m-2" onSubmit={(evt) => {
-                evt.preventDefault(); 
+                evt.preventDefault();
                 let form = evt.target as HTMLFormElement;
                 let tipoInput = form.elements.namedItem("tipo") as HTMLInputElement;
                 let colorInput = form.elements.namedItem("color") as HTMLInputElement;
@@ -53,10 +53,10 @@ export function TypesModalContent({file}:{file: UserFileInterface}){
                 file.addType(tipoInput.value, colorInput.value, parseInt(anonInput.value));
                 tipoInput.value = "";
                 colorInput.value = "";
-                }}>
+            }}>
                 <input className="form-control" name="tipo" placeholder="Tipo..." required></input>
-                <input  className="form-control form-control-color" name="color" type="color"></input>
-                <select  className="form-select" name="anonimização" required>{functionsWithDescriptionArray.map( (desc,i ) => <option key={i} label={desc.name} value={i}>{desc.name}</option>)}</select>
+                <input className="form-control form-control-color" name="color" type="color"></input>
+                <select className="form-select" name="anonimização" required>{functionsWithDescriptionArray.map((desc, i) => <option key={i} label={desc.name} value={i}>{desc.name}</option>)}</select>
                 <button className="form-control btn btn-primary">Adicionar</button>
             </form>
         </div>
@@ -67,33 +67,33 @@ export function TypesModalContent({file}:{file: UserFileInterface}){
     </>
 }
 
-const TYPE_COLUMN: (file: UserFileInterface, profile: ProfileI | null, setProfile: (p:ProfileI) => void) => MRT_ColumnDef<EntityTypeI> = (file, profile, setProfile) => ({
+const TYPE_COLUMN: (file: UserFileInterface, profile: ProfileI | null, setProfile: (p: ProfileI) => void) => MRT_ColumnDef<EntityTypeI> = (file, profile, setProfile) => ({
     header: "Tipo",
-    Header: <><Bicon n="pencil"/> Tipo</>,
+    Header: <><Bicon n="pencil" /> Tipo</>,
     accessorKey: "color",
     enableEditing: true,
-    muiTableBodyCellEditTextFieldProps: ({row, table}: { row: MRT_Row<EntityTypeI>; table: MRT_TableInstance<EntityTypeI> }) => ({
+    muiTableBodyCellEditTextFieldProps: ({ row, table }: { row: MRT_Row<EntityTypeI>; table: MRT_TableInstance<EntityTypeI> }) => ({
         type: "color",
         name: "color",
         onBlur: (evt: React.FocusEvent<HTMLInputElement>) => {
             file.updateType(row.original.name, evt.target.value, row.original.functionIndex)
-            if(profile){
-                setProfile({...profile, defaultEntityTypes: {...profile.defaultEntityTypes, [row.original.name]: {color: evt.target.value, functionIndex: row.original.functionIndex}}});
+            if (profile) {
+                setProfile({ ...profile, defaultEntityTypes: { ...profile.defaultEntityTypes, [row.original.name]: { color: evt.target.value, functionIndex: row.original.functionIndex } } });
             }
             table.setEditingCell(null);
         }
     }),
-    Cell: ({row}) => <span className='badge text-body' style={{background: row.original.color}}>{row.original.name}</span>    
+    Cell: ({ row }) => <span className='badge text-body' style={{ background: row.original.color }}>{row.original.name}</span>
 })
 
 const ANON_COLUMN: (file: UserFileInterface) => MRT_ColumnDef<EntityTypeI> = (file) => ({
     header: "Anonimização",
-    Header: <><Bicon n="pencil"/> Anonimização</>,
+    Header: <><Bicon n="pencil" /> Anonimização</>,
     accessorFn: (ent) => functionsWithDescriptionArray[ent.functionIndex].name,
     enableEditing: true,
-    muiTableBodyCellEditTextFieldProps: ({row,table}: { row: MRT_Row<EntityTypeI>; table: MRT_TableInstance<EntityTypeI> }) => ({
+    muiTableBodyCellEditTextFieldProps: ({ row, table }: { row: MRT_Row<EntityTypeI>; table: MRT_TableInstance<EntityTypeI> }) => ({
         select: true,
-        children: functionsWithDescriptionArray.map( (desc,i) => <option key={i} label={desc.name} value={i}>{desc.name}</option>),
+        children: functionsWithDescriptionArray.map((desc, i) => <option key={i} label={desc.name} value={i}>{desc.name}</option>),
         SelectProps: {
             native: true,
             defaultValue: row.original.functionIndex
