@@ -8,7 +8,7 @@ import SelectFile from "@/components/SelectFile";
 import { Banner } from "@/components/Banner";
 import BootstrapModal from "@/core/BootstrapModal";
 import { ProfileProvider, ProfileSelector } from "@/core/ProfileTypeLogic";
-import { UserFileInterface } from "@/types/UserFileInterfaceType";
+import { UserFileInterface } from "@/types/UserFileInterface";
 
 export default function ClientRoot() {
   const [userFile, setUserFile] = useState<UserFileInterface | undefined>();

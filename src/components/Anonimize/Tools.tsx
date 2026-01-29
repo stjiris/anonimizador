@@ -5,7 +5,7 @@ import { Button } from "@/core/BootstrapIcons";
 import { SumarizadorModalBody } from "@/core/runRemoteSumarizador";
 import { useProfile } from "@/core/ProfileTypeLogic";
 import { ProfileI } from "@/types/ProfileType";
-import { UserFileInterface } from "@/types/UserFileInterfaceType";
+import { UserFileInterface } from "@/types/UserFileInterface";
 
 
 const TOOLS = {

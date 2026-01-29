@@ -2,7 +2,7 @@ import { useMemo, useRef, useState } from "react";
 import { UserFile } from "@/core/UserFile";
 import { useTypes } from "@/core/uses";
 import { AddEntityDryRun } from "@/types/EntityPool";
-import { UserFileInterface } from "@/types/UserFileInterfaceType";
+import { UserFileInterface } from "@/types/UserFileInterface";
 
 // We want exact matches
 // https://stackoverflow.com/a/3561711/2573422

@@ -1,7 +1,7 @@
 "use client";
 import { UserFile } from "@/core/UserFile";
 import { useTypes } from "./uses";
-import { UserFileInterface } from "@/types/UserFileInterfaceType";
+import { UserFileInterface } from "@/types/UserFileInterface";
 
 export function EntitiesStyle({ file }: { file: UserFileInterface }) {
     const entityTypes = useTypes(file)

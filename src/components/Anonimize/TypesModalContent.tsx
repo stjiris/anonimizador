@@ -7,7 +7,7 @@ import { Bicon, Button } from "@/core/BootstrapIcons";
 import { useTypes } from "@/core/uses";
 import { ProfileI } from "@/types/ProfileType";
 import { useProfile } from "@/core/ProfileTypeLogic";
-import { UserFileInterface } from "@/types/UserFileInterfaceType";
+import { UserFileInterface } from "@/types/UserFileInterface";
 
 export function TypesModalContent({ file }: { file: UserFileInterface }) {
     let types = useTypes(file).filter(type => !type.name.startsWith("X"));

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { UserFile } from "@/core/UserFile";
 import { Button } from "./BootstrapIcons";
 import { useArea, useDescriptors } from "./uses";
-import { UserFileInterface } from "@/types/UserFileInterfaceType";
+import { UserFileInterface } from "@/types/UserFileInterface";
 
 export function DescritoresModalBody({ file }: { file: UserFileInterface }) {
     const area = useArea(file);

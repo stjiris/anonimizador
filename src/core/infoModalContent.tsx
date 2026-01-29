@@ -4,7 +4,7 @@ import { UserFile } from "@/core/UserFile";
 import { MaterialReactTable } from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { useArea, useDescriptors, useEntities, useImages, useSave, useSummary, useTypes } from "./uses";
-import { UserFileInterface } from "@/types/UserFileInterfaceType";
+import { UserFileInterface } from "@/types/UserFileInterface";
 
 const intl = new Intl.DateTimeFormat(["pt", "en"], { dateStyle: "short", timeStyle: "medium" });
 

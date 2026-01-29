@@ -6,6 +6,7 @@ import { SummaryI } from "@/types/SummaryType"
 import { addEntityTypeI, getEntityTypeI, getEntityTypeIs, restoreEntityTypesColors, updateEntityTypeI } from "./EntityTypeLogic"
 import { updateUserFile } from "./UserFileCRUDL"
 import { AUTO_ANONIMIZE } from "./anonimizeFunctions"
+import { UserFileInterface } from "@/types/UserFileInterface";
 
 export interface SavedUserFile {
     name: string
@@ -22,7 +23,7 @@ export interface SavedUserFile {
     profile?: string
 }
 
-export class UserFile {
+export class UserFile implements UserFileInterface {
     name: string
     html_contents: string
     types: EntityTypeI[]

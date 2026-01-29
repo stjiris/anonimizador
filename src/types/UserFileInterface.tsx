@@ -49,6 +49,6 @@ export interface UserFileInterface {
     notifySummary(): void
     checkCountPES(): void
     toSavedFile(): SavedUserFile
-    save(): boolean
+    save(): Promise<boolean>
     notifyType(): void
 }
