@@ -7,10 +7,10 @@ export default function Header() {
         <a className="align-items-center d-flex flex-wrap text-decoration-none nav-link" href="./">
             <img src={`${process.env.NEXT_PUBLIC_BASE_PATH}/stj-logo.png`} style={{ maxHeight: 70 }} alt="Logotipo Supremo Tribunal de Justiça" />
             <div className="ps-2 d-flex flex-column align-items-center">
-                <h5 className="m-0 fancy-font">{process.env.REACT_APP_TITLE}</h5>
+                <h5 className="m-0 fancy-font">{process.env.NEXT_PUBLIC_TITLE}</h5>
             </div>
         </a>
-        <pre className="m-0">Versão: {process.env.REACT_APP_VERSION_COMMIT} ({process.env.REACT_APP_VERSION_DATE})</pre>
+        <pre className="m-0">Versão: {process.env.NEXT_PUBLIC_VERSION_COMMIT} ({process.env.NEXT_PUBLIC_VERSION_DATE})</pre>
         <Button title="Perfil" i="palette2" text={`Perfil${profile?.name ? `: ${profile.name}` : ''}`} className="btn m-1 ms-3" style={{
             backgroundColor: "#a58f3c",
             borderWidth: "2px",
