@@ -116,10 +116,10 @@ export class UserFile {
         }
     }
 
-    save(): boolean {
+    async save(): Promise<boolean> {
         this.modified = new Date();
 
-        const saved = updateUserFile(this.toSavedFile())
+        const saved = await updateUserFile(this.toSavedFile())
 
         this.notifySave(saved);
 
