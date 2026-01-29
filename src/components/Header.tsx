@@ -10,7 +10,7 @@ export default function Header() {
                 <h5 className="m-0 fancy-font">{process.env.NEXT_PUBLIC_TITLE}</h5>
             </div>
         </a>
-        <pre className="m-0">Versão: {process.env.NEXT_PUBLIC_VERSION_COMMIT} ({process.env.NEXT_PUBLIC_VERSION_DATE})</pre>
+        <pre className="m-0">  Versão: {process.env.NEXT_PUBLIC_VERSION_COMMIT} ({process.env.NEXT_PUBLIC_VERSION_DATE})</pre>
         <Button title="Perfil" i="palette2" text={`Perfil${profile?.name ? `: ${profile.name}` : ''}`} className="btn m-1 ms-3" style={{
             backgroundColor: "#a58f3c",
             borderWidth: "2px",
