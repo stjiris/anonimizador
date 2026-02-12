@@ -291,7 +291,6 @@ img {
 }
 
 .anon-toolbar {
-  gap: 6px;
   align-items: center;
 }
 
@@ -386,7 +385,6 @@ img {
 
 #doc .col-7 {
   position: relative;
-  overflow: hidden;
 }
 
 .anon-toolbar {

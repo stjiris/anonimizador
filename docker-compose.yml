@@ -1,6 +1,7 @@
 volumes:
   logs:
 
+
 services:
   anonimizador:
     build:
@@ -59,7 +60,7 @@ services:
     restart: unless-stopped
     ports:
       - ${DESCRITORES_PORT:-8999}:8999
-  
+
 networks:
   juris-network:
-    external: true
+    name: juris-network

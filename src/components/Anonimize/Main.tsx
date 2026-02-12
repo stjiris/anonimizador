@@ -68,8 +68,7 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
         <div id="doc" className="row w-100 m-0 p-0 bg-dark">
             <EntitiesStyle file={file} />
             <div className="col-7 p-0 m-0">
-                <div className="anon-toolbar position-sticky top-0 bg-white p-0 m-0 d-flex" style={{ borderBottom: "5px solid #161616", zIndex: 1 }}>
-                    {requesting ? <ForceExitButton setUserFile={props.setUserFile} /> : <ExitButton file={file} setUserFile={props.setUserFile} />}
+                <div className="anon-toolbar position-sticky top-0 bg-white p-0 m-0 d-flex" style={{ borderBottom: "5px solid #161616", zIndex: 1 }}>                    {requesting ? <ForceExitButton setUserFile={props.setUserFile} /> : <ExitButton file={file} setUserFile={props.setUserFile} />}
                     <SavedBadge file={file} />
                     <ToolsButton />
                     <Button title="Gerir tipos" i="file-earmark-font" text="Tipos" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types" />
