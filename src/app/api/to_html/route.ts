@@ -87,7 +87,6 @@ export async function POST(req: NextRequest) {
                 '-o', outPath,
                 '--self-contained',
                 '--wrap', 'none',
-                '--metadata', `title=${title}`,
                 ...luaFilterArgs
             ]);
         } else if (ext === '.doc' || ext === '.docx') {
@@ -101,7 +100,6 @@ export async function POST(req: NextRequest) {
                 '-o', outPath,
                 '--self-contained',
                 '--wrap', 'none',
-                '--metadata', `title=${title}`,
                 ...luaFilterArgs
             ]);
         } else if (ext === '.pdf') {
@@ -117,7 +115,6 @@ export async function POST(req: NextRequest) {
                 '-o', outPath,
                 '--self-contained',
                 '--wrap', 'none',
-                '--metadata', `title=${title}`,
                 ...luaFilterArgs
             ]);
         }
