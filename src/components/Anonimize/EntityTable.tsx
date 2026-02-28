@@ -18,6 +18,7 @@ export function EntityTable({ file }: { file: UserFile }) {
 
     const ents = useEntities(file.pool);
     const filteredEnts = showOnlyMarks ? ents.filter((e) => e.type === "Marca") : ents;
+    const entityCount = filteredEnts.length;
 
     const typesDict = useTypesDict(file);
     const typesList = useMemo(() => Object.values(typesDict), [typesDict]);
@@ -38,7 +39,7 @@ export function EntityTable({ file }: { file: UserFile }) {
 
     return (
         <MaterialReactTable<Entity>
-            key="ent-table"
+            key={`ent-table-${showOnlyMarks}-${entityCount}`}
             columns={columns}
             data={filteredEnts}
             localization={{ ...MRT_Localization_PT, noRecordsToDisplay: "Sem entidades" }}
@@ -146,7 +147,12 @@ export function EntityTable({ file }: { file: UserFile }) {
                 sx: { "&:hover": { backgroundColor: "rgba(244,236,206,.35)" } },
             })}
             muiPaginationProps={{
-                rowsPerPageOptions: [10, 25, 50, 100],
+                rowsPerPageOptions: [
+                    { label: "25", value: 25 },
+                    { label: "50", value: 50 },
+                    { label: "100", value: 100 },
+                    { label: "Todas", value: entityCount }
+                ]
             }}
             muiTablePaperProps={{
                 sx: { display: "flex", flexDirection: "column" },
@@ -156,7 +162,7 @@ export function EntityTable({ file }: { file: UserFile }) {
                 density: "compact",
                 sorting: [{ id: "count", desc: true }],
                 columnPinning: { right: ["mrt-row-actions"] },
-                pagination: { pageIndex: 0, pageSize: 25 }
+                pagination: { pageIndex: 0, pageSize: entityCount }
             }}
         />
     );
