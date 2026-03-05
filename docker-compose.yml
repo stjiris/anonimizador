@@ -22,8 +22,8 @@ services:
     volumes:
       - logs:/opt/app/logs
     restart: unless-stopped
-    #networks:
-    #  - juris-network
+    networks:
+      - juris-network
   anonimizador_dev:
     build:
       context: .
