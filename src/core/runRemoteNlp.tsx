@@ -93,6 +93,16 @@ export async function runRemoteNlp(file: UserFile, abort?: AbortSignal) {
         return;
     }
 
+    const DATE_STOPWORDS = ["de", "do", "da", "dos", "das", "em", "no", "na", "nos", "nas", "a", "o"];
+
+    resArray = resArray.filter(ent => {
+        const text = ent.text.trim().toLowerCase();
+        if (ent.label_ === "DAT" && DATE_STOPWORDS.includes(text)) return false;
+        if (ent.label_ === "DAT" && text.length <= 2) return false;
+        return true;
+    });
+
+
     let entities: { [key: string]: Entity } = {};
     let usedIndexes: { [key: number]: boolean } = {};
     let errors: RemoteEntity[] = []
