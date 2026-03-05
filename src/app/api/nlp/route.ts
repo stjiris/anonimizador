@@ -1,4 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Agent, setGlobalDispatcher } from "undici";
+
+setGlobalDispatcher(new Agent({
+    headersTimeout: 1200000,
+    bodyTimeout: 1200000,
+    connectTimeout: 1200000,
+}));
 
 export const runtime = "nodejs";
 export const maxDuration = 1200;
@@ -14,12 +21,10 @@ export async function POST(req: NextRequest) {
 
         const text = await file.text();
         const nlpUrl = process.env.NLP_SERVER_URL || "http://localhost:5001";
-        console.log(nlpUrl);
 
         const result = await fetch(nlpUrl, {
             method: "POST",
             body: text,
-            signal: AbortSignal.timeout(1200000),
         });
 
         if (!result.ok) {
