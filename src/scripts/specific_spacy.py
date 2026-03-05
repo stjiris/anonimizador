@@ -399,8 +399,10 @@ def merge(ents, text):
     return merged
 
 def nlp(text, model):
-    model.add_pipe("new_line_segmenter", before="ner")
-    model.add_pipe("remove_entities_with_excluded_words", last=True)
+    if "new_line_segmenter" not in model.pipe_names:
+        model.add_pipe("new_line_segmenter", before="ner")
+    if "remove_entities_with_excluded_words" not in model.pipe_names:
+        model.add_pipe("remove_entities_with_excluded_words", last=True)
 
     # Create entity list
     ents = []
