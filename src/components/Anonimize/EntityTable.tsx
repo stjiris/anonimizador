@@ -345,7 +345,16 @@ const TYPE_COL: (types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (types) => ({
     enableEditing: false,
     enableColumnActions: false,
     filterVariant: "select",
-    filterSelectOptions: types.map((t) => t.name),
+    filterSelectOptions: [
+        { text: "Tipos Normais", value: "__NO_X__" },
+        { text: "Outros Tipos", value: "__ONLY_X__" },
+        ...types.map((t) => t.name),
+    ],
+    filterFn: (row, _columnId, filterValue) => {
+        if (filterValue === "__ONLY_X__") return row.original.type.startsWith("X-");
+        if (filterValue === "__NO_X__") return !row.original.type.startsWith("X-");
+        return row.original.type === filterValue;
+    },
     muiTableHeadCellFilterTextFieldProps: {
         inputRef: (ref: HTMLInputElement | null) => {
             if (ref && !ref.select) ref.select = () => { };
