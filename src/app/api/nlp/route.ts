@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { Agent, setGlobalDispatcher } from "undici";
+import { fetch, Agent } from "undici";
 
-setGlobalDispatcher(new Agent({
+const agent = new Agent({
     headersTimeout: 1200000,
     bodyTimeout: 1200000,
     connectTimeout: 1200000,
-}));
+});
 
 export const runtime = "nodejs";
 export const maxDuration = 1200;
@@ -21,10 +21,12 @@ export async function POST(req: NextRequest) {
 
         const text = await file.text();
         const nlpUrl = process.env.NLP_SERVER_URL || "http://localhost:5001";
+        console.log("Calling NLP server:", nlpUrl);
 
         const result = await fetch(nlpUrl, {
             method: "POST",
             body: text,
+            dispatcher: agent,
         });
 
         if (!result.ok) {
@@ -32,7 +34,6 @@ export async function POST(req: NextRequest) {
         }
 
         const jsonData = await result.json();
-
         const end = new Date();
         console.error(JSON.stringify({
             requestPath: "/api/nlp",
