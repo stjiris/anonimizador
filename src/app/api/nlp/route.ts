@@ -19,6 +19,7 @@ export async function POST(req: NextRequest) {
         const result = await fetch(nlpUrl, {
             method: "POST",
             body: text,
+            signal: AbortSignal.timeout(1200000),
         });
 
         if (!result.ok) {
