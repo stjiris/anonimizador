@@ -28,6 +28,7 @@ services:
     depends_on:
       nlp_server:
         condition: service_started
+
   anonimizador_dev:
     build:
       context: .
@@ -47,9 +48,6 @@ services:
       - ${ANONIMIZADOR_PORT:-7999}:7999
     volumes:
       - logs:/opt/app/logs
-      - ./iris-lfs-storage/model-best:/opt/app/src/scripts/model-best
-      - ./iris-lfs-storage/model-gpt:/opt/app/src/scripts/model-gpt
-      - ./iris-lfs-storage/model-extended:/opt/app/src/scripts/model-extended
       - .:/opt/app
       - /opt/app/node_modules
     restart: unless-stopped
@@ -63,6 +61,10 @@ services:
       context: .
       dockerfile: ./Dockerfile_nlp
     restart: unless-stopped
+    volumes:
+      - ./iris-lfs-storage/model-best:/opt/app/src/scripts/model-best
+      - ./iris-lfs-storage/model-gpt:/opt/app/src/scripts/model-gpt
+      - ./iris-lfs-storage/model-extended:/opt/app/src/scripts/model-extended
     networks:
       - juris-network
   sumarizador:

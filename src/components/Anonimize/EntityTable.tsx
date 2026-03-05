@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { MaterialReactTable, MRT_ColumnDef, MRT_ColumnFiltersState, MRT_Row, MRT_TableInstance, } from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 
@@ -13,23 +13,31 @@ import { EntityPool } from "@/types/EntityPool";
 import { Button } from "@/core/BootstrapIcons";
 import { FULL_ANONIMIZE } from "@/core/anonimizeFunctions";
 
+const TODAS = Number.MAX_SAFE_INTEGER;
 
 export function EntityTable({ file }: { file: UserFile }) {
     const [showOnlyMarks, setShowOnlyMarks] = useState(false);
     const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
-    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 });
 
     const ents = useEntities(file.pool);
     const filteredEnts = showOnlyMarks ? ents.filter((e) => e.type === "Marca") : ents;
     const entityCount = filteredEnts.length;
+    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 });
+
+    const typesDict = useTypesDict(file);
+
+    const wasEmpty = useRef(true);
 
     useEffect(() => {
-        if (entityCount > 0) {
-            setPagination((prev) => ({ ...prev, pageSize: entityCount }));
+        if (entityCount === 0) {
+            wasEmpty.current = true;
+        }
+        if (wasEmpty.current && entityCount > 0) {
+            setPagination(prev => ({ ...prev, pageSize: TODAS }));
+            wasEmpty.current = false;
         }
     }, [entityCount]);
 
-    const typesDict = useTypesDict(file);
     const typesList = useMemo(() => Object.values(typesDict), [typesDict]);
 
     const totalOcc = useMemo(
@@ -163,7 +171,7 @@ export function EntityTable({ file }: { file: UserFile }) {
                     { label: "25", value: 25 },
                     { label: "50", value: 50 },
                     { label: "100", value: 100 },
-                    { label: "Todas", value: Math.max(1, entityCount) }
+                    { label: "Todas", value: TODAS },
                 ]
             }}
             initialState={{
@@ -213,7 +221,7 @@ const toolbar =
                         />
                     </span>
 
-                    <span className="d-inline-flex flex-shrink-0 align-middle">   
+                    <span className="d-inline-flex flex-shrink-0 align-middle">
                         <Button
                             i="trash"
                             text="Remover"

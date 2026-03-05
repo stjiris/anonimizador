@@ -5,10 +5,5 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY src/scripts ./src/scripts
 COPY src/regex ./src/regex
-RUN git clone https://gitlab.com/diogoalmiro/iris-lfs-storage.git
-RUN cd iris-lfs-storage && git lfs pull
-RUN cp -r iris-lfs-storage/model-best ./src/scripts/
-RUN cp -r iris-lfs-storage/model-gpt ./src/scripts/
-RUN cp -r iris-lfs-storage/model-extended ./src/scripts/
-RUN rm -rf iris-lfs-storage
+COPY iris-lfs-storage ./src/iris-lfs-storage
 CMD ["python3", "src/scripts/nlp_server.py"]
