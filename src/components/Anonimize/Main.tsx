@@ -96,8 +96,8 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
                     }
                 </div>
             </div>
-            <div id="entityTable" className="col-5 p-1 m-0" style={{ overflow: "hidden" }}>
-                <div className="m-0 position-sticky top-0" style={{ width: "100%" }}>
+            <div id="entityTable" className="col-5 p-1 m-0">
+                <div className="m-0 position-sticky top-0">
                     <EntityTable file={file} />
                 </div>
             </div>
