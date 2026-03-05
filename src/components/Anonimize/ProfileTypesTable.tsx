@@ -1,95 +1,96 @@
-import { MRT_ColumnDef, MRT_Row, MRT_TableInstance, MaterialReactTable } from "material-react-table";
+import { MRT_ColumnDef, MaterialReactTable } from "material-react-table";
 import { functionsWithDescriptionArray } from "@/core/anonimizeFunctions";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { EntityTypeIDefaults, EntityTypeI } from "@/types/EntityType";
 import { Bicon, Button } from "@/core/BootstrapIcons";
-import { useMemo } from "react";
-import { useAvaiableProfiles, useProfile } from "@/core/ProfileTypeLogic";
+import { ChangeEventHandler, useCallback, useMemo, useRef } from "react";
+import { isProfileI, useAvaiableProfiles, useProfile } from "@/core/ProfileTypeLogic";
 import { ProfileI } from "@/types/ProfileType";
 
-export function ProfileTypesTable(){
+export function ProfileTypesTable() {
     let [profile, setProfile] = useProfile();
     let availableProfiles = useAvaiableProfiles();
-    let knownProfile = availableProfiles.find( p => p.name === profile?.name);
-    const data = useMemo(() => profile ? Object.entries(profile.defaultEntityTypes).map( ([name, {color, functionIndex}]) => ({name, color, functionIndex})) : [], [profile]);
-    if( !profile ) return null;
+    let knownProfile = availableProfiles.find(p => p.name === profile?.name);
+    const data = useMemo(() => profile ? Object.entries(profile.defaultEntityTypes).map(([name, { color, functionIndex }]) => ({ name, color, functionIndex })) : [], [profile]);
+    if (!profile) return null;
     return <>
         <MaterialReactTable
-                key="type-table"
-                enableColumnResizing={false}
-                enableRowSelection={false}
-                enableColumnOrdering={false}
-                enableDensityToggle={false}
-                enableHiding={false}
-                enableStickyHeader={false}
-                enablePagination={false}
-                enableEditing={true}
-                enableColumnFilters={false}
-                enableSorting={false}
-                enableGlobalFilter={false}
-                enableFullScreenToggle={false}
-                enableColumnActions={false}
-                columns={[TYPE_COLUMN(profile, setProfile),ANON_COLUMN(profile, setProfile),EXAMPLE_COLUMN]} 
-                data={data}
-                localization={MRT_Localization_PT}
-                renderTopToolbarCustomActions={() => knownProfile ? [
-                    <Button key="reset" className="btn btn-warning" i="arrow-clockwise" text="Repor" onClick={() => setProfile({...profile!, defaultEntityTypes: knownProfile!.defaultEntityTypes})}/>
-                ] : []}
-                renderBottomToolbarCustomActions={() =>
-                    <form className="d-flex m-2 w-100" onSubmit={(evt) => {
-                        evt.preventDefault(); 
-                        let form = evt.target as HTMLFormElement;
-                        let tipoInput = form.elements.namedItem("tipo") as HTMLInputElement;
-                        let colorInput = form.elements.namedItem("color") as HTMLInputElement;
-                        let anonInput = form.elements.namedItem("anonimização") as HTMLSelectElement;
-                        setProfile({...profile!, defaultEntityTypes: {...profile!.defaultEntityTypes, [tipoInput.value]: {color: colorInput.value, functionIndex: parseInt(anonInput.value)}}});
-                        tipoInput.value = "";
-                        colorInput.value = "";
-                        }}>
-                        <input className="form-control" name="tipo" placeholder="Tipo..." required></input>
-                        <input  className="form-control form-control-color" name="color" type="color"></input>
-                        <select  className="form-select" name="anonimização" required>{functionsWithDescriptionArray.map( (desc,i ) => <option key={i} label={desc.name} value={i}>{desc.name}</option>)}</select>
-                        <Button className="form-control btn btn-primary" i="plus" text="Adicionar" type="submit"/>
-                    </form>
-                }
-                muiTableBodyCellProps={({table, cell}) => ({
-                    onClick: () => {table.setEditingCell(cell);}
-                })}
-                enableRowActions={true}
-                renderRowActions={({row}) => EntityTypeIDefaults[row.original.name] ? <></> : <Button className="btn text-danger" i='trash' title="Eliminar" onClick={() => setProfile({...profile!, defaultEntityTypes: Object.fromEntries(Object.entries(profile!.defaultEntityTypes).filter(([key]) => key !== row.original.name))})}/>}
-            />
+            key="type-table"
+            enableColumnResizing={false}
+            enableRowSelection={false}
+            enableColumnOrdering={false}
+            enableDensityToggle={false}
+            enableHiding={false}
+            enableStickyHeader={false}
+            enablePagination={false}
+            enableEditing={true}
+            enableColumnFilters={false}
+            enableSorting={false}
+            enableGlobalFilter={false}
+            enableFullScreenToggle={false}
+            enableColumnActions={false}
+            editingMode="cell"
+            columns={[TYPE_COLUMN(profile, setProfile), ANON_COLUMN(profile, setProfile), EXAMPLE_COLUMN]}
+            data={data}
+            localization={MRT_Localization_PT}
+            renderTopToolbarCustomActions={() => knownProfile ? [
+                <Button key="reset" className="btn btn-warning" i="arrow-clockwise" text="Repor" onClick={() => setProfile({ ...profile!, defaultEntityTypes: knownProfile!.defaultEntityTypes })} />
+            ] : []}
+            renderBottomToolbarCustomActions={() =>
+                <form className="d-flex m-2 w-100" onSubmit={(evt) => {
+                    evt.preventDefault();
+                    let form = evt.target as HTMLFormElement;
+                    let tipoInput = form.elements.namedItem("tipo") as HTMLInputElement;
+                    let colorInput = form.elements.namedItem("color") as HTMLInputElement;
+                    let anonInput = form.elements.namedItem("anonimização") as HTMLSelectElement;
+                    setProfile({ ...profile!, defaultEntityTypes: { ...profile!.defaultEntityTypes, [tipoInput.value]: { color: colorInput.value, functionIndex: parseInt(anonInput.value) } } });
+                    tipoInput.value = "";
+                    colorInput.value = "";
+                }}>
+                    <input className="form-control" name="tipo" placeholder="Tipo..." required></input>
+                    <input className="form-control form-control-color" name="color" type="color"></input>
+                    <select className="form-select" name="anonimização" required>{functionsWithDescriptionArray.map((desc, i) => <option key={i} label={desc.name} value={i}>{desc.name}</option>)}</select>
+                    <Button className="form-control btn btn-primary" i="plus" text="Adicionar" type="submit" />
+                </form>
+            }
+            muiTableBodyCellProps={({ table, cell }) => ({
+                onClick: () => { table.setEditingCell(cell); }
+            })}
+            enableRowActions={true}
+            renderRowActions={({ row }) => EntityTypeIDefaults[row.original.name] ? <></> : <Button className="btn text-danger" i='trash' title="Eliminar" onClick={() => setProfile({ ...profile!, defaultEntityTypes: Object.fromEntries(Object.entries(profile!.defaultEntityTypes).filter(([key]) => key !== row.original.name)) })} />}
+        />
     </>
 }
 
 const TYPE_COLUMN: (profile: ProfileI, setProfile: (p: ProfileI) => void) => MRT_ColumnDef<EntityTypeI> = (profile, setProfile) => ({
     header: "Tipo",
-    Header: <><Bicon n="pencil"/> Tipo</>,
+    Header: <><Bicon n="pencil" /> Tipo</>,
     accessorKey: "color",
     enableEditing: true,
-    muiTableBodyCellEditTextFieldProps: ({row, table}: { row: MRT_Row<EntityTypeI>; table: MRT_TableInstance<EntityTypeI> }) => ({
+    muiTableBodyCellEditTextFieldProps: ({ row, table }) => ({
         type: "color",
         name: "color",
-        onBlur: (evt: React.FocusEvent<HTMLInputElement>) => {
-            setProfile({...profile, defaultEntityTypes: {...profile.defaultEntityTypes, [row.original.name]: {functionIndex: row.original.functionIndex, color: evt.target.value}}});
+        onBlur: (evt) => {
+            setProfile({ ...profile, defaultEntityTypes: { ...profile.defaultEntityTypes, [row.original.name]: { functionIndex: row.original.functionIndex, color: evt.target.value } } });
             table.setEditingCell(null);
         }
     }),
-    Cell: ({row}) => <span className='badge text-body' style={{background: row.original.color}}>{row.original.name}</span>    
+    Cell: ({ row }) => <span className='badge text-body' style={{ background: row.original.color }}>{row.original.name}</span>
 })
 
 const ANON_COLUMN: (profile: ProfileI, setProfile: (p: ProfileI) => void) => MRT_ColumnDef<EntityTypeI> = (profile, setProfile) => ({
     header: "Anonimização",
-    Header: <><Bicon n="pencil"/> Anonimização</>,
+    Header: <><Bicon n="pencil" /> Anonimização</>,
     accessorFn: (ent) => functionsWithDescriptionArray[ent.functionIndex].name,
     enableEditing: true,
-    muiTableBodyCellEditTextFieldProps: ({row,table}: { row: MRT_Row<EntityTypeI>; table: MRT_TableInstance<EntityTypeI> }) => ({
+    muiTableBodyCellEditTextFieldProps: ({ row, table }) => ({
         select: true,
-        children: functionsWithDescriptionArray.map( (desc,i) => <option key={i} label={desc.name} value={i}>{desc.name}</option>),
+        children: functionsWithDescriptionArray.map((desc, i) => <option key={i} label={desc.name} value={i}>{desc.name}</option>),
         SelectProps: {
             native: true,
             defaultValue: row.original.functionIndex
         },
-        onChange: (evt: React.FocusEvent<HTMLInputElement>) => setProfile({...profile, defaultEntityTypes: {...profile.defaultEntityTypes, [row.original.name]: {color: row.original.color, functionIndex: parseInt(evt.target.value)}}})
+        onChange: (evt) => setProfile({ ...profile, defaultEntityTypes: { ...profile.defaultEntityTypes, [row.original.name]: { color: row.original.color, functionIndex: parseInt(evt.target.value) } } })
     })
 })
 
@@ -100,4 +101,90 @@ const EXAMPLE_COLUMN: MRT_ColumnDef<EntityTypeI> = {
     muiTableBodyCellProps: {
         className: "text-nowrap"
     }
+}
+
+
+export function ProfileSelector() {
+    const [profile, setProfile] = useProfile();
+    const availableProfiles = useAvaiableProfiles();
+    const inputFileRef = useRef<HTMLInputElement>(null);
+
+    const onFileChangeCallback = useCallback<ChangeEventHandler<HTMLInputElement>>((e) => {
+        let file = e.target.files?.item(0);
+        if (!file) {
+            return;
+        }
+        let reader = new FileReader();
+        reader.onload = (e) => {
+            let profile = JSON.parse(reader.result as string);
+            if (!isProfileI(profile)) {
+                alert("Arquivo inválido");
+                return;
+            }
+
+            setProfile(profile);
+        }
+        reader.readAsText(file);
+        e.target.value = "";
+    }, [setProfile]);
+    const onDownloadProfile = useCallback(() => {
+        let newName = prompt("Nome do perfil", profile?.name || "")
+        if (!newName || availableProfiles.find(p => p.name === newName)) {
+            alert("Nome inválido");
+            return;
+        }
+        setProfile({ ...profile!, name: newName });
+        let blob = new Blob([JSON.stringify(profile)], { type: "application/json" });
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement("a");
+        a.href = url;
+        a.download = newName || "perfil.json";
+        a.click();
+        URL.revokeObjectURL(url);
+    }, [profile]);
+
+    const isInAvailable = availableProfiles.find(p => p.name === profile?.name);
+    const profiles = isInAvailable || !profile ? availableProfiles : availableProfiles.concat(profile);
+
+
+    return <>
+        <div className="modal-header">
+            <div><h4 className="modal-title" id="modal-info-label">Perfil</h4></div>
+        </div>
+        <div className="modal-body">
+            <input ref={inputFileRef} type="file" hidden id="profileFile" onChange={onFileChangeCallback} />
+            <div>
+                <Button onClick={() => inputFileRef.current?.click()} i="upload" text="Carregar Perfil" className="btn btn-primary" />
+                <Button onClick={onDownloadProfile} disabled={profile === null} i="floppy" text="Salvar Perfil" className="btn btn-primary mx-1" />
+                <i className="bi bi-dot mx-1"></i>
+                {profiles && profiles.map(p => <button key={p.name} className="col btn btn-primary mx-1" disabled={p.name === profile?.name} onClick={() => setProfile(p)}>{p.name}</button>)}
+                <i className="bi bi-dot mx-1"></i>
+                <button className="col btn btn-primary mx-1" disabled={profile === null} onClick={() => setProfile(null)}>Sem perfil</button>
+            </div>
+            {profile &&
+                <>
+                    <div>
+                        <p className="m-0">Ferramentas ativas:</p>
+                        <input type="checkbox" className="form-check-input" id="perfilSumarizador" checked={profile.tools.sumarizador} onChange={e => setProfile({ ...profile, tools: { ...profile.tools, sumarizador: e.target.checked } })} />
+                        <label className="form-check-label" htmlFor="perfilSumarizador" title="Ferramenta de sumarização treinada sobre acórdãos do Supremo Tribunal de Justiça">Sumarizador</label>
+                        <br />
+                        <input type="checkbox" className="form-check-input" id="perfilDescritores" checked={profile.tools.descritores} onChange={e => setProfile({ ...profile, tools: { ...profile.tools, descritores: e.target.checked } })} />
+                        <label className="form-check-label" htmlFor="perfilDescritores" title="Ferramenta de extração de descritores treinada sobre acórdãos do Supremo Tribunal de Justiça">Descritores</label>
+                    </div>
+                    <div>
+                        <p className="m-0">Versão Pro:</p>
+                        <input type="checkbox" className="form-check-input" id="nerOn" checked={profile.nerRgx?.nerOn ?? true} onChange={e => setProfile({ ...profile, nerRgx: { ...(profile.nerRgx || {}), nerOn: e.target.checked } })} />
+                        <br />
+                        <input type="checkbox" className="form-check-input" id="rgxOn" checked={profile.nerRgx?.rgxOn ?? true} onChange={e => setProfile({ ...profile, nerRgx: { ...(profile.nerRgx || {}), rgxOn: e.target.checked } })} />
+                        <label className="form-check-label" htmlFor="rgxOn" title="Utilização das regras REGEX na identificação de entidades">Regras REGEX</label>
+                    </div>
+                    <div>
+                        <p className="m-0">Tipos padrão:</p>
+                        <ProfileTypesTable />
+                    </div>
+                </>
+            }
+        </div>
+    </>
+
 }

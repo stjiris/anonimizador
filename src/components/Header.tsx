@@ -4,7 +4,7 @@ import { Bicon, Button } from "@/core/BootstrapIcons";
 export default function Header() {
     const [profile] = useProfile();
     return <header className="py-2 align-items-center d-flex flex-wrap">
-        <a className="align-items-center d-flex flex-wrap text-decoration-none nav-link" href="./">
+        <a className="align-items-center d-flex flex-wrap text-decoration-none nav-link" href={`${process.env.NEXT_PUBLIC_BASE_PATH || "/"}`}>
             <img src={`${process.env.NEXT_PUBLIC_BASE_PATH}/stj-logo.png`} style={{ maxHeight: 70 }} alt="Logotipo Supremo Tribunal de Justiça" />
             <div className="ps-2 d-flex flex-column align-items-center">
                 <h5 className="m-0 fancy-font">{process.env.NEXT_PUBLIC_TITLE}</h5>
