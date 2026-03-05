@@ -76,9 +76,11 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
                     <select title="Escolher modo" className="text-body btn m-1 p-1 text-start alert alert-primary" onChange={(ev) => setAnonimizeSate(getAnonimizedStateCombined(ev.target.value as AnonimizeVisualState))} defaultValue={AnonimizeVisualState.ALL_TYPES}>
                         <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
                         <option value={AnonimizeVisualState.REPLACE}>{AnonimizeVisualState.REPLACE}</option>
+                        <option value={AnonimizeVisualState.REPLACE_NORMAL}>{AnonimizeVisualState.REPLACE_NORMAL}</option>
+                        <option value={AnonimizeVisualState.REPLACE_OTHER}>{AnonimizeVisualState.REPLACE_OTHER}</option>
                         <option value={AnonimizeVisualState.ALL_TYPES}>{AnonimizeVisualState.ALL_TYPES}</option>
-                        <option value={AnonimizeVisualState.OTHER_TYPES}>{AnonimizeVisualState.OTHER_TYPES}</option>
                         <option value={AnonimizeVisualState.NORMAL_TYPES}>{AnonimizeVisualState.NORMAL_TYPES}</option>
+                        <option value={AnonimizeVisualState.OTHER_TYPES}>{AnonimizeVisualState.OTHER_TYPES}</option>
                         <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
                     </select>
                     <ExportButton file={file} />
