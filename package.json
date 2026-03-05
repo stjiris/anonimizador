@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -H 0.0.0.0 -p 7999",
+    "dev": "ts-node server.ts",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_ENV=production ts-node server.ts",
     "lint": "next lint"
   },
   "dependencies": {
@@ -29,6 +29,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
+    "ts-node": "latest",
     "typescript": "^5"
   }
 }
