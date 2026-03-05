@@ -1,13 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
-import { MaterialReactTable, MRT_ColumnDef, MRT_ColumnFiltersState, MRT_Row, MRT_TableInstance, } from "material-react-table";
+import { useMemo, useState } from "react";
+import { MaterialReactTable, MRT_ColumnDef, MRT_Row, MRT_TableInstance } from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
-
 import { IconButton, Tooltip, TextField, Badge, ToggleButton, ToggleButtonGroup } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import { UserFile } from "@/core/UserFile";
 import { useEntities, useTypesDict } from "@/core/uses";
+import { UserFile } from "@/core/UserFile";
 import { Entity, EntityTypeI } from "@/types/EntityType";
 import { EntityPool } from "@/types/EntityPool";
 import { Button } from "@/core/BootstrapIcons";
@@ -16,18 +15,10 @@ import { FULL_ANONIMIZE } from "@/core/anonimizeFunctions";
 
 export function EntityTable({ file }: { file: UserFile }) {
     const [showOnlyMarks, setShowOnlyMarks] = useState(false);
-    const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
-    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 });
 
     const ents = useEntities(file.pool);
     const filteredEnts = showOnlyMarks ? ents.filter((e) => e.type === "Marca") : ents;
     const entityCount = filteredEnts.length;
-
-    useEffect(() => {
-        if (entityCount > 0) {
-            setPagination((prev) => ({ ...prev, pageSize: entityCount }));
-        }
-    }, [entityCount]);
 
     const typesDict = useTypesDict(file);
     const typesList = useMemo(() => Object.values(typesDict), [typesDict]);
@@ -47,15 +38,15 @@ export function EntityTable({ file }: { file: UserFile }) {
     }, [typesList, totalOcc, file.pool, typesDict]);
 
     return (
-        <MaterialReactTable
-            key="ent-table"
+        <MaterialReactTable<Entity>
+            key={`ent-table-${showOnlyMarks}-${entityCount}`}
             columns={columns}
             data={filteredEnts}
             localization={{ ...MRT_Localization_PT, noRecordsToDisplay: "Sem entidades" }}
 
             enableRowSelection
             enableEditing
-            editingMode="cell"
+            editDisplayMode="cell"
             positionActionsColumn="last"
 
             enableColumnOrdering={false}
@@ -66,10 +57,7 @@ export function EntityTable({ file }: { file: UserFile }) {
             enableRowVirtualization={false}
             enableColumnResizing
             columnResizeMode="onChange"
-            muiTableContainerProps={{
-                sx: { maxWidth: "100%", overflowX: "hidden" }
-            }}
-            muiTableProps={{ sx: { tableLayout: "fixed", width: "100%" } }}
+            muiTableProps={{ sx: { tableLayout: "grid", width: "100%" } }}
             displayColumnDefOptions={{
                 "mrt-row-select": { size: 44, minSize: 44, maxSize: 44, enableResizing: false },
                 "mrt-row-expand": { size: 44, minSize: 44, maxSize: 44, enableResizing: false },
@@ -94,7 +82,7 @@ export function EntityTable({ file }: { file: UserFile }) {
             }}
             muiTableBodyCellProps={{ sx: { py: 0.75, px: 1, lineHeight: 1.25 } }}
 
-            getRowId={(r) => r.index.toString()}
+            getRowId={(r: { index: { toString: () => any; }; }) => r.index.toString()}
 
             renderDetailPanel={entityDetails(file.pool)}
 
@@ -123,7 +111,7 @@ export function EntityTable({ file }: { file: UserFile }) {
                                 size="small"
                                 disabled={row.original.offsets.length <= 1}
                                 onClick={() => {
-                                    row.original.offsets.forEach((off) => file.pool.splitOffset(off.start, off.end));
+                                    row.original.offsets.forEach((off: { start: number; end: number; }) => file.pool.splitOffset(off.start, off.end));
                                     file.checkCountPES();
                                 }}
                             >
@@ -158,24 +146,24 @@ export function EntityTable({ file }: { file: UserFile }) {
             muiTableBodyRowProps={() => ({
                 sx: { "&:hover": { backgroundColor: "rgba(244,236,206,.35)" } },
             })}
-            muiTablePaginationProps={{
+            muiPaginationProps={{
                 rowsPerPageOptions: [
                     { label: "25", value: 25 },
                     { label: "50", value: 50 },
                     { label: "100", value: 100 },
-                    { label: "Todas", value: Math.max(1, entityCount) }
+                    { label: "Todas", value: entityCount }
                 ]
             }}
+            muiTablePaperProps={{
+                sx: { display: "flex", flexDirection: "column" },
+            }}
+            positionToolbarAlertBanner="bottom"
             initialState={{
                 density: "compact",
                 sorting: [{ id: "count", desc: true }],
+                columnPinning: { right: ["mrt-row-actions"] },
+                pagination: { pageIndex: 0, pageSize: entityCount }
             }}
-            state={{
-                columnFilters,
-                pagination,
-            }}
-            onColumnFiltersChange={setColumnFilters}
-            onPaginationChange={setPagination}
         />
     );
 }
@@ -188,37 +176,40 @@ const toolbar =
             const isSplitDisabled = showOnlyMarks || selectedCount === 0;
 
             return (
-                <div className="d-flex w-100 align-items-center gap-2">
+                <div className="d-flex w-100 align-items-stretch gap-2">
                     <Badge badgeContent={selectedCount} color={selectedCount ? "primary" : "default"}>
                         <Button
                             i="union"
                             text="Juntar"
-                            className="btn btn-primary my-0 mx-1 p-1"
+                            className="btn btn-primary my-0 mx-1 p-1 h-100"
                             disabled={isJoinDisabled}
                             onClick={() => {
                                 if (!isJoinDisabled) joinSelectedEntities(table, pool, file);
                             }}
                         />
                     </Badge>
+                    
+                    <span className="d-inline-flex flex-shrink-0 align-middle">
+                        <Button
+                            i="exclude"
+                            text="Separar"
+                            className="btn btn-warning my-0 mx-1 p-1 h-100"
+                            disabled={isSplitDisabled}
+                            onClick={() => {
+                                if (!isSplitDisabled) splitSelectedEntities(table, pool, file);
+                            }}
+                        />
+                    </span>
 
-                    <Button
-                        i="exclude"
-                        text="Separar"
-                        className="btn btn-warning my-0 mx-1 p-1"
-                        disabled={isSplitDisabled}
-                        onClick={() => {
-                            if (!isSplitDisabled) splitSelectedEntities(table, pool, file);
-                        }}
-                    />
-
-                    <Button
-                        i="trash"
-                        text="Remover"
-                        className="btn btn-danger my-0 mx-1 p-1"
-                        disabled={selectedCount === 0}
-                        onClick={() => removeSelectedEntities(table, pool, file)}
-                    />
-
+                    <span className="d-inline-flex flex-shrink-0 align-middle">
+                        <Button
+                            i="trash"
+                            text="Remover"
+                            className="btn btn-danger my-0 mx-1 p-1 h-100"
+                            disabled={selectedCount === 0}
+                            onClick={() => removeSelectedEntities(table, pool, file)}
+                        />
+                    </span>
                     <div className="flex-grow-1" />
 
                     <TextField
@@ -304,7 +295,9 @@ const COUNT_COL = (totalOcc: number): MRT_ColumnDef<Entity> => ({
     id: "count",
     header: `# (${totalOcc})`,
     accessorFn: (e) => e.offsets.length,
-    size: 70, minSize: 50, maxSize: 132,
+    size: 90,
+    minSize: 90,
+    maxSize: 132,
     sortDescFirst: true,
     enableColumnActions: false,
     muiTableHeadCellProps: { align: "right" },
@@ -316,7 +309,9 @@ const ENTITY_COL: (pool: EntityPool) => MRT_ColumnDef<Entity> = (pool) => ({
     id: "entity",
     header: `Entidade (${pool.entities.length})`,
     accessorFn: (ent) => ent.offsets[0]?.preview ?? "",
-    size: 160, minSize: 100, maxSize: 280,
+    size: 210,
+    minSize: 200,
+    maxSize: 280,
     enableEditing: false,
     enableColumnFilter: true,
     enableColumnDragging: false,
@@ -341,25 +336,13 @@ const TYPE_COL: (types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (types) => ({
     id: "type",
     header: "Tipo",
     accessorKey: "type",
-    size: 90, minSize: 60, maxSize: 140,
+    size: 95,
+    minSize: 90,
+    maxSize: 140,
     enableEditing: false,
     enableColumnActions: false,
     filterVariant: "select",
-    filterSelectOptions: [
-        { text: "Tipos Normais", value: "__NO_X__" },
-        { text: "Outros Tipos", value: "__ONLY_X__" },
-        ...types.map((t) => t.name),
-    ],
-    filterFn: (row, _columnId, filterValue) => {
-        if (filterValue === "__ONLY_X__") return row.original.type.startsWith("X-");
-        if (filterValue === "__NO_X__") return !row.original.type.startsWith("X-");
-        return row.original.type === filterValue;
-    },
-    muiTableHeadCellFilterTextFieldProps: {
-        inputRef: (ref: HTMLInputElement | null) => {
-            if (ref && !ref.select) ref.select = () => { };
-        },
-    },
+    filterSelectOptions: types.map((t) => t.name),
     muiTableHeadCellProps: { align: "center" },
     muiTableBodyCellProps: { align: "center", sx: { px: 1 } },
     Cell: ({ row, table }) => {
@@ -386,7 +369,9 @@ const ANONIMIZE_COL: (pool: EntityPool, types: Record<string, EntityTypeI>) => M
     id: "anon",
     header: "Anonimização",
     accessorKey: "overwriteAnonimization",
-    size: 160, minSize: 100, maxSize: 280,
+    size: 196,
+    minSize: 180,
+    maxSize: 280,
     enableColumnActions: false,
     muiTableHeadCellProps: { align: "left" },
     muiTableBodyCellProps: {
@@ -414,7 +399,7 @@ const ANONIMIZE_COL: (pool: EntityPool, types: Record<string, EntityTypeI>) => M
             </code>
         );
     },
-    muiTableBodyCellEditTextFieldProps: ({ row }) => ({
+    muiTableBodyCellEditTextFieldProps: (row: { original: { anonimizingFunction: (arg0: EntityTypeI) => { (arg0: any, arg1: any, arg2: any, arg3: any, arg4: any): any; new(): any; }; type: string | number; offsets: { preview: any; }[]; index: any; typeIndex: any; funcIndex: any; overwriteAnonimization: any; }; }) => ({
         placeholder: row.original.anonimizingFunction(types[row.original.type])(
             row.original.offsets[0].preview,
             row.original.type,
@@ -422,7 +407,7 @@ const ANONIMIZE_COL: (pool: EntityPool, types: Record<string, EntityTypeI>) => M
             row.original.typeIndex,
             row.original.funcIndex,
         ),
-        onBlur: (event) => {
+        onBlur: (event: { target: { value: any; }; }) => {
             const old = row.original.overwriteAnonimization;
             row.original.overwriteAnonimization = event.target.value;
             if (old !== row.original.overwriteAnonimization) pool.updateOrder("Modificar anonimização de entidade");
