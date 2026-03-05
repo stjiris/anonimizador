@@ -78,12 +78,12 @@ export async function runRemoteNlp(file: UserFile, abort?: AbortSignal) {
         body: fd,
         signal: abort
     }).then(r => {
-        if (r.status === 200)
-            return r.json();
+        if (r.status === 200) return r.json();
         alert(`Servidor respondeu: ${r.status} (${r.statusText})`)
         return [];
     }).catch(e => {
         if (e instanceof DOMException && e.name === "AbortError") return [];
+        console.error("NLP fetch failed:", e);
         alert(e);
         return [];
     })
