@@ -14,9 +14,9 @@ app.prepare().then(() => {
         handle(req, res, parsedUrl);
     });
 
-    server.timeout = 300000;
-    server.headersTimeout = 310000;
-    server.keepAliveTimeout = 310000;
+    server.timeout = 1200000;
+    server.headersTimeout = 1210000;
+    server.keepAliveTimeout = 1210000;
 
     server.listen(port, "0.0.0.0", () => {
         console.log(`> Ready on http://0.0.0.0:${port}`);

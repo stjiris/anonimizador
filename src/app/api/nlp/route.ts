@@ -7,7 +7,7 @@ import { randomUUID } from "crypto";
 import { PYTHON_COMMAND } from "@/server_constants";
 
 export const runtime = "nodejs";
-export const maxDuration = 300;
+export const maxDuration = 1200;
 
 function getTempFilePath(suffix = "") {
     return path.join(os.tmpdir(), `${Date.now()}-${randomUUID()}${suffix}`);
