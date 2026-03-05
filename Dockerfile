@@ -41,9 +41,9 @@ ENV NEXT_PUBLIC_TITLE=${NEXT_PUBLIC_TITLE} \
 
 COPY . .
 
-RUN cp -r iris-lfs-storage/model-best ./src/scripts/model-best
-RUN cp -r iris-lfs-storage/model-gpt ./src/scripts/model-gpt
-RUN cp -r iris-lfs-storage/model-extended ./src/scripts/model-extended
+RUN cp -r iris-lfs-storage/model-best ./src/scripts/
+RUN cp -r iris-lfs-storage/model-gpt ./src/scripts/
+RUN cp -r iris-lfs-storage/model-extended ./src/scripts/
 
 RUN npm run build
 
