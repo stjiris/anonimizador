@@ -4,7 +4,7 @@ import json
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 print("Loading model...", flush=True)
-model = spacy.load("./src/scripts/model-gpt/model-best")
+model = spacy.load("./src/scripts/model-gpt/model-extended")
 print("Model loaded.", flush=True)
 
 class Handler(BaseHTTPRequestHandler):
