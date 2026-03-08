@@ -12,6 +12,7 @@ import { Entity, EntityTypeI } from "@/types/EntityType";
 import { EntityPool } from "@/types/EntityPool";
 import { Button } from "@/core/BootstrapIcons";
 import { FULL_ANONIMIZE } from "@/core/anonimizeFunctions";
+import { EntitiesStyle } from "@/core/entitiesStyle";
 
 const TODAS = Number.MAX_SAFE_INTEGER;
 
@@ -49,10 +50,10 @@ export function EntityTable({ file }: { file: UserFile }) {
         return [
             TYPE_COL(typesList),
             COUNT_COL(totalOcc),
-            ENTITY_COL(file.pool),
+            ENTITY_COL(file.pool, ents.length),
             ANONIMIZE_COL(file.pool, typesDict),
         ];
-    }, [typesList, totalOcc, file.pool, typesDict]);
+    }, [typesList, totalOcc, file.pool, typesDict, ents.length]);
 
     return (
         <MaterialReactTable
@@ -324,9 +325,9 @@ const COUNT_COL = (totalOcc: number): MRT_ColumnDef<Entity> => ({
     Cell: ({ cell }) => <strong>{cell.getValue<number>() ?? 0}</strong>,
 });
 
-const ENTITY_COL: (pool: EntityPool) => MRT_ColumnDef<Entity> = (pool) => ({
+const ENTITY_COL: (pool: EntityPool, count: number) => MRT_ColumnDef<Entity> = (pool, count) => ({
     id: "entity",
-    header: `Entidade (${pool.entities.length})`,
+    header: `Entidade (${count})`,
     accessorFn: (ent) => ent.offsets[0]?.preview ?? "",
     size: 160, minSize: 100, maxSize: 280,
     enableEditing: false,
