@@ -72,6 +72,14 @@ export class EntityPool {
         this.updateOrder("Separar entidades");
     }
 
+    changeEntitiesType(indexes: number[], newType: string) {
+        if (indexes.length === 0) return;
+        indexes.forEach(i => {
+            this.entities[i].type = newType;
+        })
+        this.updateOrder("Modificar tipo de entidade");
+    }
+
     removeEntities(indexes: number[]) {
         if (indexes.length === 0) return;
         indexes.sort((a, b) => a - b).reverse().forEach(i => {

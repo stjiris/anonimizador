@@ -13,6 +13,8 @@ import { EntityPool } from "@/types/EntityPool";
 import { Button } from "@/core/BootstrapIcons";
 import { FULL_ANONIMIZE } from "@/core/anonimizeFunctions";
 import { EntitiesStyle } from "@/core/entitiesStyle";
+import { sortEntityTypesXLast } from "@/components/Anonimize/Tooltip";
+import { Portal } from "@mui/material";
 
 const TODAS = Number.MAX_SAFE_INTEGER;
 
@@ -24,6 +26,8 @@ export function EntityTable({ file }: { file: UserFile }) {
     const filteredEnts = showOnlyMarks ? ents.filter((e) => e.type === "Marca") : ents;
     const entityCount = filteredEnts.length;
     const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 });
+
+    
 
     const typesDict = useTypesDict(file);
 
@@ -157,7 +161,7 @@ export function EntityTable({ file }: { file: UserFile }) {
                 </div>
             )}
 
-            renderTopToolbarCustomActions={toolbar(file.pool, file, showOnlyMarks, setShowOnlyMarks)}
+            renderTopToolbarCustomActions={toolbar(file.pool, file, showOnlyMarks, setShowOnlyMarks, typesList)}
 
             enableStickyHeader
             enableHiding
@@ -190,31 +194,50 @@ export function EntityTable({ file }: { file: UserFile }) {
 }
 
 const toolbar =
-    (pool: EntityPool, file: UserFile, showOnlyMarks: boolean, setShowOnlyMarks: (v: boolean) => void) =>
+    (pool: EntityPool, file: UserFile, showOnlyMarks: boolean, setShowOnlyMarks: (v: boolean) => void, typesList: EntityTypeI[]) =>
         ({ table }: { table: MRT_TableInstance<Entity> }) => {
             const selectedCount = Object.keys(table.getState().rowSelection).length;
             const isJoinDisabled = showOnlyMarks || selectedCount <= 1;
             const isSplitDisabled = showOnlyMarks || selectedCount === 0;
+            const [showTypePicker, setShowTypePicker] = useState(false);
+            const [pickerPos, setPickerPos] = useState({ top: 0, left: 0 });
+            const btnRef = useRef<HTMLSpanElement>(null);
+            
+            const pickerRef = useRef<HTMLDivElement>(null);
+
+useEffect(() => {
+    if (!showTypePicker) return;
+    const handler = (e: MouseEvent) => {
+        if (
+            btnRef.current && !btnRef.current.contains(e.target as Node) &&
+            pickerRef.current && !pickerRef.current.contains(e.target as Node)
+        ) {
+            setShowTypePicker(false);
+        }
+    };
+    window.addEventListener("mousedown", handler);
+    return () => window.removeEventListener("mousedown", handler);
+}, [showTypePicker]);
 
             return (
                 <div className="d-flex w-100 align-items-center gap-2">
-                    <Badge badgeContent={selectedCount} color={selectedCount ? "primary" : "default"}>
-                        <Button
-                            i="union"
-                            text="Juntar"
-                            className="btn btn-primary my-0 mx-1 p-1 h-100"
-                            disabled={isJoinDisabled}
-                            onClick={() => {
-                                if (!isJoinDisabled) joinSelectedEntities(table, pool, file);
-                            }}
-                        />
-                    </Badge>
+                    <span title="Juntar">
+                        <Badge badgeContent={selectedCount} color={selectedCount ? "primary" : "default"}>
+                            <Button
+                                i="union"
+                                className="btn btn-primary my-0 mx-1 p-1 h-100 px-3"
+                                disabled={isJoinDisabled}
+                                onClick={() => {
+                                    if (!isJoinDisabled) joinSelectedEntities(table, pool, file);
+                                }}
+                            />
+                        </Badge>
+                    </span>
 
-                    <span className="d-inline-flex flex-shrink-0 align-middle">
+                    <span title="Separar" className="d-inline-flex flex-shrink-0 align-middle">
                         <Button
                             i="exclude"
-                            text="Separar"
-                            className="btn btn-warning my-0 mx-1 p-1 h-100"
+                            className="btn btn-warning my-0 mx-1 p-1 h-100 px-3"
                             disabled={isSplitDisabled}
                             onClick={() => {
                                 if (!isSplitDisabled) splitSelectedEntities(table, pool, file);
@@ -222,15 +245,61 @@ const toolbar =
                         />
                     </span>
 
-                    <span className="d-inline-flex flex-shrink-0 align-middle">
+                    <span title="Remover" className="d-inline-flex flex-shrink-0 align-middle">
                         <Button
                             i="trash"
-                            text="Remover"
-                            className="btn btn-danger my-0 mx-1 p-1 h-100"
+                            className="btn btn-danger my-0 mx-1 p-1 h-100 px-3"
                             disabled={selectedCount === 0}
                             onClick={() => removeSelectedEntities(table, pool, file)}
+
                         />
                     </span>
+
+                    <span ref={btnRef} title="Mudar Tipo" className="d-inline-flex flex-shrink-0 align-middle" style={{ position: "relative" }}>
+    <Button
+        i="pencil"
+        className="btn btn-secondary my-0 mx-1 p-1 h-100 px-3"
+        disabled={selectedCount === 0 || showOnlyMarks}
+        onClick={() => {
+            if (!showTypePicker && btnRef.current) {
+                const rect = btnRef.current.getBoundingClientRect();
+                setPickerPos({ top: rect.bottom, left: rect.left });
+            }
+            setShowTypePicker(v => !v);
+        }}
+    />
+    {showTypePicker && (
+    <Portal>
+        <div
+            ref={pickerRef}
+            className="bg-white border p-1 d-flex flex-column gap-1"
+            style={{
+                position: "fixed",
+                top: pickerPos.top,
+                left: pickerPos.left,
+                zIndex: 2000,
+                maxHeight: 300,
+                overflowY: "auto"
+            }}
+        >
+            {sortEntityTypesXLast(typesList).map((t, i) => (
+                <span
+                    key={i}
+                    role="button"
+                    className="badge text-body"
+                    style={{ background: t.color, cursor: "pointer" }}
+                    onClick={() => {
+                        changeSelectedEntitiesType(table, pool, file, t.name);
+                        setShowTypePicker(false);
+                    }}
+                >
+                    {t.name}
+                </span>
+            ))}
+        </div>
+    </Portal>
+)}
+</span>
 
                     <div className="flex-grow-1" />
 
@@ -276,6 +345,14 @@ const splitSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPoo
     removeTableSelection(table);
     file.checkCountPES();
 };
+
+const changeSelectedEntitiesType = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile, newType: string) => {
+    pool.changeEntitiesType(selectedIndexes(table), newType);
+    removeTableSelection(table);
+    file.checkCountPES();
+}
+    
+
 
 const removeSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
     pool.removeEntities(selectedIndexes(table));

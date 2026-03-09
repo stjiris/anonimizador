@@ -16,9 +16,9 @@ export const enum AnonimizeVisualState {
     ALL_TYPES = "Editar - Tipos - Todos", // Shows all types of entities
     NORMAL_TYPES = "Editar - Tipos - Normais", // Shows normal types of entities
     OTHER_TYPES = "Editar - Tipos - Outros", // Shows other types of entities
-    REPLACE = "Subsituições - Todos", // Shows entities highlights
-    REPLACE_NORMAL = "Subsituições - Normais", // Shows entities highlights
-    REPLACE_OTHER = "Subsituições - Outros", // Shows entities highlights
+    REPLACE = "Substituições - Todos", // Shows entities highlights
+    REPLACE_NORMAL = "Substituições - Normais", // Shows entities highlights
+    REPLACE_OTHER = "Substituições - Outros", // Shows entities highlights
     ANONIMIZED = "Ver - Anonimização" // Shows file without entities
 }
 
