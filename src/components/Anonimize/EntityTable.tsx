@@ -202,7 +202,6 @@ const toolbar =
             const [showTypePicker, setShowTypePicker] = useState(false);
             const [pickerPos, setPickerPos] = useState({ top: 0, left: 0 });
             const btnRef = useRef<HTMLSpanElement>(null);
-            
             const pickerRef = useRef<HTMLDivElement>(null);
 
 useEffect(() => {
@@ -438,7 +437,7 @@ const TYPE_COL: (types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (types) => ({
     filterSelectOptions: [
         { text: "Tipos Normais", value: "__NO_X__" },
         { text: "Outros Tipos", value: "__ONLY_X__" },
-        ...types.map((t) => t.name),
+        ...sortEntityTypesXLast(types).map((t) => t.name),
     ],
     filterFn: (row, _columnId, filterValue) => {
         if (filterValue === "__ONLY_X__") return row.original.type.startsWith("X-");
