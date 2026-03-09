@@ -98,7 +98,7 @@ export function renderBlock(
     offset: number,
     images: Record<number, AnonimizeImage>,
     imageIndex: { current: number },
-    pageBreaks?: Set<number>
+    pageBreaks?: Set<number>,
 ) {
     let elmt = doc;
 

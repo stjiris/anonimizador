@@ -37,6 +37,7 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
 
     const anonimizedHTML = useRef<string>("");
     const [profiles, setProfiles] = useState<{ name: string; label: string }[]>([]);
+    const [paginated, setPaginated] = useState<boolean>(false);
 
     useEffect(() => {
         loadAnonimizeProfiles()
@@ -70,9 +71,9 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
             <div className="col-7 p-0 m-0">
                 <div className="anon-toolbar position-sticky top-0 bg-white p-0 m-0 d-flex" style={{ borderBottom: "5px solid #161616", zIndex: 1 }}>                    {requesting ? <ForceExitButton setUserFile={props.setUserFile} /> : <ExitButton file={file} setUserFile={props.setUserFile} />}
                     <SavedBadge file={file} />
-                    <ToolsButton />
                     <Button title="Gerir tipos" i="file-earmark-font" text="Tipos" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types" />
                     <Sep />
+                    <Button title="Documento paginado" i="file-earmark-break" text="Paginar" className={"btn btn-sm m-1 p-1 " + (paginated ? "btn-success" : "btn-danger")} onClick={() => setPaginated(p => !p)} />
                     <select title="Escolher modo" className="text-body btn m-1 p-1 text-start alert alert-primary" onChange={(ev) => setAnonimizeSate(getAnonimizedStateCombined(ev.target.value as AnonimizeVisualState))} defaultValue={AnonimizeVisualState.ALL_TYPES}>
                         <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
                         <option value={AnonimizeVisualState.REPLACE}>{AnonimizeVisualState.REPLACE}</option>
@@ -94,7 +95,7 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
                     {requesting && anonimizeState.state === AnonimizeStateState.TAGGED ?
                         <div className="alert alert-info">A processar o documento, esta operação poderá demorar.</div>
                         :
-                        <AnonimizeContent accessHtml={(html) => anonimizedHTML.current = html} showTypes={anonimizeState.showTypes} file={file} anonimizeState={anonimizeState.state} />
+                        <AnonimizeContent paginated={paginated} accessHtml={(html) => anonimizedHTML.current = html} showTypes={anonimizeState.showTypes} file={file} anonimizeState={anonimizeState.state} />
                     }
                 </div>
             </div>
