@@ -74,7 +74,7 @@ export function EntityTable({ file }: { file: UserFile }) {
             enableColumnOrdering={false}
             enableColumnDragging={false}
             enableColumnActions={false}
-            enableGlobalFilter={false}
+            enableGlobalFilter
 
             enableRowVirtualization={false}
             enableColumnResizing
