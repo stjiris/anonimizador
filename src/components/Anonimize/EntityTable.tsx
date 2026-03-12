@@ -199,24 +199,24 @@ const toolbar =
             const selectedCount = Object.keys(table.getState().rowSelection).length;
             const isJoinDisabled = showOnlyMarks || selectedCount <= 1;
             const isSplitDisabled = showOnlyMarks || selectedCount === 0;
-            const [showTypePicker, setShowTypePicker] = useState(false);
-            const [pickerPos, setPickerPos] = useState({ top: 0, left: 0 });
+            //const [showTypePicker, setShowTypePicker] = useState(false);
+            //const [pickerPos, setPickerPos] = useState({ top: 0, left: 0 });
             const btnRef = useRef<HTMLSpanElement>(null);
             const pickerRef = useRef<HTMLDivElement>(null);
 
-useEffect(() => {
-    if (!showTypePicker) return;
-    const handler = (e: MouseEvent) => {
-        if (
-            btnRef.current && !btnRef.current.contains(e.target as Node) &&
-            pickerRef.current && !pickerRef.current.contains(e.target as Node)
-        ) {
-            setShowTypePicker(false);
-        }
-    };
-    window.addEventListener("mousedown", handler);
-    return () => window.removeEventListener("mousedown", handler);
-}, [showTypePicker]);
+            /*useEffect(() => {
+                if (!showTypePicker) return;
+                const handler = (e: MouseEvent) => {
+                    if (
+                        btnRef.current && !btnRef.current.contains(e.target as Node) &&
+                        pickerRef.current && !pickerRef.current.contains(e.target as Node)
+                    ) {
+                        setShowTypePicker(false);
+                    }
+                };
+                window.addEventListener("mousedown", handler);
+                return () => window.removeEventListener("mousedown", handler);
+            }, [showTypePicker]);*/
 
             return (
                 <div className="d-flex w-100 align-items-center gap-2">
@@ -224,7 +224,8 @@ useEffect(() => {
                         <Badge badgeContent={selectedCount} color={selectedCount ? "primary" : "default"}>
                             <Button
                                 i="union"
-                                className="btn btn-primary my-0 mx-1 p-1 h-100 px-3"
+                                text="Juntar"
+                                className="btn btn-primary my-0 mx-1 p-1 h-100"
                                 disabled={isJoinDisabled}
                                 onClick={() => {
                                     if (!isJoinDisabled) joinSelectedEntities(table, pool, file);
@@ -236,7 +237,8 @@ useEffect(() => {
                     <span title="Separar" className="d-inline-flex flex-shrink-0 align-middle">
                         <Button
                             i="exclude"
-                            className="btn btn-warning my-0 mx-1 p-1 h-100 px-3"
+                            text="Separar"
+                            className="btn btn-warning my-0 mx-1 p-1 h-100"
                             disabled={isSplitDisabled}
                             onClick={() => {
                                 if (!isSplitDisabled) splitSelectedEntities(table, pool, file);
@@ -247,7 +249,8 @@ useEffect(() => {
                     <span title="Remover" className="d-inline-flex flex-shrink-0 align-middle">
                         <Button
                             i="trash"
-                            className="btn btn-danger my-0 mx-1 p-1 h-100 px-3"
+                            text="Remover"
+                            className="btn btn-danger my-0 mx-1 p-1 h-100"
                             disabled={selectedCount === 0}
                             onClick={() => removeSelectedEntities(table, pool, file)}
 
