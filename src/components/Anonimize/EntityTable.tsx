@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MaterialReactTable, MRT_ColumnDef, MRT_ColumnFiltersState, MRT_Row, MRT_TableInstance, } from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 
-import { IconButton, Tooltip, TextField, Badge, ToggleButton, ToggleButtonGroup } from "@mui/material";
+import { IconButton, Tooltip, TextField, Badge, ToggleButton, ToggleButtonGroup, Menu, MenuItem } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -52,7 +52,7 @@ export function EntityTable({ file }: { file: UserFile }) {
 
     const columns = useMemo<MRT_ColumnDef<Entity>[]>(() => {
         return [
-            TYPE_COL(typesList),
+            TYPE_COL(typesList, file.pool, file),
             COUNT_COL(totalOcc),
             ENTITY_COL(file.pool, ents.length),
             ANONIMIZE_COL(file.pool, typesDict),
@@ -254,52 +254,6 @@ useEffect(() => {
                         />
                     </span>
 
-                    <span ref={btnRef} title="Mudar Tipo" className="d-inline-flex flex-shrink-0 align-middle" style={{ position: "relative" }}>
-    <Button
-        i="pencil"
-        className="btn btn-secondary my-0 mx-1 p-1 h-100 px-3"
-        disabled={selectedCount === 0 || showOnlyMarks}
-        onClick={() => {
-            if (!showTypePicker && btnRef.current) {
-                const rect = btnRef.current.getBoundingClientRect();
-                setPickerPos({ top: rect.bottom, left: rect.left });
-            }
-            setShowTypePicker(v => !v);
-        }}
-    />
-    {showTypePicker && (
-    <Portal>
-        <div
-            ref={pickerRef}
-            className="bg-white border p-1 d-flex flex-column gap-1"
-            style={{
-                position: "fixed",
-                top: pickerPos.top,
-                left: pickerPos.left,
-                zIndex: 2000,
-                maxHeight: 300,
-                overflowY: "auto"
-            }}
-        >
-            {sortEntityTypesXLast(typesList).map((t, i) => (
-                <span
-                    key={i}
-                    role="button"
-                    className="badge text-body"
-                    style={{ background: t.color, cursor: "pointer" }}
-                    onClick={() => {
-                        changeSelectedEntitiesType(table, pool, file, t.name);
-                        setShowTypePicker(false);
-                    }}
-                >
-                    {t.name}
-                </span>
-            ))}
-        </div>
-    </Portal>
-)}
-</span>
-
                     <div className="flex-grow-1" />
 
                     <TextField
@@ -344,12 +298,6 @@ const splitSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPoo
     removeTableSelection(table);
     file.checkCountPES();
 };
-
-const changeSelectedEntitiesType = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile, newType: string) => {
-    pool.changeEntitiesType(selectedIndexes(table), newType);
-    removeTableSelection(table);
-    file.checkCountPES();
-}
     
 
 
@@ -426,7 +374,7 @@ const ENTITY_COL: (pool: EntityPool, count: number) => MRT_ColumnDef<Entity> = (
     }),
 });
 
-const TYPE_COL: (types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (types) => ({
+const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_ColumnDef<Entity> = (types, pool, file) => ({
     id: "type",
     header: "Tipo",
     accessorKey: "type",
@@ -451,23 +399,60 @@ const TYPE_COL: (types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (types) => ({
     },
     muiTableHeadCellProps: { align: "center" },
     muiTableBodyCellProps: { align: "center", sx: { px: 1 } },
-    Cell: ({ row, table }) => {
+    Cell: ({ row}) => {
+        const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+
         const t =
             types.find((x) => x.name === row.original.type) ||
             ({ name: `${row.original.type}*`, color: "red", functionIndex: FULL_ANONIMIZE } as EntityTypeI);
+
+        const handleClick = (evt: React.MouseEvent<HTMLElement>) => {
+            evt.stopPropagation();
+            setAnchorEl(evt.currentTarget);
+        };
+
+        const handleClose = () => setAnchorEl(null);
+
+        const handleSelectType = (newType: string) => {
+            pool.changeEntitiesType([row.original.index - 1], newType);
+            file.checkCountPES();
+            handleClose();
+        };
+
         return (
-            <span
-                className="badge text-body"
-                title="Filtrar por este tipo"
-                style={{ background: t.color, cursor: "pointer" }}
-                onClick={() => table.getColumn("type")?.setFilterValue(t.name)}
-            >
-                {t.name}
-            </span>
+            <>
+                <span
+                    className="badge text-body"
+                    title="Alterar tipo de todas as ocorrências"
+                    style={{ background: t.color, cursor: "pointer" }}
+                    onClick={handleClick}
+                >
+                    {t.name}
+                </span>
+                <Menu
+                    anchorEl={anchorEl}
+                    open={Boolean(anchorEl)}
+                    onClose={handleClose}
+                >
+                    {sortEntityTypesXLast(types).map((type) => (
+                        <MenuItem
+                            key={type.name}
+                            onClick={() => handleSelectType(type.name)}
+                            selected={type.name === row.original.type}
+                        >
+                            <span
+                                className="badge text-body me-2"
+                                style={{ background: type.color }}
+                            >
+                                {type.name}
+                            </span>
+                        </MenuItem>
+                    ))}
+                </Menu>
+            </>
         );
     },
 });
-
 const ANONIMIZE_COL: (pool: EntityPool, types: Record<string, EntityTypeI>) => MRT_ColumnDef<Entity> = (
     pool,
     types,
