@@ -3,6 +3,7 @@ import { UserFile } from "@/core/UserFile";
 import { useTypes } from "@/core/uses";
 import { AddEntityDryRun } from "@/types/EntityPool";
 import { UserFileInterface } from "@/types/UserFileInterface";
+import { sortEntityTypesXLast } from "./Tooltip";
 
 // We want exact matches
 // https://stackoverflow.com/a/3561711/2573422
@@ -69,7 +70,7 @@ export function SearchModalContent({ file }: { file: UserFileInterface }) {
                 </div>
                 <select ref={selectRef} id="modal-search-select" className="form-select" defaultValue={type} onInput={(e) => setType(e.currentTarget.value)}>
                     <option value="">Selecionar tipo...</option>
-                    {types.map((t, i) => <option key={i} value={t.name}>{t.name}</option>)}
+                    {sortEntityTypesXLast(types).map((t, i) => <option key={i} value={t.name}>{t.name}</option>)}
                 </select>
             </div>
             <label className="form-label">Pré-visualização dos primeiros <b>{Math.min(10, results.length)}</b> de <b>{results.length}</b> resultados:</label>
