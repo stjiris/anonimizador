@@ -225,7 +225,7 @@ const toolbar =
                             <Button
                                 i="union"
                                 text="Juntar"
-                                className="btn btn-primary my-0 mx-1 p-1 h-100"
+                                className="btn btn-primary my-0 mx-1 p-1"
                                 disabled={isJoinDisabled}
                                 onClick={() => {
                                     if (!isJoinDisabled) joinSelectedEntities(table, pool, file);
@@ -238,7 +238,7 @@ const toolbar =
                         <Button
                             i="exclude"
                             text="Separar"
-                            className="btn btn-warning my-0 mx-1 p-1 h-100"
+                            className="btn btn-warning my-0 mx-1 p-1"
                             disabled={isSplitDisabled}
                             onClick={() => {
                                 if (!isSplitDisabled) splitSelectedEntities(table, pool, file);
@@ -250,7 +250,7 @@ const toolbar =
                         <Button
                             i="trash"
                             text="Remover"
-                            className="btn btn-danger my-0 mx-1 p-1 h-100"
+                            className="btn btn-danger my-0 mx-1 p-1"
                             disabled={selectedCount === 0}
                             onClick={() => removeSelectedEntities(table, pool, file)}
 
@@ -261,7 +261,7 @@ const toolbar =
     <Button
         i="pencil"
         text="Mudar Tipo"
-        className="btn btn-secondary my-0 mx-1 p-1 h-100 px-3"
+        className="btn btn-secondary my-0 mx-1 p-1"
         disabled={selectedCount === 0 || showOnlyMarks}
         onClick={() => {
             if (!showTypePicker && btnRef.current) {
