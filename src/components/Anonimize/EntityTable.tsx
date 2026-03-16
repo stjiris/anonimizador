@@ -220,7 +220,7 @@ const toolbar =
 
             return (
                 <div className="d-flex w-100 align-items-center gap-2">
-                    <span title="Juntar">
+                    <span title="Juntar" className="d-inline-flex flex-shrink-0 align-middle">
                         <Badge badgeContent={selectedCount} color={selectedCount ? "primary" : "default"}>
                             <Button
                                 i="union"
@@ -257,62 +257,54 @@ const toolbar =
                         />
                     </span>
 
-                    <span ref={btnRef} title="Mudar Tipo" className="d-inline-flex flex-shrink-0 align-middle" style={{ position: "relative" }}>
-    <Button
-        i="pencil"
-        text="Mudar Tipo"
-        className="btn btn-secondary my-0 mx-1 p-1"
-        disabled={selectedCount === 0 || showOnlyMarks}
-        onClick={() => {
-            if (!showTypePicker && btnRef.current) {
-                const rect = btnRef.current.getBoundingClientRect();
-                setPickerPos({ top: rect.bottom, left: rect.left });
-            }
-            setShowTypePicker(v => !v);
-        }}
-    />
-    {showTypePicker && (
-    <Portal>
-        <div
-            ref={pickerRef}
-            className="bg-white border p-1 d-flex flex-column gap-1"
-            style={{
-                position: "fixed",
-                top: pickerPos.top,
-                left: pickerPos.left,
-                zIndex: 2000,
-                maxHeight: 300,
-                overflowY: "auto"
-            }}
-        >
-            {sortEntityTypesXLast(typesList).map((t, i) => (
-                <span
-                    key={i}
-                    role="button"
-                    className="badge text-body"
-                    style={{ background: t.color, cursor: "pointer" }}
-                    onClick={() => {
-                        changeSelectedEntitiesType(table, pool, file, t.name);
-                        setShowTypePicker(false);
-                    }}
-                >
-                    {t.name}
-                </span>
-            ))}
-        </div>
-    </Portal>
-)}
-</span>
+                    <span ref={btnRef} title="Mudar Tipo" className="d-inline-flex flex-shrink-0 align-middle">
+                        <Button
+                            i="pencil"
+                            text="Mudar Tipo"
+                            className="btn btn-secondary my-0 mx-1 p-1"
+                            disabled={selectedCount === 0 || showOnlyMarks}
+                            onClick={() => {
+                                if (!showTypePicker && btnRef.current) {
+                                    const rect = btnRef.current.getBoundingClientRect();
+                                    setPickerPos({ top: rect.bottom, left: rect.left });
+                                }
+                                setShowTypePicker(v => !v);
+                            }}
+                        />
+                        {showTypePicker && (
+                        <Portal>
+                            <div
+                                ref={pickerRef}
+                                className="bg-white border p-1 d-flex flex-column gap-1"
+                                style={{
+                                    position: "fixed",
+                                    top: pickerPos.top,
+                                    left: pickerPos.left,
+                                    zIndex: 2000,
+                                    maxHeight: 300,
+                                    overflowY: "auto"
+                                }}
+                            >
+                                {sortEntityTypesXLast(typesList).map((t, i) => (
+                                    <span
+                                        key={i}
+                                        role="button"
+                                        className="badge text-body"
+                                        style={{ background: t.color, cursor: "pointer" }}
+                                        onClick={() => {
+                                            changeSelectedEntitiesType(table, pool, file, t.name);
+                                            setShowTypePicker(false);
+                                        }}
+                                    >
+                                        {t.name}
+                                    </span>
+                                ))}
+                            </div>
+                        </Portal>
+                    )}
+                    </span>
 
-<div className="flex-grow-1" />
-
-                    <TextField
-                        size="small"
-                        placeholder="Pesquisar…"
-                        value={table.getState().globalFilter ?? ""}
-                        onChange={(e) => table.setGlobalFilter(e.target.value)}
-                        sx={{ minWidth: 220 }}
-                    />
+                    <div className="flex-grow-1" />
 
                     <ToggleButtonGroup
                         size="small"
@@ -514,7 +506,13 @@ const ANONIMIZE_COL: (pool: EntityPool, types: Record<string, EntityTypeI>) => M
 ) => ({
     id: "anon",
     header: "Anonimização",
-    accessorKey: "overwriteAnonimization",
+    accessorFn: (row) => row.overwriteAnonimization || row.anonimizingFunction(types[row.type])(
+        row.offsets[0]?.preview,
+        row.type,
+        row.index,
+        row.typeIndex,
+        row.funcIndex,
+    ),
     size: 160, minSize: 100, maxSize: 280,
     enableColumnActions: false,
     muiTableHeadCellProps: { align: "left" },
