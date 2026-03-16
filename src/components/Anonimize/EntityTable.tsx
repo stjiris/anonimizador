@@ -23,11 +23,12 @@ export function EntityTable({ file }: { file: UserFile }) {
     const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
 
     const ents = useEntities(file.pool);
-    const filteredEnts = showOnlyMarks ? ents.filter((e) => e.type === "Marca") : ents;
+    const filteredEnts = useMemo(
+        () => showOnlyMarks ? ents.filter((e) => e.type === "Marca") : ents,
+        [ents, showOnlyMarks]
+    );
     const entityCount = filteredEnts.length;
     const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 });
-
-    
 
     const typesDict = useTypesDict(file);
 
@@ -58,6 +59,12 @@ export function EntityTable({ file }: { file: UserFile }) {
             ANONIMIZE_COL(file.pool, typesDict),
         ];
     }, [typesList, totalOcc, file.pool, typesDict, ents.length]);
+
+    const handleToggle = (_: React.MouseEvent<HTMLElement>, v: string | null) => {
+        setShowOnlyMarks(v === "marcas");
+        setColumnFilters([]);
+        setPagination(prev => ({ ...prev, pageIndex: 0 }));
+    };
 
     return (
         <MaterialReactTable
@@ -161,7 +168,7 @@ export function EntityTable({ file }: { file: UserFile }) {
                 </div>
             )}
 
-            renderTopToolbarCustomActions={toolbar(file.pool, file, showOnlyMarks, setShowOnlyMarks, typesList)}
+            renderTopToolbarCustomActions={toolbar(file.pool, file, showOnlyMarks, handleToggle, typesList)}
 
             enableStickyHeader
             enableHiding
@@ -194,7 +201,7 @@ export function EntityTable({ file }: { file: UserFile }) {
 }
 
 const toolbar =
-    (pool: EntityPool, file: UserFile, showOnlyMarks: boolean, setShowOnlyMarks: (v: boolean) => void, typesList: EntityTypeI[]) =>
+    (pool: EntityPool, file: UserFile, showOnlyMarks: boolean, onToggle: (e: React.MouseEvent<HTMLElement>, v: string | null) => void, typesList: EntityTypeI[]) =>
         ({ table }: { table: MRT_TableInstance<Entity> }) => {
             const selectedCount = Object.keys(table.getState().rowSelection).length;
             const isJoinDisabled = showOnlyMarks || selectedCount <= 1;
@@ -310,7 +317,7 @@ const toolbar =
                         size="small"
                         value={showOnlyMarks ? "marcas" : "todas"}
                         exclusive
-                        onChange={(_, v) => setShowOnlyMarks(v === "marcas")}
+                        onChange={onToggle}
                     >
                         <ToggleButton value="todas">Todas</ToggleButton>
                         <ToggleButton value="marcas">Marcas</ToggleButton>
@@ -323,9 +330,6 @@ const selectedIndexes = (table: MRT_TableInstance<Entity>) =>
     Object.keys(table.getState().rowSelection)
         .map((k) => parseInt(k, 10) - 1)
         .filter((k) => !isNaN(k));
-
-//const selectedIndexes = (table: MRT_TableInstance<Entity>) =>
-//  table.getSelectedRowModel().rows.map((row) => row.original.index);
 
 const removeTableSelection = (table: MRT_TableInstance<Entity>) => table.setRowSelection({});
 
