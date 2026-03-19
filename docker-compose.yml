@@ -50,6 +50,9 @@ services:
       - logs:/opt/app/logs
       - .:/opt/app
       - /opt/app/node_modules
+      - ./iris-lfs-storage/model-best:/opt/app/src/scripts/model-best
+      - ./iris-lfs-storage/model-gpt:/opt/app/src/scripts/model-gpt
+      - ./iris-lfs-storage/model-extended:/opt/app/src/scripts/model-extended
     restart: unless-stopped
     networks:
       - juris-network
