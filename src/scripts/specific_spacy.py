@@ -401,8 +401,9 @@ def merge(ents, text):
 def nlp(text, model):
     if "new_line_segmenter" not in model.pipe_names:
         model.add_pipe("new_line_segmenter", before="ner")
-    if "remove_entities_with_excluded_words" not in model.pipe_names:
-        model.add_pipe("remove_entities_with_excluded_words", last=True)
+    #if "remove_entities_with_excluded_words" not in model.pipe_names:
+        #model.add_pipe("remove_entities_with_excluded_words", last=True)
+    
 
     # Create entity list
     ents = []
@@ -446,4 +447,5 @@ def nlp(text, model):
     ents = label_social_media(doc, ents)
     ents = sorted(ents,key=lambda x: x.start_char)
     ents = merge(ents, text)
+
     return FakeDoc(ents, doc.text)
