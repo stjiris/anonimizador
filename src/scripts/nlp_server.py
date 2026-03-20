@@ -1,3 +1,14 @@
+import torch
+
+# Patch for models saved without embeddings.position_ids (older transformers)
+_original_torch_load = torch.load
+def _patched_torch_load(f, **kwargs):
+    state = _original_torch_load(f, **kwargs)
+    if isinstance(state, dict) and 'embeddings.position_ids' not in state:
+        state['embeddings.position_ids'] = torch.arange(512).expand((1, -1))
+    return state
+torch.load = _patched_torch_load
+
 from specific_spacy import nlp, FakeDoc
 import spacy
 import json
