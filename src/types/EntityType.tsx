@@ -43,8 +43,6 @@ export const EntityTypeIDefaults: { [key: string]: EntityTypeI } = {
     PROF: { name: "PROF", color: "#F7C4D8", functionIndex: AUTO_ANONIMIZE },
     "X-PROF": { name: "X-PROF", color: "#DCDCDC", functionIndex: DONT_ANONIMIZE },
     "Marca": { name: "Marca", color: "#2f4f4f", functionIndex: DONT_ANONIMIZE },
-    ADDR: { name: "ADDR", color: "#ffc0cb", functionIndex: AUTO_ANONIMIZE },
-    "X-ADDR": { name: "X-ADDR", color: "#DCDCDC", functionIndex: DONT_ANONIMIZE },
 }
 
 
