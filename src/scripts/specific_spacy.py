@@ -17,7 +17,7 @@ PATTERN_DATA = r"\b\d{1,2}(-|\.|/)\d{1,2}(-|\.|/)\d{2,4}\b"
 EXCLUDE = ['Tribunal','Juízo','Secção','Vara','Arguído','Arguída','Arguídos','Arguídas',
             'Réu','Reu','Ré','Rés','Autores','Supremo Tribunal de Justiça','STJ','Supremo Tribunal',
             'Requerida','Autora','Instância','Relação','Supremo','Recorrente','Recorrida','Recorrido',
-            'Tribunal da Relação','artº','Exª','Exº','Secção do Supremo Tribunal de Justiça','A.A.','nºs']
+            'Tribunal da Relação','artº','Exª','Exº','Secção do Supremo Tribunal de Justiça','A.A.','nºs',"Estado","Constituição", "Constituição da República Portuguesa"]
 
 # Termos referentes a cargos desempenhados por agentes do poder judicial que não devem
 # ser anonimizados.
