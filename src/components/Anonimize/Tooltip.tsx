@@ -109,7 +109,7 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
         </>
     );
 
-    if (selection.would === undefined || selection.would === AddEntityDryRun.NONE) return <></>;
+    if (selection.would === undefined) return <></>;
 
     return (
         <div
