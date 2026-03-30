@@ -279,36 +279,37 @@ const toolbar =
                             }}
                         />
                         {showTypePicker && (
-                        <Portal>
-                            <div
-                                ref={pickerRef}
-                                className="bg-white border p-1 d-flex flex-column gap-1"
-                                style={{
-                                    position: "fixed",
-                                    top: pickerPos.top,
-                                    left: pickerPos.left,
-                                    zIndex: 2000,
-                                    maxHeight: 300,
-                                    overflowY: "auto"
-                                }}
-                            >
-                                {sortEntityTypesXLast(typesList).map((t, i) => (
-                                    <span
-                                        key={i}
-                                        role="button"
-                                        className="badge text-body"
-                                        style={{ background: t.color, cursor: "pointer" }}
-                                        onClick={() => {
-                                            changeSelectedEntitiesType(table, pool, file, t.name);
-                                            setShowTypePicker(false);
-                                        }}
-                                    >
-                                        {t.name}
-                                    </span>
-                                ))}
-                            </div>
-                        </Portal>
-                    )}
+                            <Portal>
+                                <div
+                                    ref={pickerRef}
+                                    className="dropdown-menu show shadow overflow-y-auto"
+                                    style={{
+                                        position: "fixed",
+                                        top: pickerPos.top,
+                                        left: pickerPos.left,
+                                        zIndex: 99999,
+                                        maxHeight: 300,
+                                    }}
+                                >
+                                    {sortEntityTypesXLast(typesList).map((t, i) => (
+                                        <button
+                                            key={i}
+                                            className="dropdown-item d-flex align-items-center gap-2"
+                                            onClick={() => {
+                                                changeSelectedEntitiesType(table, pool, file, t.name);
+                                                setShowTypePicker(false);
+                                            }}
+                                        >
+                                            <span
+                                                className="badge"
+                                                style={{ background: t.color, minWidth: 12, minHeight: 12 }}
+                                            >&nbsp;</span>
+                                            {t.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            </Portal>
+                        )}
                     </span>
 
                     <div className="flex-grow-1" />

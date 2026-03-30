@@ -2,7 +2,8 @@ import { UserFile } from "@/core/UserFile"
 import { AddEntityDryRun, EntityPool } from "@/types/EntityPool"
 import { EntityTypeColor } from "@/types/EntityType"
 import { TokenSelection } from "@/types/SelectionType"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
+import { createPopper, Instance } from "@popperjs/core"
 
 interface AnonimizeTooltipProps {
     entityTypes: EntityTypeColor[]
@@ -18,116 +19,108 @@ interface SelectionState {
     affects: number | undefined
 }
 
-
 export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
     const [selection, setSelection] = useState<SelectionState>({ selection: undefined, would: undefined, affects: undefined });
+    const menuRef = useRef<HTMLDivElement>(null);
+    const popperRef = useRef<Instance | null>(null);
 
-    let fileA = props.file;
-
-    const onMouseup = (ev: React.MouseEvent<HTMLDivElement>) => {
+    const onMouseup = useCallback((ev: MouseEvent) => {
         if (props.contentRef.current) {
-            updateSelection(ev, props.contentRef.current, props.nodesRef.current, props.pool, selection, setSelection)
+            updateSelection(ev as any, props.contentRef.current, props.nodesRef.current, props.pool, selection, setSelection)
         }
-    }
+    }, [props.contentRef, props.nodesRef, props.pool, selection]);
+
     useEffect(() => {
-        window.addEventListener("mouseup", onMouseup as any)
-        return () => {
-            window.removeEventListener("mouseup", onMouseup as any)
+        window.addEventListener("mouseup", onMouseup)
+        return () => window.removeEventListener("mouseup", onMouseup)
+    }, [onMouseup])
+
+    
+    //hook para o dropdown seguir o texto selecionado
+    useEffect(() => {
+        if (!selection.selection || !menuRef.current) {
+            popperRef.current?.destroy();
+            popperRef.current = null;
+            return;
         }
-    })
 
-    if (!selection.selection) return <></>
+        const anchor = document.querySelector(`[data-offset="${selection.selection.start}"]`);
+        if (!anchor) return;
 
-    let sel = selection.selection;
-    let start = document.querySelector(`[data-offset="${sel.start}"]`);
-    if (!start) return <></>;
-    let rects = start.getClientRects();
+        popperRef.current = createPopper(anchor as HTMLElement, menuRef.current, {
+            placement: "bottom-start",
+            modifiers: [
+                { name: "flip", enabled: true },
+                { 
+                    name: "preventOverflow", 
+                    options: { boundary: props.contentRef.current || "viewport" } 
+                },
+                { name: "hide", enabled: true },
+                {
+                    name: 'detectHidden',
+                    enabled: true,
+                    phase: 'main',
+                    fn({ state }) {
+                        
+                        //se sair do ecrã, esconder o menu e limpar a seleção
+                        if (state.modifiersData.hide?.isReferenceHidden) {
+                            window.getSelection()?.removeAllRanges();
+                            setSelection({ selection: undefined, would: undefined, affects: undefined });
+                        }
+                    },
+                },
+            ],
+        });
 
-    let style: React.CSSProperties = {
-        position: "fixed",
-        display: "block",
-        bottom: window.innerHeight - rects[0].top,
-        top: rects[0].top + rects[0].height,
-        left: rects[0].left,
-        width: "fit-content"
-    };
+        return () => {
+            popperRef.current?.destroy();
+            popperRef.current = null;
+        };
+    }, [selection.selection, props.contentRef]);
 
-    if (rects[0].top > window.innerHeight / 2) {
-        delete style.top;
-    }
-    else {
-        delete style.bottom;
-    }
+    if (!selection.selection) return <></>;
 
-    switch (selection.would) {
-        case AddEntityDryRun.CHANGE_ARRAY:
-            return (
-                <div style={style}>
-                    <div className="d-flex flex-column gap-1 bg-white p-1 border"
-                        style={{ maxHeight: 400, overflowY: "auto" }}>
-                        {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
-                            <span
-                                key={i}
-                                role="button"
-                                className="badge text-body"
-                                style={{ background: t.color }}
-                                onMouseDown={() => setType(props.pool!, sel, t, fileA)}
-                            >
-                                {t.name}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            );
-        case AddEntityDryRun.CHANGE_OFFSET:
-            return (
-                <div style={style}>
-                    <div className="d-flex flex-column gap-1 bg-white p-1 border"
-                        style={{ maxHeight: 400, overflowY: "auto" }}>
-                        {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
-                            <span
-                                key={i}
-                                role="button"
-                                className="badge text-body"
-                                style={{ background: t.color }}
-                                onMouseDown={() => setType(props.pool!, sel, t, fileA)}
-                            >
-                                {t.name}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            );
-        case AddEntityDryRun.CHANGE_TYPE:
-            return (
-                <div style={style}>
-                    <div className="d-flex flex-column gap-1 bg-white p-1 border"
-                        style={{ maxHeight: 400, overflowY: "auto" }}>
-                        <span
-                            role="button"
-                            onMouseDown={() => removeType(props.pool!, sel, fileA)}
-                        >
-                            <i className="bi bi-trash"></i> Remover
-                        </span>
-                        {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
-                            <span
-                                key={i}
-                                role="button"
-                                className="badge text-body"
-                                style={{ background: t.color }}
-                                onMouseDown={() => setType(props.pool!, sel, t, fileA)}
-                            >
-                                {t.name}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            );
-        default:
-            return <></>
-    }
+    const menuItems = (
+        <>
+            {selection.would === AddEntityDryRun.CHANGE_TYPE && (
+                <>
+                    <button
+                        className="dropdown-item text-danger"
+                        onMouseDown={() => removeType(props.pool!, selection.selection!, props.file)}
+                    >
+                        <i className="bi bi-trash me-1"></i> Remover
+                    </button>
+                    <div className="dropdown-divider"></div>
+                </>
+            )}
+            {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
+                <button
+                    key={i}
+                    className="dropdown-item d-flex align-items-center gap-2"
+                    onMouseDown={() => setType(props.pool!, selection.selection!, t, props.file)}
+                >
+                    <span
+                        className="badge"
+                        style={{ background: t.color, minWidth: 12, minHeight: 12 }}
+                    >&nbsp;</span>
+                    {t.name}
+                </button>
+            ))}
+        </>
+    );
+
+    if (selection.would === undefined || selection.would === AddEntityDryRun.NONE) return <></>;
+
+    return (
+        <div
+            ref={menuRef}
+            className="dropdown-menu show shadow"
+            style={{ maxHeight: 400, overflowY: "auto", minWidth: 160, zIndex: 9999 }}
+        >
+            {menuItems}
+        </div>
+    );
 }
-
 
 export function sortEntityTypesXLast(types: EntityTypeColor[]): EntityTypeColor[] {
     return [...types].sort((a, b) => {
@@ -226,4 +219,3 @@ function updateSelection(ev: React.MouseEvent<HTMLDivElement>, contentDiv: HTMLD
         }
     }
 }
-
