@@ -4,6 +4,7 @@ import os from 'os';
 import { promises as fsp } from 'fs';
 import { spawn } from 'child_process';
 import { CONFIG_DIR } from '@/server_constants';
+import { formatXml, wrapXmlIntoHtml } from '@/core/pdfUtils';
 
 export const runtime = 'nodejs';
 const XEMF_LUA = path.join(CONFIG_DIR, 'xemf-to-png.lua');
@@ -21,7 +22,16 @@ function decodeBufferWithFallback(buf: Buffer): string {
     return utf8;
 }
 
-function runCommand(command: string, args: string[], timeoutMs = 15000): Promise<{ code: number | null, signal: NodeJS.Signals | null, stdout: Buffer, stderr: Buffer }> {
+function runCommand(
+    command: string,
+    args: string[],
+    timeoutMs = 15000
+): Promise<{
+    code: number | null,
+    signal: NodeJS.Signals | null,
+    stdout: Buffer,
+    stderr: Buffer
+}> {
     return new Promise((resolve, reject) => {
         const child = spawn(command, args);
 
@@ -47,7 +57,12 @@ function runCommand(command: string, args: string[], timeoutMs = 15000): Promise
         child.on('exit', (code, signal) => {
             clearTimeout(timer);
             finished = true;
-            resolve({ code, signal, stdout: Buffer.concat(stdoutChunks), stderr: Buffer.concat(stderrChunks) });
+            resolve({
+                code,
+                signal,
+                stdout: Buffer.concat(stdoutChunks),
+                stderr: Buffer.concat(stderrChunks)
+            });
         });
     });
 }
@@ -61,7 +76,9 @@ export async function POST(req: NextRequest) {
     try {
         const formData = await req.formData();
         const file = formData.get('file') as File | null;
-        if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+        if (!file) {
+            return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+        }
 
         const originalName = file.name || `upload-${Date.now()}`;
         const title = originalName.replace(/\.[^/.]+$/, '') || 'Anonymized Document';
@@ -71,10 +88,14 @@ export async function POST(req: NextRequest) {
         await fsp.writeFile(inPath, buffer);
 
         outPath = getTempFilePath('.html');
+        const pdfOutPath = getTempFilePath('.xml');
+
+        const baseOutPath = pdfOutPath.replace(/\.xml$/, '');
         const ext = path.extname(originalName).toLowerCase();
 
         const luaFilterArgs = await fsp
-            .access(XEMF_LUA).then(() => ['--lua-filter', XEMF_LUA])
+            .access(XEMF_LUA)
+            .then(() => ['--lua-filter', XEMF_LUA])
             .catch(() => []);
 
         let subproc;
@@ -89,11 +110,22 @@ export async function POST(req: NextRequest) {
                 '--wrap', 'none',
                 ...luaFilterArgs
             ]);
+
         } else if (ext === '.doc' || ext === '.docx') {
             const base = path.basename(inPath, ext);
             tmpDocx = path.join(os.tmpdir(), `${base}.docx`);
-            const conv = await runCommand('lowriter', ['--headless', '--convert-to', 'docx', inPath, '--outdir', os.tmpdir()]);
-            if (conv.code !== 0) throw new Error('lowriter conversion failed: ' + conv.stderr.toString());
+
+            const conv = await runCommand('lowriter', [
+                '--headless',
+                '--convert-to', 'docx',
+                inPath,
+                '--outdir', os.tmpdir()
+            ]);
+
+            if (conv.code !== 0) {
+                throw new Error('lowriter conversion failed: ' + conv.stderr.toString());
+            }
+
             subproc = await runCommand('pandoc', [
                 tmpDocx,
                 '-t', 'html',
@@ -102,12 +134,19 @@ export async function POST(req: NextRequest) {
                 '--wrap', 'none',
                 ...luaFilterArgs
             ]);
+
         } else if (ext === '.pdf') {
-            subproc = await runCommand('pdftohtml', ['-s', '-dataurls', '-noframes', inPath, outPath]);
+            subproc = await runCommand('pdftohtml', ['-xml', '-noframes', '-dataurls', inPath, baseOutPath]);
+
             try {
-                const outBase = path.basename(outPath);
-                await runCommand('sed', ['-i', `s/href="${outBase}#/href="#/g`, outPath]);
+                const outBase = path.basename(baseOutPath);
+                await runCommand('sed', [
+                    '-i',
+                    `s/href="${outBase}#/href="#/g`,
+                    baseOutPath + '.xml'
+                ]);
             } catch { }
+
         } else {
             subproc = await runCommand('pandoc', [
                 inPath,
@@ -120,15 +159,27 @@ export async function POST(req: NextRequest) {
         }
 
         console.log('spawn finished:', subproc.code, subproc.signal);
-        if (subproc.stderr.length) console.error(subproc.stderr.toString());
+        if (subproc.stderr.length) {
+            console.error(subproc.stderr.toString());
+        }
 
         if (!subproc || subproc.code !== 0) {
             const errMsg = subproc ? subproc.stderr.toString() : 'converter failed';
             return NextResponse.json({ error: errMsg }, { status: 500 });
         }
 
-        const outBuf = await fsp.readFile(outPath);
-        const html = decodeBufferWithFallback(outBuf);
+        const finalPath = ext === '.pdf' ? `${baseOutPath}.xml` : outPath;
+        const outBuf = await fsp.readFile(finalPath);
+        const raw = decodeBufferWithFallback(outBuf);
+
+
+        let html = raw;
+
+        if (ext === '.pdf') {
+                
+            const groupedHtml = formatXml(raw);
+            html = wrapXmlIntoHtml(groupedHtml, title);
+        }
 
         console.log(JSON.stringify({
             requestPath: '/api/to_html',
@@ -139,10 +190,14 @@ export async function POST(req: NextRequest) {
             exitCode: subproc.code,
         }));
 
-        return new NextResponse(html, { headers: { 'content-type': 'text/html; charset=utf-8' } });
+        return new NextResponse(html, {
+            headers: { 'content-type': 'text/html; charset=utf-8' }
+        });
+
     } catch (err) {
         console.error('Error in /api/to_html:', err);
         return NextResponse.json({ error: 'Failed to convert file' }, { status: 500 });
+
     } finally {
         try { if (inPath) await fsp.rm(inPath, { force: true }); } catch { }
         try { if (outPath) await fsp.rm(outPath, { force: true }); } catch { }
