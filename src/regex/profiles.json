@@ -1,6 +1,6 @@
 [
     {
-    "name": "STJ - Principal",
+    "name": "Geral",
     "tools": {
         "sumarizador": false,
         "descritores": false
@@ -40,7 +40,7 @@
     }
 },
 {
-    "name": "CSM - Principal",
+    "name": "CSM",
     "tools": {
         "sumarizador": false,
         "descritores": false
@@ -59,8 +59,8 @@
         "PART": {"color":"#4d4a35", "functionIndex":18},
         "LOC":{"color":"#e238ff","functionIndex":1},
         "X-LOC":{"color":"#DCDCDC","functionIndex":0},
-        "MOR": {"color": "#ffc0cb", "functionIndex": 1},
-        "PRO":{"color":"#ff9800","functionIndex":1},
+        "MOR": {"color": "#ffc0cb", "functionIndex": 15},
+        "PRO":{"color":"#ff9800","functionIndex":0},
         "X-PRO":{"color":"#DCDCDC","functionIndex":0},
         "MAT":{"color":"#526cff","functionIndex":17},
         "X-MAT":{"color":"#DCDCDC","functionIndex":0},
@@ -68,7 +68,7 @@
         "X-CEP":{"color":"#DCDCDC","functionIndex":0},
         "TEL":{"color":"#ff5f95","functionIndex":9},
         "X-TEL":{"color":"#DCDCDC","functionIndex":0},
-        "E-MAIL":{"color":"#ffeb3b","functionIndex":1},
+        "E-MAIL":{"color":"#ffeb3b","functionIndex":19},
         "X-E-MAIL":{"color":"#DCDCDC","functionIndex":0},
         "RED":{"color":"#b59379ff","functionIndex":19},
         "IDP":{"color":"#69bcff","functionIndex":2},
@@ -76,7 +76,36 @@
         "INST":{"color":"#71ff77","functionIndex":1},
         "X-INST":{"color":"#DCDCDC","functionIndex":0},
         "PROF":{"color":"#F7C4D8","functionIndex":1},
-        "X-PROF":{"color":"#DCDCDC","functionIndex":0}
+        "X-PROF":{"color":"#DCDCDC","functionIndex":0},
+        "URL":{"color":"#9C27B0","functionIndex":2},
+        "X-URL":{"color":"#DCDCDC","functionIndex":0},
+        "Autor":{"color":"#00e2ff","functionIndex":20},
+        "X-autor":{"color":"#DCDCDC","functionIndex":0},
+        "Réu":{"color":"#00e2ff","functionIndex":20},
+        "X-réu":{"color":"#DCDCDC","functionIndex":0},
+        "Lesado":{"color":"#00e2ff","functionIndex":20},
+        "X-lesado":{"color":"#DCDCDC","functionIndex":0},
+        "Vítima":{"color":"#00e2ff","functionIndex":20},
+        "X-vítima":{"color":"#DCDCDC","functionIndex":0},
+        "Ofendido":{"color":"#00e2ff","functionIndex":20},
+        "X-ofendido":{"color":"#DCDCDC","functionIndex":0},
+        "Demandante":{"color":"#00e2ff","functionIndex":20},
+        "X-demandante":{"color":"#DCDCDC","functionIndex":0},
+        "Assistente":{"color":"#00e2ff","functionIndex":20},
+        "X-assistente":{"color":"#DCDCDC","functionIndex":0},
+        "Arguido":{"color":"#00e2ff","functionIndex":20},
+        "X-arguido":{"color":"#DCDCDC","functionIndex":0},
+        "Exequente":{"color":"#00e2ff","functionIndex":20},
+        "X-exequente":{"color":"#DCDCDC","functionIndex":0},
+        "Executado":{"color":"#00e2ff","functionIndex":20},
+        "X-executado":{"color":"#DCDCDC","functionIndex":0},
+        "Insolvente":{"color":"#00e2ff","functionIndex":20},
+        "X-insolvente":{"color":"#DCDCDC","functionIndex":0},
+        "Testemunha":{"color":"#00e2ff","functionIndex":20},
+        "X-testemunha":{"color":"#DCDCDC","functionIndex":0},
+        "Ré":{"color":"#00e2ff","functionIndex":20},
+        "X-ré":{"color":"#DCDCDC","functionIndex":0}
+        
     }
 },
 {

@@ -1,5 +1,8 @@
 export function formatXml(xml: string): string {
-    
+    const TOP_MARGIN = 0.08; // 8% acima da página
+    const BOTTOM_MARGIN = 0.92; // 8% abaixo da página
+    const WRAP_THRESHOLD = 0.75; // 75% da largura da página para considerar quebra de linha como word wrap invés de parágrafo
+    const SAME_LINE_THRESHOLD = 2; // 2px de diferença vertical para considerar como mesma linha
     
     const pageRegex = /<page\b([^>]*)>([\s\S]*?)<\/page>/g;
     let result = '';
@@ -9,13 +12,12 @@ export function formatXml(xml: string): string {
         const pageAttrs = pageMatch[1];
         const pageContent = pageMatch[2];
 
-        const pageWidthMatch  = pageAttrs.match(/\bwidth="(\d+)"/);
+        const pageWidthMatch = pageAttrs.match(/\bwidth="(\d+)"/);
         const pageHeightMatch = pageAttrs.match(/\bheight="(\d+)"/);
         const pageHeight = pageHeightMatch ? parseInt(pageHeightMatch[1], 10) : 1000;
 
-        // Header zone = top 8% of page, footer zone = bottom 8% of page
-        const headerZoneMax = pageHeight * 0.08;
-        const footerZoneMin = pageHeight * 0.92;
+        const headerZoneMax = pageHeight * TOP_MARGIN;
+        const footerZoneMin = pageHeight * BOTTOM_MARGIN;
 
 
         result += `<page${pageAttrs}>\n`;
@@ -30,15 +32,15 @@ export function formatXml(xml: string): string {
             const content = textMatch[2].trim();
             if (!content) continue;
 
-            const topMatch    = attrs.match(/\btop="(\d+)"/);
+            const topMatch = attrs.match(/\btop="(\d+)"/);
             const heightMatch = attrs.match(/\bheight="(\d+)"/);
-            const leftMatch   = attrs.match(/\bleft="(\d+)"/);
-            const widthMatch  = attrs.match(/\bwidth="(\d+)"/);
+            const leftMatch = attrs.match(/\bleft="(\d+)"/);
+            const widthMatch = attrs.match(/\bwidth="(\d+)"/);
 
-            const top    = topMatch    ? parseInt(topMatch[1],    10) : 0;
+            const top = topMatch    ? parseInt(topMatch[1],    10) : 0;
             const height = heightMatch ? parseInt(heightMatch[1], 10) : 12;
-            const left   = leftMatch   ? parseInt(leftMatch[1],   10) : 0;
-            const width  = widthMatch  ? parseInt(widthMatch[1],  10) : 0;
+            const left = leftMatch   ? parseInt(leftMatch[1],   10) : 0;
+            const width = widthMatch  ? parseInt(widthMatch[1],  10) : 0;
 
             if (top < headerZoneMax || top > footerZoneMin) continue;
 
@@ -50,15 +52,15 @@ export function formatXml(xml: string): string {
             continue;
         }
 
-        // Snap fragments on the same visual line (within 2px)
+        // juntar fragmentos que estão na mesma linha, ou seja, com top muito próximo (dentro de SAME_LINE_THRESHOLD)
         const lines: { top: number; height: number; left: number; right: number; text: string }[] = [];
 
         for (const { top, height, left, width, content } of fragments) {
-            const existing = lines.find(l => Math.abs(l.top - top) <= 2);
+            const existing = lines.find(l => Math.abs(l.top - top) <= SAME_LINE_THRESHOLD);
             if (existing) {
                 existing.text += ' ' + content;
                 existing.height = Math.max(existing.height, height);
-                existing.left  = Math.min(existing.left, left);
+                existing.left = Math.min(existing.left, left);
                 existing.right = Math.max(existing.right, left + width);
             } else {
                 lines.push({ top, height, left, right: left + width, text: content });
@@ -67,7 +69,7 @@ export function formatXml(xml: string): string {
 
         lines.sort((a, b) => a.top - b.top);
 
-        // Compute the most common gap between consecutive lines = normal line spacing
+        // calcular o gap entre linhas para determinar espaçamento
         const gaps = lines.slice(1).map((l, i) => l.top - lines[i].top);
         const gapCounts = new Map<number, number>();
         for (const g of gaps) {
@@ -77,8 +79,12 @@ export function formatXml(xml: string): string {
         const normalLineSpacing = [...gapCounts.entries()].sort((a, b) => b[1] - a[1])[0][0];
 
         const leftMargin = Math.min(...lines.map(l => l.left));
-        const maxRight   = Math.max(...lines.map(l => l.right));
-        const wrapThreshold = maxRight * 0.75;
+        const maxRight = Math.max(...lines.map(l => l.right));
+        
+        // O maxRight é o valor máximo que uma linha alcança à direita, por exemplo 700px
+        // se uma linha tem right >= 525px (75% de 700px) e a próxima linha começa perto da margem esquerda (leftMargin), 
+        // consideramos que é um word wrap, ou seja, a linha foi quebrada por falta de espaço e não por um parágrafo novo
+        const wrapThreshold = maxRight * WRAP_THRESHOLD;   
 
         let output = '<p>';
 
@@ -90,20 +96,20 @@ export function formatXml(xml: string): string {
 
             const prev = lines[i - 1];
             const curr = lines[i];
-            const gap  = curr.top - prev.top;
+            const gap = curr.top - prev.top;
 
-            const isNormalLineAdvance  = gap <= normalLineSpacing * 1.3;
-            const prevLineIsLong       = prev.right >= wrapThreshold;
-            const currAtLeftMargin     = Math.abs(curr.left - leftMargin) <= 5;
+            const isNormalLineAdvance = gap <= normalLineSpacing * 1.3;
+            const prevLineIsLong = prev.right >= wrapThreshold;
+            const currAtLeftMargin = Math.abs(curr.left - leftMargin) <= 5;
 
             if (!isNormalLineAdvance) {
-                // Gap bigger than normal spacing = paragraph break
+                // gap entre linhas maior que o normal = nova linha
                 output += `</p>\n<p>${curr.text}`;
             } else if (prevLineIsLong && currAtLeftMargin) {
-                // Prev line reached margin + next at left margin = word wrap, join
+                // a linha anterior é longa e a atual começa na margem esquerda = word wrap, sem quebra de parágrafo
                 output += ` ${curr.text}`;
             } else {
-                // Normal spacing but short line = intentional line break
+                // caso contrário = nova linha normal
                 output += `<br>${curr.text}`;
             }
         }
