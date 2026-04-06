@@ -1,7 +1,10 @@
 from specific_spacy import nlp, FakeDoc
 import spacy
 import json
+import torch
 from http.server import HTTPServer, BaseHTTPRequestHandler
+
+torch.set_num_threads(4)
 
 print("Loading model...", flush=True)
 model = spacy.load("./src/scripts/model-extended")
