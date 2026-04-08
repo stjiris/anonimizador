@@ -21,17 +21,31 @@ export function ExportButton({ file }: { file: UserFileInterface }) {
             const offsets: SpecificOffsetRange[] = [];
             file.pool.entities.forEach(e => e.offsets.forEach(o => offsets.push({ ...o, ent: e })));
             offsets.sort((a, b) => a.start - b.start);
-            const anonimizedTexto = renderBlock(file.doc, entityTypes, offsets, AnonimizeStateState.ANONIMIZED, 0, file.images, { current: 0 });
-            const originalTexto = file.html_contents;
+
+            const fullAnonimized = renderBlock(file.doc, entityTypes, offsets, AnonimizeStateState.ANONIMIZED, 0, file.images, { current: 0 });
+
+            const parser = new DOMParser();
+            const anonDoc = parser.parseFromString(fullAnonimized, "text/html");
+            const origDoc = parser.parseFromString(file.html_contents, "text/html");
+
+            const anonSumarioEl = anonDoc.querySelector('[data-juris="sumario"]');
+            const anonTextoEl = anonDoc.querySelector('[data-juris="texto"]');
+            const origSumarioEl = origDoc.querySelector('[data-juris="sumario"]');
+            const origTextoEl = origDoc.querySelector('[data-juris="texto"]');
+
+            const anonimizedTexto = anonTextoEl ? anonTextoEl.innerHTML : fullAnonimized;
+            const anonimizedSumario = anonSumarioEl ? anonSumarioEl.innerHTML : null;
+            const originalTexto = origTextoEl ? origTextoEl.innerHTML : file.html_contents;
+            const originalSumario = origSumarioEl ? origSumarioEl.innerHTML : null;
 
             const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/juris/push_document`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ jurisId: file.jurisId, anonimizedTexto, originalTexto }),
+                body: JSON.stringify({ jurisId: file.jurisId, anonimizedTexto, anonimizedSumario, originalTexto, originalSumario }),
             });
 
             if (!res.ok) throw new Error(await res.text());
-            alert("Documento enviado para o Juris com sucesso.");
+            window.open(file.jurisDocUrl || JURIS_URL, "_blank", "noopener,noreferrer");
         } catch (err) {
             console.error(err);
             alert("Erro ao enviar documento para o Juris.");

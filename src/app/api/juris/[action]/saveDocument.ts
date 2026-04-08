@@ -33,8 +33,8 @@ export async function saveDocumentEndpoint(request: Request): Promise<NextRespon
                 console.log("Document keys:", Object.keys(payload.document).slice(0, 20));
             }
         }
-        const { token, document, nlp } = payload;
-        saveDocument(token, document, 3600, nlp);
+        const { token, document, nlp, jurisUrl } = payload;
+        saveDocument(token, document, 3600, nlp, jurisUrl);
         return NextResponse.json({ ok: true });
     } catch (err) {
         console.error("Error in /api/new_document:", err);

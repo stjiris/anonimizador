@@ -42,6 +42,7 @@ export default function DocumentPage() {
         }
 
         const apiDocument: ApiDocument = data.document;
+        const jurisUrl: string | undefined = data.jurisUrl;
         const nlpData: RemoteEntity[] | null = (() => {
           if (!data.nlp) return null;
           try {
@@ -51,7 +52,11 @@ export default function DocumentPage() {
         })();
 
         const fileName = apiDocument["Número de Processo"] || `Document_${apiDocument.id}`;
-        const textContent = apiDocument["Texto"];
+        const sumario = apiDocument["Sumário"];
+        const texto = apiDocument["Texto"];
+        const textContent = sumario
+            ? `<div data-juris="sumario">${sumario}</div><div data-juris="texto">${texto || ""}</div>`
+            : texto;
 
         if (!textContent) {
           setError('Documento não contém texto');
@@ -73,6 +78,7 @@ export default function DocumentPage() {
         setStatus('A criar ficheiro...');
         const userFile = UserFile.newFrom(fileName, textContent);
         userFile.jurisId = apiDocument["UUID"];
+        userFile.jurisDocUrl = jurisUrl;
 
         if (nlpData && nlpData.length > 0) {
           setStatus('A aplicar entidades identificadas...');

@@ -19,6 +19,7 @@ export interface UserFileInterface {
     summary?: SummaryI[]
     profile?: string
     jurisId?: string
+    jurisDocUrl?: string
     typesListeners: ((types: EntityTypeI[]) => void)[]
     savedListeners: ((saved: boolean) => void)[]
     imagesListeners: ((images: Record<number, AnonimizeImage>) => void)[]

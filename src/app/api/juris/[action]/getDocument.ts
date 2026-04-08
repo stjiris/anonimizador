@@ -24,7 +24,7 @@ export async function getDocumentEndpoint(request: Request): Promise<NextRespons
 
         console.log("Document retrieved and deleted for token:", token);
 
-        return NextResponse.json({ ok: true, document: result.document, nlp: result.nlp });
+        return NextResponse.json({ ok: true, document: result.document, nlp: result.nlp, jurisUrl: result.jurisUrl });
     } catch (err) {
         console.error("Error in /api/get_document:", err);
         return NextResponse.json(

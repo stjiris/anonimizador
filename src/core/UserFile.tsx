@@ -22,6 +22,7 @@ export interface SavedUserFile {
     area?: string
     profile?: string
     jurisId?: string
+    jurisDocUrl?: string
 }
 
 export class UserFile implements UserFileInterface {
@@ -38,6 +39,7 @@ export class UserFile implements UserFileInterface {
     summary?: SummaryI[]
     profile?: string
     jurisId?: string
+    jurisDocUrl?: string
 
     typesListeners: ((types: EntityTypeI[]) => void)[]
 
@@ -96,6 +98,7 @@ export class UserFile implements UserFileInterface {
         this.area = obj.area;
         this.summary = obj.summary;
         this.jurisId = obj.jurisId;
+        this.jurisDocUrl = obj.jurisDocUrl;
 
         this.saved = false
         this.save()
@@ -118,6 +121,7 @@ export class UserFile implements UserFileInterface {
             summary: this.summary,
             profile: this.profile,
             jurisId: this.jurisId,
+            jurisDocUrl: this.jurisDocUrl,
         }
     }
 
