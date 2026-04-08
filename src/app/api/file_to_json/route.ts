@@ -19,6 +19,7 @@ function htmlToText(html: string): string {
 
 export async function POST(req: NextRequest) {
     const base = new URL(req.url).origin;
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
 
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
@@ -26,7 +27,7 @@ export async function POST(req: NextRequest) {
 
     const toHtmlForm = new FormData();
     toHtmlForm.append('file', file);
-    const htmlRes = await fetch(`${base}/api/to_html`, { method: 'POST', body: toHtmlForm });
+    const htmlRes = await fetch(`${base}${basePath}/api/to_html`, { method: 'POST', body: toHtmlForm });
     if (!htmlRes.ok) {
         const err = await htmlRes.text();
         return NextResponse.json({ error: 'to_html failed', details: err }, { status: 500 });
@@ -36,7 +37,7 @@ export async function POST(req: NextRequest) {
 
     const nlpForm = new FormData();
     nlpForm.append('file', new Blob([text], { type: 'text/plain' }), 'text.txt');
-    const nlpRes = await fetch(`${base}/api/nlp`, { method: 'POST', body: nlpForm });
+    const nlpRes = await fetch(`${base}${basePath}/api/nlp`, { method: 'POST', body: nlpForm });
     if (!nlpRes.ok) {
         const err = await nlpRes.text();
         return NextResponse.json({ error: 'nlp failed', details: err }, { status: 500 });
