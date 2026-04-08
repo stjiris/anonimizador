@@ -21,6 +21,7 @@ export interface SavedUserFile {
     summary?: SummaryI[]
     area?: string
     profile?: string
+    jurisId?: string
 }
 
 export class UserFile implements UserFileInterface {
@@ -36,6 +37,7 @@ export class UserFile implements UserFileInterface {
     descriptors?: DescriptorI[]
     summary?: SummaryI[]
     profile?: string
+    jurisId?: string
 
     typesListeners: ((types: EntityTypeI[]) => void)[]
 
@@ -93,6 +95,7 @@ export class UserFile implements UserFileInterface {
         this.descriptors = obj.descriptors;
         this.area = obj.area;
         this.summary = obj.summary;
+        this.jurisId = obj.jurisId;
 
         this.saved = false
         this.save()
@@ -114,6 +117,7 @@ export class UserFile implements UserFileInterface {
             descriptors: this.descriptors,
             summary: this.summary,
             profile: this.profile,
+            jurisId: this.jurisId,
         }
     }
 

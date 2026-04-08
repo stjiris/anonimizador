@@ -72,6 +72,7 @@ export default function DocumentPage() {
 
         setStatus('A criar ficheiro...');
         const userFile = UserFile.newFrom(fileName, textContent);
+        userFile.jurisId = apiDocument["UUID"];
 
         if (nlpData && nlpData.length > 0) {
           setStatus('A aplicar entidades identificadas...');

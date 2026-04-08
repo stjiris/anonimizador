@@ -5,10 +5,41 @@ import { Button } from "@/core/BootstrapIcons";
 import { SpecificOffsetRange, useTypesDict } from "@/core/uses";
 import { renderBlock } from "./render";
 import { UserFileInterface } from "@/types/UserFileInterface";
+import { useState } from "react";
+
+const JURIS_URL = process.env.NEXT_PUBLIC_JURIS_URL;
 
 export function ExportButton({ file }: { file: UserFileInterface }) {
     const entityTypes = useTypesDict(file);
+    const [sending, setSending] = useState(false);
     const _exportFile = (anonimize: boolean, type: "DOCX" | "PDF" | "JSON") => exportFile(file, entityTypes, anonimize, type);
+
+    const pushToJuris = async () => {
+        if (!file.jurisId) return;
+        setSending(true);
+        try {
+            const offsets: SpecificOffsetRange[] = [];
+            file.pool.entities.forEach(e => e.offsets.forEach(o => offsets.push({ ...o, ent: e })));
+            offsets.sort((a, b) => a.start - b.start);
+            const anonimizedTexto = renderBlock(file.doc, entityTypes, offsets, AnonimizeStateState.ANONIMIZED, 0, file.images, { current: 0 });
+            const originalTexto = file.html_contents;
+
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/juris/push_document`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ jurisId: file.jurisId, anonimizedTexto, originalTexto }),
+            });
+
+            if (!res.ok) throw new Error(await res.text());
+            alert("Documento enviado para o Juris com sucesso.");
+        } catch (err) {
+            console.error(err);
+            alert("Erro ao enviar documento para o Juris.");
+        } finally {
+            setSending(false);
+        }
+    };
+
     return <>
         <Button i="download" title="Exportar" className="btn m-1 p-1" data-bs-toggle="dropdown" aria-expanded="false" />
         <ul className="dropdown-menu">
@@ -18,6 +49,11 @@ export function ExportButton({ file }: { file: UserFileInterface }) {
             <li><button onClick={() => _exportFile(true, "DOCX")} className="dropdown-item">Anonimizado (DOCX)</button></li>
             <li><button onClick={() => _exportFile(true, "PDF")} className="dropdown-item">Anonimizado (PDF)</button></li>
         </ul>
+        {JURIS_URL && file.jurisId && (
+            <button onClick={pushToJuris} disabled={sending} className="btn m-1 p-1" title="Enviar anonimizado para Juris">
+                {sending ? <span className="spinner-border spinner-border-sm" role="status" /> : "→ Juris"}
+            </button>
+        )}
     </>
 }
 

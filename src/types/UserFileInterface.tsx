@@ -18,6 +18,7 @@ export interface UserFileInterface {
     descriptors?: DescriptorI[]
     summary?: SummaryI[]
     profile?: string
+    jurisId?: string
     typesListeners: ((types: EntityTypeI[]) => void)[]
     savedListeners: ((saved: boolean) => void)[]
     imagesListeners: ((images: Record<number, AnonimizeImage>) => void)[]
