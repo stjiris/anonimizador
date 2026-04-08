@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createUserFile, readSavedUserFile, deleteUserFile } from "@/core/UserFileCRUDL";
 import { UserFile } from "@/core/UserFile";
+import { applyNlpEntitiesToPool, RemoteEntity } from "@/core/runRemoteNlp";
 
 interface ApiDocument {
   id: string;
@@ -41,6 +42,14 @@ export default function DocumentPage() {
         }
 
         const apiDocument: ApiDocument = data.document;
+        const nlpData: RemoteEntity[] | null = (() => {
+          if (!data.nlp) return null;
+          try {
+            const parsed = typeof data.nlp === "string" ? JSON.parse(data.nlp) : data.nlp;
+            return Array.isArray(parsed) ? parsed : null;
+          } catch { return null; }
+        })();
+
         const fileName = apiDocument["Número de Processo"] || `Document_${apiDocument.id}`;
         const textContent = apiDocument["Texto"];
 
@@ -63,6 +72,11 @@ export default function DocumentPage() {
 
         setStatus('A criar ficheiro...');
         const userFile = UserFile.newFrom(fileName, textContent);
+
+        if (nlpData && nlpData.length > 0) {
+          setStatus('A aplicar entidades identificadas...');
+          applyNlpEntitiesToPool(userFile.pool, nlpData);
+        }
 
         setStatus('A guardar documento localmente...');
         try {

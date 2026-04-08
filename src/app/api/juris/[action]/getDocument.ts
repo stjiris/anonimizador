@@ -13,9 +13,9 @@ export async function getDocumentEndpoint(request: Request): Promise<NextRespons
             );
         }
 
-        const document = getAndDeleteDocument(token);
+        const result = getAndDeleteDocument(token);
 
-        if (!document) {
+        if (!result) {
             return NextResponse.json(
                 { ok: false, message: "Document not found or already retrieved" },
                 { status: 404 }
@@ -24,7 +24,7 @@ export async function getDocumentEndpoint(request: Request): Promise<NextRespons
 
         console.log("Document retrieved and deleted for token:", token);
 
-        return NextResponse.json({ ok: true, document });
+        return NextResponse.json({ ok: true, document: result.document, nlp: result.nlp });
     } catch (err) {
         console.error("Error in /api/get_document:", err);
         return NextResponse.json(

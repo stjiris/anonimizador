@@ -4,7 +4,7 @@ import http from "http";
 export const runtime = "nodejs";
 export const maxDuration = 1200;
 
-function httpPost(url: string, body: string): Promise<string> {
+function httpPost(url: string, body: string): Promise<{ status: number; data: string }> {
     return new Promise((resolve, reject) => {
         const parsed = new URL(url);
         const req = http.request({
@@ -20,7 +20,7 @@ function httpPost(url: string, body: string): Promise<string> {
         }, (res) => {
             let data = "";
             res.on("data", (chunk) => data += chunk);
-            res.on("end", () => resolve(data));
+            res.on("end", () => resolve({ status: res.statusCode ?? 0, data }));
         });
         req.on("error", reject);
         req.on("timeout", () => {
@@ -45,7 +45,11 @@ export async function POST(req: NextRequest) {
         const nlpUrl = process.env.NLP_SERVER_URL || "http://localhost:5001";
         console.log("Calling NLP server:", nlpUrl);
 
-        const raw = await httpPost(nlpUrl, text);
+        const { status, data: raw } = await httpPost(nlpUrl, text);
+        if (status !== 200) {
+            console.error(`NLP server returned status ${status}`);
+            return NextResponse.json({ error: `NLP server unavailable (${status})` }, { status: 503 });
+        }
         const jsonData = JSON.parse(raw);
 
         const end = new Date();

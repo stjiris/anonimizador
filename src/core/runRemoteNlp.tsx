@@ -5,6 +5,7 @@ import { useEntities } from "./uses";
 import { UserFile } from "./UserFile";
 import { useProfile } from "./ProfileTypeLogic";
 import { Entity, normalizeEntityString } from "@/types/EntityType";
+import { EntityPool } from "@/types/EntityPool";
 
 export function SuggestButton({ setRequesting, file, requesting, state }: { setRequesting: (b: boolean) => void, file: UserFile, requesting: boolean, state: AnonimizeStateState }) {
     let ents = useEntities(file.pool)
@@ -44,11 +45,51 @@ export function SuggestButton({ setRequesting, file, requesting, state }: { setR
 }
 
 
-interface RemoteEntity {
+export interface RemoteEntity {
     text: string,
     label_: string,
     start_char: number,
     end_char: number
+}
+
+export function applyNlpEntitiesToPool(pool: EntityPool, resArray: RemoteEntity[]) {
+    const DATE_STOPWORDS = ["de", "do", "da", "dos", "das", "em", "no", "na", "nos", "nas", "a", "o"];
+
+    resArray = resArray.filter(ent => {
+        const text = ent.text.trim().toLowerCase();
+        if (ent.label_ === "DAT" && DATE_STOPWORDS.includes(text)) return false;
+        if (ent.label_ === "DAT" && text.length <= 2) return false;
+        return true;
+    });
+
+    let entities: { [key: string]: Entity } = {};
+    let usedIndexes: { [key: number]: boolean } = {};
+
+    for (let ent of resArray) {
+        let id = normalizeEntityString(ent.text) + ent.label_;
+        if (!(id in entities)) {
+            entities[id] = new Entity(ent.label_);
+        }
+
+        let allMatches = pool.originalText.matchAll(new RegExp(ent.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g"));
+        let m = allMatches.next();
+        let minDist = Infinity;
+        let minIndex = Infinity;
+        while (!m.done) {
+            if (Math.abs((m.value.index || 0) - ent.start_char) < minDist && !usedIndexes[m.value.index || 0]) {
+                minDist = Math.abs((m.value.index || 0) - ent.start_char);
+                minIndex = m.value.index || 0;
+            }
+            m = allMatches.next();
+        }
+        if (minIndex !== Infinity) {
+            usedIndexes[minIndex] = true;
+            entities[id].addOffset([{ start: minIndex, end: minIndex + ent.text.length - 1, preview: ent.text }]);
+        }
+    }
+
+    pool.entities = Object.values(entities).filter(e => e.offsets.length > 0).sort((a, b) => a.offsets[0].start - b.offsets[0].start);
+    pool.updateOrder("Sugerir");
 }
 
 function textFrom(html: Element): string {
@@ -93,52 +134,6 @@ export async function runRemoteNlp(file: UserFile, abort?: AbortSignal) {
         return;
     }
 
-    const DATE_STOPWORDS = ["de", "do", "da", "dos", "das", "em", "no", "na", "nos", "nas", "a", "o"];
-
-    resArray = resArray.filter(ent => {
-        const text = ent.text.trim().toLowerCase();
-        if (ent.label_ === "DAT" && DATE_STOPWORDS.includes(text)) return false;
-        if (ent.label_ === "DAT" && text.length <= 2) return false;
-        return true;
-    });
-
-
-    let entities: { [key: string]: Entity } = {};
-    let usedIndexes: { [key: number]: boolean } = {};
-    let errors: RemoteEntity[] = []
-
-    for (let ent of resArray) {
-        let id = normalizeEntityString(ent.text) + ent.label_
-        if (!(id in entities)) {
-            entities[id] = new Entity(ent.label_);
-        }
-
-        let allMatches = pool.originalText.matchAll(new RegExp(ent.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g"));
-        let m = allMatches.next();
-        let minDist = Infinity
-        let minIndex = Infinity
-        while (!m.done) {
-            if (Math.abs((m.value.index || 0) - ent.start_char) < minDist && !usedIndexes[m.value.index || 0]) {
-                minDist = Math.abs((m.value.index || 0) - ent.start_char)
-                minIndex = m.value.index || 0
-            }
-            m = allMatches.next();
-        }
-        if (minIndex !== Infinity) {
-            usedIndexes[minIndex] = true;
-            entities[id].addOffset([{ start: minIndex, end: minIndex + ent.text.length - 1, preview: ent.text }])
-        }
-        else {
-            errors.push(ent);
-        }
-    }
-
-    pool.entities = Object.values(entities).filter(e => e.offsets.length > 0).sort((a, b) => a.offsets[0].start - b.offsets[0].start)
-    pool.updateOrder("Sugerir");
+    applyNlpEntitiesToPool(pool, resArray);
     runRemoteNlpRequesting = false;
-
-    if (errors.length > 1000) {
-        alert(`Não foi possível sinalizar na aplicação algumas das entidades detetadas (${errors.length}): ${errors.map(e => e.text).join(", ")}\n
-        Por favor, reporte este problema por email, enviando o documento usado.`)
-    }
 }
