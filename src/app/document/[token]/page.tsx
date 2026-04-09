@@ -9,7 +9,9 @@ interface ApiDocument {
   id: string;
   "Número de Processo": string;
   "Texto": string;
+  "Texto Não Anonimizado"?: string;
   "Sumário"?: string;
+  "Sumário Não Anonimizado"?: string;
   "Fonte"?: string;
   "UUID"?: string;
   "URL"?: string;
@@ -52,8 +54,8 @@ export default function DocumentPage() {
         })();
 
         const fileName = apiDocument["Número de Processo"] || `Document_${apiDocument.id}`;
-        const sumario = apiDocument["Sumário"];
-        const texto = apiDocument["Texto"];
+        const sumario = apiDocument["Sumário Não Anonimizado"] || apiDocument["Sumário"];
+        const texto = apiDocument["Texto Não Anonimizado"] || apiDocument["Texto"];
         const textContent = sumario
             ? `<div data-juris="sumario">${sumario}</div><div data-juris="texto">${texto || ""}</div>`
             : texto;
