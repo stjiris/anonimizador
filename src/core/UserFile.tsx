@@ -4,6 +4,7 @@ import { EntityPool } from "@/types/EntityPool"
 import { Entity, EntityI, EntityTypeFunction, EntityTypeI } from "@/types/EntityType"
 import { SummaryI } from "@/types/SummaryType"
 import { addEntityTypeI, getEntityTypeI, getEntityTypeIs, restoreEntityTypesColors, updateEntityTypeI } from "./EntityTypeLogic"
+import { ProfileI } from "@/types/ProfileType"
 import { updateUserFile } from "./UserFileCRUDL"
 import { AUTO_ANONIMIZE } from "./anonimizeFunctions"
 import { UserFileInterface } from "@/types/UserFileInterface";
@@ -287,6 +288,27 @@ export class UserFile implements UserFileInterface {
         for (let cb of this.summaryListeners) {
             cb(this.summary || []);
         }
+    }
+
+    applyProfile(profile: ProfileI | null) {
+        this.profile = profile?.name;
+        if (!profile) {
+            this.notifyType();
+            this.save();
+            return;
+        }
+        for (const [name, { color, functionIndex }] of Object.entries(profile.defaultEntityTypes)) {
+            const existing = this.types.find(t => t.name === name);
+            if (existing) {
+                existing.color = color;
+                existing.functionIndex = functionIndex;
+            } else {
+                this.types.push({ name, color, functionIndex });
+            }
+            updateEntityTypeI(name, color, functionIndex);
+        }
+        this.notifyType();
+        this.save();
     }
 
     checkCountPES() {

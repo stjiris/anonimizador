@@ -3,6 +3,7 @@ import { AnonimizeImage } from "./AnonimizeImage"
 import { DescriptorI } from "./DescriptorType"
 import { EntityPool } from "./EntityPool"
 import { EntityTypeI } from "./EntityType"
+import { ProfileI } from "./ProfileType"
 import { SummaryI } from "./SummaryType"
 
 export interface UserFileInterface {
@@ -49,6 +50,7 @@ export interface UserFileInterface {
     onSummary(cb: (summary: SummaryI[]) => void): void
     offSummary(cb: (summary: SummaryI[]) => void): void
     notifySummary(): void
+    applyProfile(profile: ProfileI | null): void
     checkCountPES(): void
     toSavedFile(): SavedUserFile
     save(): Promise<boolean>

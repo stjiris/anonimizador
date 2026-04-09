@@ -69,14 +69,17 @@ export function useProfile() {
     return profile;
 }
 
-export function ProfileProvider({ children }: { children: React.ReactNode }) {
+export function ProfileProvider({ children, onChange }: { children: React.ReactNode, onChange?: (profile: ProfileI | null) => void }) {
     const state = useState<ProfileI | null>(getProfile);
     const [profile] = state;
+    const onChangeRef = useRef(onChange);
+    onChangeRef.current = onChange;
 
     useEffect(() => {
         if (profile) {
             setProfile(profile);
         }
+        onChangeRef.current?.(profile ?? null);
     }, [profile])
 
     return <ProfileContext.Provider value={state}>
