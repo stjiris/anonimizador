@@ -92,25 +92,15 @@ export function applyNlpEntitiesToPool(pool: EntityPool, resArray: RemoteEntity[
     pool.updateOrder("Sugerir");
 }
 
-function textFrom(html: Element): string {
-    if (html.tagName === "P") {
-        return (html.textContent || "") + "\n";
-    }
-    if (html.nodeType === document.TEXT_NODE) {
-        return (html.textContent || "");
-    }
-    return Array.from(html.children).map(el => textFrom(el)).join("");
-}
-
 let runRemoteNlpRequesting = false;
 export async function runRemoteNlp(file: UserFile, abort?: AbortSignal) {
     if (runRemoteNlpRequesting) return;
     runRemoteNlpRequesting = true;
 
-    let doc = file.doc;
     let pool = file.pool;
 
-    let text = textFrom(doc);
+    // Use textContent (same as pool.originalText) so NLP char offsets align with renderBlock's offset tracking.
+    let text = pool.originalText;
     let fd = new FormData()
     fd.append("file", new Blob([text]), "input.txt")
 
