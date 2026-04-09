@@ -18,7 +18,9 @@ function htmlToText(html: string): string {
 }
 
 export async function POST(req: NextRequest) {
-    const base = new URL(req.url).origin;
+    const origin = new URL(req.url).origin;
+    const basePath = process.env.NEXT_PUBLIC_BASE_PATH || '';
+    const base = `${origin}${basePath}`;
 
     const formData = await req.formData();
     const file = formData.get('file') as File | null;
