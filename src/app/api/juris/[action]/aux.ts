@@ -17,11 +17,11 @@ const temp_documents = new Map<string, { document: ApiDocument; nlp?: any; juris
 export function transformApiDocumentToSavedUserFile(apiDoc: ApiDocument): SavedUserFile {
     let htmlContents: string = "";
 
-    const summary = apiDoc["Sumário"];
+    const summary = apiDoc["Sumário Não Anonimizado"] || apiDoc["Sumário"];
     if (summary) {
         htmlContents += `<div class="alert alert-info" role="alert">${summary}</div>`;
     }
-    htmlContents = apiDoc["Texto"] || "";
+    htmlContents = apiDoc["Texto Não Anonimizado"] || apiDoc["Texto"] || "";
 
     const name = apiDoc["Número de Processo"] || `Document_${apiDoc.id}`;
 
