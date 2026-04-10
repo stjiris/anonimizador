@@ -4,6 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { createUserFile, readSavedUserFile, deleteUserFile } from "@/core/UserFileCRUDL";
 import { UserFile } from "@/core/UserFile";
 import { applyNlpEntitiesToPool, RemoteEntity } from "@/core/runRemoteNlp";
+import { EntityPool } from "@/types/EntityPool";
 
 interface ApiDocument {
   id: string;
@@ -15,6 +16,25 @@ interface ApiDocument {
   "Fonte"?: string;
   "UUID"?: string;
   "URL"?: string;
+}
+
+function applyAnonimizedEntitiesToPool(pool: EntityPool, entities: Record<string, string[]>) {
+  const text = pool.originalText;
+  const seen = new Set<string>();
+  for (const [type, previews] of Object.entries(entities)) {
+    for (const preview of previews) {
+      const key = `${type}|${preview}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const escaped = preview.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escaped, 'g');
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        pool.addEntity(match.index, match.index + preview.length - 1, preview, type, false);
+      }
+    }
+  }
+  pool.updateOrder("Restaurar entidades");
 }
 
 export default function DocumentPage() {
@@ -45,6 +65,7 @@ export default function DocumentPage() {
 
         const apiDocument: ApiDocument = data.document;
         const jurisUrl: string | undefined = data.jurisUrl;
+        const savedEntities: Record<string, string[]> | null = data.entities || null;
         const nlpData: RemoteEntity[] | null = (() => {
           if (!data.nlp) return null;
           try {
@@ -82,7 +103,10 @@ export default function DocumentPage() {
         userFile.jurisId = apiDocument["UUID"];
         userFile.jurisDocUrl = jurisUrl;
 
-        if (nlpData && nlpData.length > 0) {
+        if (savedEntities && Object.keys(savedEntities).length > 0) {
+          setStatus('A restaurar entidades da última anonimização...');
+          applyAnonimizedEntitiesToPool(userFile.pool, savedEntities);
+        } else if (nlpData && nlpData.length > 0) {
           setStatus('A aplicar entidades identificadas...');
           applyNlpEntitiesToPool(userFile.pool, nlpData);
         }

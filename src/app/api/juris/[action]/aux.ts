@@ -12,7 +12,7 @@ interface ApiDocument {
     [key: string]: any;
 }
 
-const temp_documents = new Map<string, { document: ApiDocument; nlp?: any; jurisUrl?: string; expiresAt: number }>();
+const temp_documents = new Map<string, { document: ApiDocument; nlp?: any; jurisUrl?: string; entities?: Record<string, string[]>; expiresAt: number }>();
 
 export function transformApiDocumentToSavedUserFile(apiDoc: ApiDocument): SavedUserFile {
     let htmlContents: string = "";
@@ -46,9 +46,9 @@ export function transformApiDocumentToSavedUserFile(apiDoc: ApiDocument): SavedU
 }
 
 
-export function saveDocument(token: string, document: any, ttlSeconds = 3600, nlp?: any, jurisUrl?: string) {
+export function saveDocument(token: string, document: any, ttlSeconds = 3600, nlp?: any, jurisUrl?: string, entities?: Record<string, string[]>) {
     const expiresAt = Date.now() + ttlSeconds * 1000;
-    temp_documents.set(token, { document, nlp, jurisUrl, expiresAt });
+    temp_documents.set(token, { document, nlp, jurisUrl, entities, expiresAt });
 
     console.log("Document saved for token:", token);
     console.log("Map size:", temp_documents.size);
@@ -79,5 +79,5 @@ export function getAndDeleteDocument(token: string) {
     }
 
     temp_documents.delete(token);
-    return { document: data.document, nlp: data.nlp, jurisUrl: data.jurisUrl };
+    return { document: data.document, nlp: data.nlp, jurisUrl: data.jurisUrl, entities: data.entities };
 }
