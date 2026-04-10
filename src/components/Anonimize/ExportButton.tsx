@@ -38,10 +38,18 @@ export function ExportButton({ file }: { file: UserFileInterface }) {
             const originalTexto = origTextoEl ? origTextoEl.innerHTML : file.html_contents;
             const originalSumario = origSumarioEl ? origSumarioEl.innerHTML : null;
 
+            const entities: Record<string, string[]> = {};
+            for (const entity of file.pool.entities) {
+                if (!entities[entity.type]) entities[entity.type] = [];
+                for (const offset of entity.offsets) {
+                    entities[entity.type].push(offset.preview);
+                }
+            }
+
             const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/juris/push_document`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ jurisId: file.jurisId, anonimizedTexto, anonimizedSumario, originalTexto, originalSumario }),
+                body: JSON.stringify({ jurisId: file.jurisId, anonimizedTexto, anonimizedSumario, originalTexto, originalSumario, entities }),
             });
 
             if (!res.ok) throw new Error(await res.text());

@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-        const { jurisId, anonimizedTexto, anonimizedSumario, originalTexto, originalSumario } = await req.json();
+        const { jurisId, anonimizedTexto, anonimizedSumario, originalTexto, originalSumario, entities } = await req.json();
 
         if (!jurisId || !anonimizedTexto) {
             return NextResponse.json({ ok: false, message: "Missing jurisId or anonimizedTexto" }, { status: 400 });
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
                 "Content-Type": "application/json",
                 ...(secret ? { "x-service-secret": secret } : {}),
             },
-            body: JSON.stringify({ jurisId, anonimizedTexto, anonimizedSumario, originalTexto, originalSumario }),
+            body: JSON.stringify({ jurisId, anonimizedTexto, anonimizedSumario, originalTexto, originalSumario, entities }),
         });
 
         if (!res.ok) {
