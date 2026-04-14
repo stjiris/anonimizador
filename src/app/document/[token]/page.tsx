@@ -108,7 +108,16 @@ export default function DocumentPage() {
           applyAnonimizedEntitiesToPool(userFile.pool, savedEntities);
         } else if (nlpData && nlpData.length > 0) {
           setStatus('A aplicar entidades identificadas...');
-          applyNlpEntitiesToPool(userFile.pool, nlpData);
+          // Convert NLP entities to preview-map and use the same all-occurrences approach
+          // as the saved path, so first load and subsequent loads behave consistently.
+          const nlpEntities: Record<string, string[]> = {};
+          for (const ent of nlpData) {
+            if (!nlpEntities[ent.label_]) nlpEntities[ent.label_] = [];
+            if (!nlpEntities[ent.label_].includes(ent.text)) {
+              nlpEntities[ent.label_].push(ent.text);
+            }
+          }
+          applyAnonimizedEntitiesToPool(userFile.pool, nlpEntities);
         }
 
         setStatus('A guardar documento localmente...');
