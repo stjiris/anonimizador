@@ -30,8 +30,7 @@ export function transformApiDocumentToSavedUserFile(apiDoc: ApiDocument): SavedU
         html_contents: htmlContents,
         functions: getEntityTypeIs().map(k => ({
             name: k.name,
-            functionIndex: k.functionIndex,
-            subtypes: k.subtypes
+            functionIndex: k.functionIndex
         })),
         ents: [],
         imported: new Date().toString(),
