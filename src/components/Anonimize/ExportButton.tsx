@@ -70,12 +70,15 @@ export function ExportButton({ file }: { file: UserFileInterface }) {
             <li><button onClick={() => _exportFile(false, "PDF")} className="dropdown-item">Original (PDF)</button></li>
             <li><button onClick={() => _exportFile(true, "DOCX")} className="dropdown-item">Anonimizado (DOCX)</button></li>
             <li><button onClick={() => _exportFile(true, "PDF")} className="dropdown-item">Anonimizado (PDF)</button></li>
+            {JURIS_URL && file.jurisId && <>
+                <li><hr className="dropdown-divider" /></li>
+                <li>
+                    <button onClick={pushToJuris} disabled={sending} className="dropdown-item">
+                        {sending ? <><span className="spinner-border spinner-border-sm me-2" role="status" />A enviar...</> : "→ Juris"}
+                    </button>
+                </li>
+            </>}
         </ul>
-        {JURIS_URL && file.jurisId && (
-            <button onClick={pushToJuris} disabled={sending} className="btn m-1 p-1" title="Enviar anonimizado para Juris">
-                {sending ? <span className="spinner-border spinner-border-sm" role="status" /> : "→ Juris"}
-            </button>
-        )}
     </>
 }
 
