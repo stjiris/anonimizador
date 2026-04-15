@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { AnonimizeStateState } from '../../types/AnonimizeState'
 import { UserFile } from '@/core/UserFile';
-import { useImages, useSpecificOffsets, useTypesDict } from '@/core/uses';
+import { useImages, useSpecificOffsets, useTypes, useTypesDict } from '@/core/uses';
 import { planAutoPageBreaks, renderBlock } from './render';
 import AnonimizeTooltip from './Tooltip';
 
@@ -19,6 +19,7 @@ export default function AnonimizeContent(props: AnonimizeContentProps) {
 
     const offsets = useSpecificOffsets(props.file.pool)
     const entityTypes = useTypesDict(props.file);
+    const typesList = useTypes(props.file);
     const images = useImages(props.file)
     const accessHtml = props.accessHtml;
 
@@ -80,7 +81,7 @@ export default function AnonimizeContent(props: AnonimizeContentProps) {
             </div>
 
             <AnonimizeTooltip
-                entityTypes={Object.values(entityTypes)}
+                entityTypes={typesList}
                 pool={props.file.pool}
                 contentRef={contentWrapperRef}
                 nodesRef={nodesRef}

@@ -51,7 +51,10 @@ export function useImages(file: UserFile) {
 export function useTypesDict(file: UserFile) {
     const getTypes = useCallback(() => {
         let obj: Record<string, EntityTypeI> = {};
-        file.types.forEach(t => obj[t.name] = t)
+        file.types.forEach(t => {
+            obj[t.name] = t;
+            t.subtypes?.forEach(s => { obj[s.name] = s; });
+        });
         return obj;
     }, [file])
     const [types, setTypes] = useState<Record<string, EntityTypeI>>(getTypes)

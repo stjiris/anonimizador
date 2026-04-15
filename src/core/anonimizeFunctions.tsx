@@ -17,12 +17,16 @@ const typeFullNameMap: { [key: string]: string } = {
     "IDP": "Identificador",
     "INST": "Instituição",
     "PROF": "Profissão",
-    "URL": "www"
+    "URL": "WWW"
 }
 
 export const identity: AnonimizeFunction = (str) => str
 export const increment: AnonimizeFunction = (_str, type, _idx, tidx) => {
     const fullName = typeFullNameMap[type] || type;
+
+    if(!fullName) {
+        return type + " " + tidx.toString()
+    }
     return fullName.toString() + " " + tidx.toString();
 }
 

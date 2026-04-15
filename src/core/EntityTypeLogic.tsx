@@ -41,7 +41,7 @@ export function getEntityTypeIs(): EntityTypeI[] {
     if (!EntityTypesStored) {
         let profile = JSON.parse(localStorage.getItem("ProfileI.v0.1") || "null");
         if (isProfileI(profile)) {
-            let ents = Object.entries(profile.defaultEntityTypes).map(([key, value]) => ({ name: key, color: value.color, functionIndex: value.functionIndex }))
+            let ents = Object.entries(profile.defaultEntityTypes).map(([key, value]) => ({ name: key, color: value.color, functionIndex: value.functionIndex, subtypes: value.subtypes }))
             let stored = Object.fromEntries(ents.map(e => [e.name, e]))
             localStorage.setItem(EntityTypeIVersion, JSON.stringify(stored))
             return ents;
@@ -55,20 +55,24 @@ export function getEntityTypeIs(): EntityTypeI[] {
             EntityTypesStored[key] = {
                 name: key,
                 color: EntityTypeIDefaults[key].color,
-                functionIndex: EntityTypeIDefaults[key].functionIndex
+                functionIndex: EntityTypeIDefaults[key].functionIndex,
+                subtypes: EntityTypeIDefaults[key].subtypes
             }
         }
         else {
             EntityTypesStored[key].name = key
             EntityTypesStored[key].color = isColor(EntityTypesStored[key].color, EntityTypeIDefaults[key].color)
             EntityTypesStored[key].functionIndex = isAnonimizeFunctionIndex(EntityTypesStored[key].functionIndex, EntityTypeIDefaults[key].functionIndex)
+            if (!EntityTypesStored[key].subtypes && EntityTypeIDefaults[key].subtypes) {
+                EntityTypesStored[key].subtypes = EntityTypeIDefaults[key].subtypes
+            }
         }
     }
 
     return Object.values(EntityTypesStored);
 }
 
-export function addEntityTypeI(key: string, color: string, functionIndex: number): EntityTypeI[] {
+export function addEntityTypeI(key: string, color: string, functionIndex: number, subtypes?: EntityTypeI[]): EntityTypeI[] {
     let EntityTypesStored = JSON.parse(localStorage.getItem(EntityTypeIVersion) || "null");
     if (!EntityTypesStored) {
         EntityTypesStored = JSON.parse(JSON.stringify(EntityTypeIDefaults));
@@ -77,26 +81,30 @@ export function addEntityTypeI(key: string, color: string, functionIndex: number
     EntityTypesStored[key] = {
         name: key,
         color: color,
-        functionIndex: functionIndex
+        functionIndex: functionIndex,
+        subtypes: subtypes
     }
 
     localStorage.setItem(EntityTypeIVersion, JSON.stringify(EntityTypesStored));
     return Object.values(EntityTypesStored);
 }
 
-export function updateEntityTypeI(key: string, color: string, functionIndex: number): EntityTypeI[] {
+export function updateEntityTypeI(key: string, color: string, functionIndex: number, subtypes?: EntityTypeI[]): EntityTypeI[] {
     let EntityTypesStored = JSON.parse(localStorage.getItem(EntityTypeIVersion) || "null");
     if (!EntityTypesStored) {
         EntityTypesStored = JSON.parse(JSON.stringify(EntityTypeIDefaults));
     }
 
     if(!(key in EntityTypesStored)){
-        EntityTypesStored[key] = {name: key, color: color, functionIndex: functionIndex}
+        EntityTypesStored[key] = {name: key, color: color, functionIndex: functionIndex, subtypes: subtypes}
     }
     else{
         EntityTypesStored[key].name = key
         EntityTypesStored[key].color = color
         EntityTypesStored[key].functionIndex = functionIndex
+        if(subtypes !== undefined) {
+            EntityTypesStored[key].subtypes = subtypes
+        }
         delete _type_color_cache[key];
     }
 

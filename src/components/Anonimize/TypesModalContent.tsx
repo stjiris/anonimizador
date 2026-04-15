@@ -7,16 +7,20 @@ import { EntityTypeI, EntityTypeIDefaults } from "@/types/EntityType";
 import { ProfileI } from "@/types/ProfileType";
 import MaterialReactTable, { MRT_ColumnDef } from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
+import { useState } from "react";
+import { sortEntityTypesXLast } from "./Tooltip";
 
 export function TypesModalContent({ file }: { file: UserFile }) {
-    let types = useTypes(file).filter(type => !type.name.startsWith("X"));
     let [profile, setProfile] = useProfile();
+    let [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+    const types = sortEntityTypesXLast(useTypes(file));
+
     return <>
         <div className="modal-header">
             <div><h5 className="modal-title" id="modal-types-label">Gerir tipos de entidades</h5></div>
         </div>
         <div className="modal-body p-0">
-            <MaterialReactTable
+            <MaterialReactTable<EntityTypeI>
                 key="type-table"
                 enableColumnResizing={false}
                 enableRowSelection={false}
@@ -32,7 +36,8 @@ export function TypesModalContent({ file }: { file: UserFile }) {
                 enableFullScreenToggle={false}
                 enableColumnActions={false}
                 editingMode="cell"
-                columns={[TYPE_COLUMN(file, profile, setProfile), ANON_COLUMN(file), EXAMPLE_COLUMN]}
+                enableExpanding={true}
+                columns={[TYPE_COLUMN(file, profile, setProfile), ANON_COLUMN(file), EXAMPLE_COLUMN] as MRT_ColumnDef<EntityTypeI>[]}
                 data={types}
                 localization={MRT_Localization_PT}
                 renderTopToolbarCustomActions={() => [
@@ -43,6 +48,34 @@ export function TypesModalContent({ file }: { file: UserFile }) {
                 })}
                 enableRowActions={true}
                 renderRowActions={({ row }) => EntityTypeIDefaults[row.original.name] ? <></> : <Button className="btn text-danger" onClick={() => { file.deleteType(row.original.name) }} i='trash' title="Eliminar" />}
+                state={{ expanded: expandedRows }}
+                onExpandedChange={(updater) => {
+                    const newState = typeof updater === 'function' ? updater(expandedRows) : updater;
+                    setExpandedRows(newState as Record<string, boolean>);
+                }}
+                renderDetailPanel={({ row }) => row.original.subtypes && row.original.subtypes.length > 0 ? (
+                    <div className="p-3 bg-light rounded">
+                        <h6>Subtipos de {row.original.name}</h6>
+                        <table className="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Cor</th>
+                                    <th>Anonimização</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {row.original.subtypes.map((subtype, idx) => (
+                                    <tr key={idx}>
+                                        <td><span className="badge" style={{ background: subtype.color }}>{subtype.name}</span></td>
+                                        <td><div style={{ width: "30px", height: "30px", background: subtype.color, borderRadius: "4px", border: "1px solid #ccc" }}></div></td>
+                                        <td>{functionsWithDescriptionArray[subtype.functionIndex].name}</td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                ) : null}
             />
             <form className="d-flex m-2" onSubmit={(evt) => {
                 evt.preventDefault();
@@ -78,7 +111,7 @@ const TYPE_COLUMN: (file: UserFile, profile: ProfileI | null, setProfile: (p: Pr
         onBlur: (evt) => {
             file.updateType(row.original.name, evt.target.value, row.original.functionIndex)
             if (profile) {
-                setProfile({ ...profile, defaultEntityTypes: { ...profile.defaultEntityTypes, [row.original.name]: { color: evt.target.value, functionIndex: row.original.functionIndex } } });
+                setProfile({ ...profile, defaultEntityTypes: { ...profile.defaultEntityTypes, [row.original.name]: { color: evt.target.value, functionIndex: row.original.functionIndex, subtypes: row.original.subtypes } } });
             }
             table.setEditingCell(null);
         }

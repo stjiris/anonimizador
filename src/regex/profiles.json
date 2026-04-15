@@ -10,7 +10,10 @@
         "rgxOn": true
     },
     "defaultEntityTypes": {
-        "PES":{"color":"#00e2ff","functionIndex":1},
+        "PES":{
+            "color":"#00e2ff",
+            "functionIndex":1
+        },
         "X-PES":{"color":"#DCDCDC","functionIndex":0},
         "DAT":{"color":"#b7ff63","functionIndex":16},
         "X-DAT":{"color":"#DCDCDC","functionIndex":0},
@@ -50,7 +53,25 @@
         "rgxOn": true
     },
     "defaultEntityTypes": {
-        "PES":{"color":"#00e2ff","functionIndex":1},
+        "PES":{
+            "color":"#00e2ff",
+            "functionIndex":1,
+            "subtypes":[
+                {"name":"Autor","color":"#00e2ff","functionIndex":2},
+                {"name":"Réu","color":"#00e2ff","functionIndex":2},
+                {"name":"Lesado","color":"#00e2ff","functionIndex":2},
+                {"name":"Vítima","color":"#00e2ff","functionIndex":2},
+                {"name":"Ofendido","color":"#00e2ff","functionIndex":2},
+                {"name":"Demandante","color":"#00e2ff","functionIndex":2},
+                {"name":"Assistente","color":"#00e2ff","functionIndex":2},
+                {"name":"Arguido","color":"#00e2ff","functionIndex":2},
+                {"name":"Exequente","color":"#00e2ff","functionIndex":2},
+                {"name":"Executado","color":"#00e2ff","functionIndex":2},
+                {"name":"Insolvente","color":"#00e2ff","functionIndex":2},
+                {"name":"Testemunha","color":"#00e2ff","functionIndex":2},
+                {"name":"Ré","color":"#00e2ff","functionIndex":2}
+            ]
+        },
         "X-PES":{"color":"#DCDCDC","functionIndex":0},
         "DAT":{"color":"#b7ff63","functionIndex":16},
         "X-DAT":{"color":"#DCDCDC","functionIndex":0},
@@ -71,41 +92,24 @@
         "E-MAIL":{"color":"#ffeb3b","functionIndex":19},
         "X-E-MAIL":{"color":"#DCDCDC","functionIndex":0},
         "RED":{"color":"#b59379ff","functionIndex":19},
-        "IDP":{"color":"#69bcff","functionIndex":2},
+        "IDP":{
+            "color":"#69bcff",
+            "functionIndex":2,
+            "subtypes":[
+                {"name":"Carta de Condução", "color": "#69bcff", "functionIndex": 2},
+                {"name":"Passaporte", "color": "#69bcff", "functionIndex": 2},
+                {"name":"CC", "color": "#69bcff", "functionIndex": 2},
+                {"name":"NIF", "color": "#69bcff", "functionIndex": 2},
+                {"name":"NSS", "color": "#69bcff", "functionIndex": 2}   
+            ]    
+        },
         "X-IDP":{"color":"#DCDCDC","functionIndex":0},
         "INST":{"color":"#71ff77","functionIndex":1},
         "X-INST":{"color":"#DCDCDC","functionIndex":0},
         "PROF":{"color":"#F7C4D8","functionIndex":1},
         "X-PROF":{"color":"#DCDCDC","functionIndex":0},
         "URL":{"color":"#9C27B0","functionIndex":2},
-        "X-URL":{"color":"#DCDCDC","functionIndex":0},
-        "Autor":{"color":"#00e2ff","functionIndex":20},
-        "X-autor":{"color":"#DCDCDC","functionIndex":0},
-        "Réu":{"color":"#00e2ff","functionIndex":20},
-        "X-réu":{"color":"#DCDCDC","functionIndex":0},
-        "Lesado":{"color":"#00e2ff","functionIndex":20},
-        "X-lesado":{"color":"#DCDCDC","functionIndex":0},
-        "Vítima":{"color":"#00e2ff","functionIndex":20},
-        "X-vítima":{"color":"#DCDCDC","functionIndex":0},
-        "Ofendido":{"color":"#00e2ff","functionIndex":20},
-        "X-ofendido":{"color":"#DCDCDC","functionIndex":0},
-        "Demandante":{"color":"#00e2ff","functionIndex":20},
-        "X-demandante":{"color":"#DCDCDC","functionIndex":0},
-        "Assistente":{"color":"#00e2ff","functionIndex":20},
-        "X-assistente":{"color":"#DCDCDC","functionIndex":0},
-        "Arguido":{"color":"#00e2ff","functionIndex":20},
-        "X-arguido":{"color":"#DCDCDC","functionIndex":0},
-        "Exequente":{"color":"#00e2ff","functionIndex":20},
-        "X-exequente":{"color":"#DCDCDC","functionIndex":0},
-        "Executado":{"color":"#00e2ff","functionIndex":20},
-        "X-executado":{"color":"#DCDCDC","functionIndex":0},
-        "Insolvente":{"color":"#00e2ff","functionIndex":20},
-        "X-insolvente":{"color":"#DCDCDC","functionIndex":0},
-        "Testemunha":{"color":"#00e2ff","functionIndex":20},
-        "X-testemunha":{"color":"#DCDCDC","functionIndex":0},
-        "Ré":{"color":"#00e2ff","functionIndex":20},
-        "X-ré":{"color":"#DCDCDC","functionIndex":0}
-        
+        "X-URL":{"color":"#DCDCDC","functionIndex":0}
     }
 },
 {
@@ -119,7 +123,9 @@
         "rgxOn": true
     },
     "defaultEntityTypes": {
-        "PES":{"color":"#00e2ff","functionIndex":1},
+        "PES":{
+            "color":"#00e2ff",
+            "functionIndex":1},
         "X-PES":{"color":"#DCDCDC","functionIndex":1},
         "DAT":{"color":"#b7ff63","functionIndex":1},
         "X-DAT":{"color":"#DCDCDC","functionIndex":1},
@@ -137,7 +143,10 @@
         "X-TEL":{"color":"#DCDCDC","functionIndex":1},
         "E-MAIL":{"color":"#ffeb3b","functionIndex":1},
         "X-E-MAIL":{"color":"#DCDCDC","functionIndex":1},
-        "IDP":{"color":"#69bcff","functionIndex":1},
+        "IDP":{
+            "color":"#69bcff",
+            "functionIndex":1 
+        },
         "X-IDP":{"color":"#DCDCDC","functionIndex":1},
         "INST":{"color":"#71ff77","functionIndex":1},
         "X-INST":{"color":"#DCDCDC","functionIndex":1},

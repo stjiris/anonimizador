@@ -11,7 +11,7 @@ import { UserFileInterface } from "@/types/UserFileInterface";
 export interface SavedUserFile {
     name: string
     html_contents: string
-    functions: EntityTypeFunction[]
+    functions: (EntityTypeFunction & { subtypes?: EntityTypeI[] })[]
     ents: EntityI[]
     imported: string
     modified: string
@@ -55,7 +55,15 @@ export class UserFile implements UserFileInterface {
     constructor(obj: SavedUserFile) {
         this.name = obj.name
         this.html_contents = obj.html_contents
-        this.types = obj.functions.map(f => ({ color: getEntityTypeI(f.name).color, name: f.name, functionIndex: f.functionIndex }))
+        this.types = obj.functions.map(f => {
+            const globalType = getEntityTypeI(f.name);
+            return {
+                color: globalType.color,
+                name: f.name,
+                functionIndex: f.functionIndex,
+                subtypes: globalType.subtypes ?? f.subtypes
+            };
+        })
         this.imported = new Date(obj.imported)
         this.modified = new Date(obj.modified)
 
@@ -104,7 +112,7 @@ export class UserFile implements UserFileInterface {
         return {
             name: this.name,
             html_contents: this.html_contents,
-            functions: this.types.map(t => ({ name: t.name, functionIndex: t.functionIndex })),
+            functions: this.types.map(t => ({ name: t.name, functionIndex: t.functionIndex, subtypes: t.subtypes })),
             ents: this.pool.entities.map(e => e.toStub()),
             imported: this.imported.toString(),
             modified: this.modified.toString(),
@@ -144,29 +152,30 @@ export class UserFile implements UserFileInterface {
         }
     }
 
-    addType(key: string, color: string, funcIndex: number) {
+    addType(key: string, color: string, funcIndex: number, subtypes?: EntityTypeI[]) {
         if (this.types.some(t => t.name === key)) {
             return this.updateType(key, color, funcIndex)
         }
 
-        addEntityTypeI(key, color, funcIndex)
-        this.types.push({ name: key, color: color, functionIndex: funcIndex })
+        addEntityTypeI(key, color, funcIndex, subtypes)
+        this.types.push({ name: key, color: color, functionIndex: funcIndex, subtypes: subtypes })
         this.notifyType()
         this.save()
     }
 
-    updateType(key: string, color: string, funcIndex: number) {
+    updateType(key: string, color: string, funcIndex: number, subtypes?: EntityTypeI[]) {
         let updated = false;
         for (let t of this.types) {
             if (t.name === key) {
                 updated = color !== t.color || t.functionIndex !== funcIndex
                 t.color = color;
                 t.functionIndex = funcIndex;
+                t.subtypes = subtypes
                 break;
             }
         }
         if (updated) {
-            updateEntityTypeI(key, color, funcIndex)
+            updateEntityTypeI(key, color, funcIndex, subtypes)
             this.notifyType()
             this.save()
         }

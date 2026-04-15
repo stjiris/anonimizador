@@ -3,15 +3,73 @@ import { functionsWithDescriptionArray } from "@/core/anonimizeFunctions";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { EntityTypeIDefaults, EntityTypeI } from "@/types/EntityType";
 import { Bicon, Button } from "@/core/BootstrapIcons";
-import { ChangeEventHandler, useCallback, useMemo, useRef } from "react";
+import { ChangeEventHandler, useCallback, useMemo, useRef, useState } from "react";
 import { isProfileI, useAvaiableProfiles, useProfile } from "@/core/ProfileTypeLogic";
 import { ProfileI } from "@/types/ProfileType";
+import { sortEntityTypesXLast } from "./Tooltip";
 
 export function ProfileTypesTable() {
     let [profile, setProfile] = useProfile();
+    let [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
     let availableProfiles = useAvaiableProfiles();
     let knownProfile = availableProfiles.find(p => p.name === profile?.name);
-    const data = useMemo(() => profile ? Object.entries(profile.defaultEntityTypes).map(([name, { color, functionIndex }]) => ({ name, color, functionIndex })) : [], [profile]);
+    const data = useMemo(() =>
+        profile
+            ? sortEntityTypesXLast(
+                Object.entries(profile.defaultEntityTypes).map(([name, { color, functionIndex, subtypes }]) => ({
+                    id: name,
+                    name, color, functionIndex, subtypes
+                }))
+            )
+            : [],
+        [profile]
+    );
+
+    const addSubtype = (parentName: string, subtypeName: string, color: string, functionIndex: number) => {
+        const subtypes = profile!.defaultEntityTypes[parentName].subtypes || [];
+        setProfile({
+            ...profile!,
+            defaultEntityTypes: {
+                ...profile!.defaultEntityTypes,
+                [parentName]: {
+                    ...profile!.defaultEntityTypes[parentName],
+                    subtypes: [...subtypes, { name: subtypeName, color, functionIndex }]
+                }
+            }
+        });
+    };
+
+    const updateSubtype = (parentName: string, subtypeIndex: number, color: string, functionIndex: number) => {
+        const subtypes = profile!.defaultEntityTypes[parentName].subtypes || [];
+        const updated = [...subtypes];
+        updated[subtypeIndex] = { ...updated[subtypeIndex], color, functionIndex };
+        setProfile({
+            ...profile!,
+            defaultEntityTypes: {
+                ...profile!.defaultEntityTypes,
+                [parentName]: {
+                    ...profile!.defaultEntityTypes[parentName],
+                    subtypes: updated
+                }
+            }
+        });
+    };
+
+    const deleteSubtype = (parentName: string, subtypeIndex: number) => {
+        const subtypes = profile!.defaultEntityTypes[parentName].subtypes || [];
+        const updated = subtypes.filter((_, i) => i !== subtypeIndex);
+        setProfile({
+            ...profile!,
+            defaultEntityTypes: {
+                ...profile!.defaultEntityTypes,
+                [parentName]: {
+                    ...profile!.defaultEntityTypes[parentName],
+                    subtypes: updated.length > 0 ? updated : undefined
+                }
+            }
+        });
+    };
+
     if (!profile) return null;
     return <>
         <MaterialReactTable
@@ -30,6 +88,7 @@ export function ProfileTypesTable() {
             enableFullScreenToggle={false}
             enableColumnActions={false}
             editingMode="cell"
+            enableExpanding={true}
             columns={[TYPE_COLUMN(profile, setProfile), ANON_COLUMN(profile, setProfile), EXAMPLE_COLUMN]}
             data={data}
             localization={MRT_Localization_PT}
@@ -58,6 +117,20 @@ export function ProfileTypesTable() {
             })}
             enableRowActions={true}
             renderRowActions={({ row }) => EntityTypeIDefaults[row.original.name] ? <></> : <Button className="btn text-danger" i='trash' title="Eliminar" onClick={() => setProfile({ ...profile!, defaultEntityTypes: Object.fromEntries(Object.entries(profile!.defaultEntityTypes).filter(([key]) => key !== row.original.name)) })} />}
+            state={{ expanded: expandedRows }}
+            onExpandedChange={(updater) => {
+                const newState = typeof updater === 'function' ? updater(expandedRows) : updater;
+                setExpandedRows(newState as Record<string, boolean>);
+            }}
+            renderDetailPanel={({ row }) => row.original.subtypes && row.original.subtypes.length > 0 ? (
+                <SubtypesManager 
+                    parentName={row.original.name}
+                    subtypes={row.original.subtypes}
+                    onAddSubtype={addSubtype}
+                    onUpdateSubtype={updateSubtype}
+                    onDeleteSubtype={deleteSubtype}
+                />
+            ) : null}
         />
     </>
 }
@@ -71,7 +144,7 @@ const TYPE_COLUMN: (profile: ProfileI, setProfile: (p: ProfileI) => void) => MRT
         type: "color",
         name: "color",
         onBlur: (evt) => {
-            setProfile({ ...profile, defaultEntityTypes: { ...profile.defaultEntityTypes, [row.original.name]: { functionIndex: row.original.functionIndex, color: evt.target.value } } });
+            setProfile({ ...profile, defaultEntityTypes: { ...profile.defaultEntityTypes, [row.original.name]: { functionIndex: row.original.functionIndex, color: evt.target.value, subtypes: row.original.subtypes } } });
             table.setEditingCell(null);
         }
     }),
@@ -90,7 +163,7 @@ const ANON_COLUMN: (profile: ProfileI, setProfile: (p: ProfileI) => void) => MRT
             native: true,
             defaultValue: row.original.functionIndex
         },
-        onChange: (evt) => setProfile({ ...profile, defaultEntityTypes: { ...profile.defaultEntityTypes, [row.original.name]: { color: row.original.color, functionIndex: parseInt(evt.target.value) } } })
+        onChange: (evt) => setProfile({ ...profile, defaultEntityTypes: { ...profile.defaultEntityTypes, [row.original.name]: { color: row.original.color, functionIndex: parseInt(evt.target.value), subtypes: row.original.subtypes } } })
     })
 })
 
@@ -103,6 +176,98 @@ const EXAMPLE_COLUMN: MRT_ColumnDef<EntityTypeI> = {
     }
 }
 
+interface SubtypesManagerProps {
+    parentName: string;
+    subtypes?: EntityTypeI[];
+    onAddSubtype: (parentName: string, name: string, color: string, functionIndex: number) => void;
+    onUpdateSubtype: (parentName: string, index: number, color: string, functionIndex: number) => void;
+    onDeleteSubtype: (parentName: string, index: number) => void;
+}
+
+function SubtypesManager({ parentName, subtypes = [], onAddSubtype, onUpdateSubtype, onDeleteSubtype }: SubtypesManagerProps) {
+    const [subtypeForm, setSubtypeForm] = useState<{ name: string; color: string; funcIndex: number }>({ name: "", color: "#000000", funcIndex: 1 });
+
+    const handleAddSubtype = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (subtypeForm.name.trim()) {
+            onAddSubtype(parentName, subtypeForm.name, subtypeForm.color, subtypeForm.funcIndex);
+            setSubtypeForm({ name: "", color: "#000000", funcIndex: 1 });
+        }
+    };
+
+    return (
+        <div className="p-3 bg-light rounded">
+            <h6>Subtipos de {parentName}</h6>
+            {subtypes && subtypes.length > 0 && (
+                <div className="mb-3">
+                    <table className="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th>Cor</th>
+                                <th>Anonimização</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {subtypes.map((subtype, idx) => (
+                                <tr key={idx}>
+                                    <td><span className="badge" style={{ background: subtype.color }}>{subtype.name}</span></td>
+                                    <td>
+                                        <input 
+                                            type="color" 
+                                            defaultValue={subtype.color}
+                                            onChange={(e) => onUpdateSubtype(parentName, idx, e.target.value, subtype.functionIndex)}
+                                            className="form-control form-control-sm"
+                                            style={{ maxWidth: "50px" }}
+                                        />
+                                    </td>
+                                    <td>{functionsWithDescriptionArray[subtype.functionIndex].name}</td>
+                                    <td>
+                                        <button 
+                                            className="btn btn-sm btn-danger"
+                                            onClick={() => onDeleteSubtype(parentName, idx)}
+                                        >
+                                            <Bicon n="trash" />
+                                        </button>
+                                    </td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            )}
+            <form onSubmit={handleAddSubtype} className="d-flex gap-2">
+                <input 
+                    type="text" 
+                    className="form-control form-control-sm"
+                    placeholder="Nome do subtipo..."
+                    value={subtypeForm.name}
+                    onChange={(e) => setSubtypeForm({ ...subtypeForm, name: e.target.value })}
+                    required
+                />
+                <input 
+                    type="color"
+                    className="form-control form-control-color form-control-sm"
+                    value={subtypeForm.color}
+                    onChange={(e) => setSubtypeForm({ ...subtypeForm, color: e.target.value })}
+                />
+                <select 
+                    className="form-select form-select-sm"
+                    value={subtypeForm.funcIndex}
+                    onChange={(e) => setSubtypeForm({ ...subtypeForm, funcIndex: parseInt(e.target.value) })}
+                >
+                    {functionsWithDescriptionArray.map((desc, i) => (
+                        <option key={i} value={i}>{desc.name}</option>
+                    ))}
+                </select>
+                <button type="submit" className="btn btn-sm btn-success">
+                    <Bicon n="plus" />
+                </button>
+            </form>
+        </div>
+    );
+}
 
 export function ProfileSelector() {
     const [profile, setProfile] = useProfile();

@@ -18,6 +18,11 @@ export interface ProfileI {
         [key: string]: {
             color: string,
             functionIndex: number,
+            subtypes?: Array<{
+                name: string,
+                color: string,
+                functionIndex: number,
+            }>
         }
     }
 }

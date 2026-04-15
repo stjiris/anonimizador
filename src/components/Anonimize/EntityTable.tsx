@@ -2,21 +2,36 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { MaterialReactTable, MRT_ColumnDef, MRT_ColumnFiltersState, MRT_Row, MRT_TableInstance, } from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 
-import { IconButton, Tooltip, TextField, Badge, ToggleButton, ToggleButtonGroup, Menu, MenuItem } from "@mui/material";
+import { IconButton, Tooltip, TextField, Badge, ToggleButton, ToggleButtonGroup, Menu, MenuItem, Portal } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import { UserFile } from "@/core/UserFile";
-import { useEntities, useTypesDict } from "@/core/uses";
+import { useEntities, useTypes, useTypesDict } from "@/core/uses";
 import { Entity, EntityTypeI } from "@/types/EntityType";
 import { EntityPool } from "@/types/EntityPool";
 import { Button } from "@/core/BootstrapIcons";
 import { FULL_ANONIMIZE } from "@/core/anonimizeFunctions";
 import { EntitiesStyle } from "@/core/entitiesStyle";
 import { sortEntityTypesXLast } from "@/components/Anonimize/Tooltip";
-import { Portal } from "@mui/material";
+import { TypePickerDropdown } from "@/components/Anonimize/TypePickerDropdown";
 
 const TODAS = Number.MAX_SAFE_INTEGER;
+
+const getType = (types: EntityTypeI[], typeName: string): EntityTypeI => {
+    
+    let found = types.find(t => t.name === typeName);
+    if (found) return found;
+    
+    for (const type of types) {
+        if (type.subtypes) {
+            found = type.subtypes.find(s => s.name === typeName);
+            if (found) return found;
+        }
+    }
+
+    return { name: `${typeName}*`, color: "red", functionIndex: FULL_ANONIMIZE } as EntityTypeI;
+};
 
 export function EntityTable({ file }: { file: UserFile }) {
     const [showOnlyMarks, setShowOnlyMarks] = useState(false);
@@ -30,7 +45,7 @@ export function EntityTable({ file }: { file: UserFile }) {
     const entityCount = filteredEnts.length;
     const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 });
 
-    const typesDict = useTypesDict(file);
+    const typesList = useTypes(file);
 
     const wasEmpty = useRef(true);
 
@@ -44,8 +59,6 @@ export function EntityTable({ file }: { file: UserFile }) {
         }
     }, [entityCount]);
 
-    const typesList = useMemo(() => Object.values(typesDict), [typesDict]);
-
     const totalOcc = useMemo(
         () => filteredEnts.reduce((acc, e) => acc + (e.offsets?.length ?? 0), 0),
         [filteredEnts]
@@ -56,9 +69,9 @@ export function EntityTable({ file }: { file: UserFile }) {
             TYPE_COL(typesList, file.pool, file),
             COUNT_COL(totalOcc),
             ENTITY_COL(file.pool, ents.length),
-            ANONIMIZE_COL(file.pool, typesDict),
+            ANONIMIZE_COL(file.pool, typesList),
         ];
-    }, [typesList, totalOcc, file.pool, typesDict, ents.length]);
+    }, [typesList, totalOcc, file.pool, ents.length]);
 
     const handleToggle = (_: React.MouseEvent<HTMLElement>, v: string | null) => {
         setShowOnlyMarks(v === "marcas");
@@ -207,23 +220,7 @@ const toolbar =
             const isJoinDisabled = showOnlyMarks || selectedCount <= 1;
             const isSplitDisabled = showOnlyMarks || selectedCount === 0;
             const [showTypePicker, setShowTypePicker] = useState(false);
-            const [pickerPos, setPickerPos] = useState({ top: 0, left: 0 });
             const btnRef = useRef<HTMLSpanElement>(null);
-            const pickerRef = useRef<HTMLDivElement>(null);
-
-            useEffect(() => {
-                if (!showTypePicker) return;
-                const handler = (e: MouseEvent) => {
-                    if (
-                        btnRef.current && !btnRef.current.contains(e.target as Node) &&
-                        pickerRef.current && !pickerRef.current.contains(e.target as Node)
-                    ) {
-                        setShowTypePicker(false);
-                    }
-                };
-                window.addEventListener("mousedown", handler);
-                return () => window.removeEventListener("mousedown", handler);
-            }, [showTypePicker]);
 
             return (
                 <div className="d-flex w-100 align-items-center gap-2">
@@ -271,43 +268,19 @@ const toolbar =
                             className="btn btn-secondary my-0 mx-1 p-1"
                             disabled={selectedCount === 0 || showOnlyMarks}
                             onClick={() => {
-                                if (!showTypePicker && btnRef.current) {
-                                    const rect = btnRef.current.getBoundingClientRect();
-                                    setPickerPos({ top: rect.bottom, left: rect.left });
-                                }
                                 setShowTypePicker(v => !v);
                             }}
                         />
                         {showTypePicker && (
                             <Portal>
-                                <div
-                                    ref={pickerRef}
-                                    className="dropdown-menu show shadow overflow-y-auto"
-                                    style={{
-                                        position: "fixed",
-                                        top: pickerPos.top,
-                                        left: pickerPos.left,
-                                        zIndex: 99999,
-                                        maxHeight: 300,
+                                <TypePickerDropdown
+                                    types={typesList}
+                                    anchorRef={btnRef}  
+                                    onSelect={(newType) => {
+                                        changeSelectedEntitiesType(table, pool, file, newType);
                                     }}
-                                >
-                                    {sortEntityTypesXLast(typesList).map((t, i) => (
-                                        <button
-                                            key={i}
-                                            className="dropdown-item d-flex align-items-center gap-2"
-                                            onClick={() => {
-                                                changeSelectedEntitiesType(table, pool, file, t.name);
-                                                setShowTypePicker(false);
-                                            }}
-                                        >
-                                            <span
-                                                className="badge"
-                                                style={{ background: t.color, minWidth: 12, minHeight: 12 }}
-                                            >&nbsp;</span>
-                                            {t.name}
-                                        </button>
-                                    ))}
-                                </div>
+                                    onClose={() => setShowTypePicker(false)}
+                                />
                             </Portal>
                         )}
                     </span>
@@ -356,8 +329,6 @@ const changeSelectedEntitiesType = (table: MRT_TableInstance<Entity>, pool: Enti
 const removeSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
     pool.removeEntities(selectedIndexes(table));
     removeTableSelection(table);
-    console.log("Selected indexes LENGTH:", selectedIndexes(table).length);
-    console.log("Selected indexes FULL:", selectedIndexes(table));
     file.checkCountPES();
 };
 
@@ -426,7 +397,9 @@ const ENTITY_COL: (pool: EntityPool, count: number) => MRT_ColumnDef<Entity> = (
     }),
 });
 
-const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_ColumnDef<Entity> = (types, pool, file) => ({
+const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_ColumnDef<Entity> = (types, pool, file) => {
+    const sortedTypes = sortEntityTypesXLast(types);
+    return ({
     id: "type",
     header: "Tipo",
     accessorKey: "type",
@@ -437,7 +410,7 @@ const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_
     filterSelectOptions: [
         { text: "Tipos Normais", value: "__NO_X__" },
         { text: "Outros Tipos", value: "__ONLY_X__" },
-        ...sortEntityTypesXLast(types).map((t) => t.name),
+        ...sortedTypes.map((t) => t.name),
     ],
     filterFn: (row, _columnId, filterValue) => {
         if (filterValue === "__ONLY_X__") return row.original.type.startsWith("X-");
@@ -452,28 +425,25 @@ const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_
     muiTableHeadCellProps: { align: "center" },
     muiTableBodyCellProps: { align: "center", sx: { px: 1 } },
     Cell: ({ row}) => {
-        const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+        const [showTypePicker, setShowTypePicker] = useState(false);
+        const badgeRef = useRef<HTMLSpanElement>(null);
 
-        const t =
-            types.find((x) => x.name === row.original.type) ||
-            ({ name: `${row.original.type}*`, color: "red", functionIndex: FULL_ANONIMIZE } as EntityTypeI);
+        const t = getType(types, row.original.type);
 
-        const handleClick = (evt: React.MouseEvent<HTMLElement>) => {
+        const handleClick = (evt: React.MouseEvent<HTMLSpanElement>) => {
             evt.stopPropagation();
-            setAnchorEl(evt.currentTarget);
+            setShowTypePicker(v => !v);
         };
-
-        const handleClose = () => setAnchorEl(null);
 
         const handleSelectType = (newType: string) => {
             pool.changeEntitiesType([row.original.index - 1], newType);
             file.checkCountPES();
-            handleClose();
         };
 
         return (
             <>
                 <span
+                    ref={badgeRef}
                     className="badge text-body"
                     title="Alterar tipo de todas as ocorrências"
                     style={{ background: t.color, cursor: "pointer" }}
@@ -481,37 +451,28 @@ const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_
                 >
                     {t.name}
                 </span>
-                <Menu
-                    anchorEl={anchorEl}
-                    open={Boolean(anchorEl)}
-                    onClose={handleClose}
-                >
-                    {sortEntityTypesXLast(types).map((type) => (
-                        <MenuItem
-                            key={type.name}
-                            onClick={() => handleSelectType(type.name)}
-                            selected={type.name === row.original.type}
-                        >
-                            <span
-                                className="badge text-body me-2"
-                                style={{ background: type.color }}
-                            >
-                                {type.name}
-                            </span>
-                        </MenuItem>
-                    ))}
-                </Menu>
+                {showTypePicker && (
+                    <Portal>
+                        <TypePickerDropdown
+                            types={types}
+                            anchorRef={badgeRef}
+                            onSelect={handleSelectType}
+                            onClose={() => setShowTypePicker(false)}
+                        />
+                    </Portal>
+                )}
             </>
         );
     },
-});
-const ANONIMIZE_COL: (pool: EntityPool, types: Record<string, EntityTypeI>) => MRT_ColumnDef<Entity> = (
+    });
+};
+const ANONIMIZE_COL: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (
     pool,
     types,
 ) => ({
     id: "anon",
     header: "Anonimização",
-    accessorFn: (row) => row.overwriteAnonimization || row.anonimizingFunction(types[row.type])(
+    accessorFn: (row) => row.overwriteAnonimization || row.anonimizingFunction(getType(types, row.type))(
         row.offsets[0]?.preview,
         row.type,
         row.index,
@@ -526,7 +487,7 @@ const ANONIMIZE_COL: (pool: EntityPool, types: Record<string, EntityTypeI>) => M
         sx: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
     },
     Cell: ({ row }) => {
-        const generated = row.original.anonimizingFunction(types[row.original.type])(
+        const generated = row.original.anonimizingFunction(getType(types, row.original.type))(
             row.original.offsets[0].preview,
             row.original.type,
             row.original.index,
@@ -547,7 +508,7 @@ const ANONIMIZE_COL: (pool: EntityPool, types: Record<string, EntityTypeI>) => M
         );
     },
     muiTableBodyCellEditTextFieldProps: ({ row }) => ({
-        placeholder: row.original.anonimizingFunction(types[row.original.type])(
+        placeholder: row.original.anonimizingFunction(getType(types, row.original.type))(
             row.original.offsets[0].preview,
             row.original.type,
             row.original.index,

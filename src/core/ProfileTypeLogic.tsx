@@ -2,9 +2,7 @@
 import { ProfileI } from "@/types/ProfileType";
 import { isAnonimizeFunctionIndex } from "./anonimizeFunctions";
 import { updateEntityTypeI } from "./EntityTypeLogic";
-import { ChangeEventHandler, createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
-import { Button } from "./BootstrapIcons";
-import { ProfileTypesTable } from "@/components/Anonimize/ProfileTypesTable";
+import { createContext, useContext, useEffect, useState } from "react";
 
 export function isProfileI(arg: any): arg is ProfileI {
     if (!arg) return false;
@@ -22,6 +20,19 @@ export function isProfileI(arg: any): arg is ProfileI {
         if (typeof arg.defaultEntityTypes[key].functionIndex !== "number") return false;
         if (isAnonimizeFunctionIndex(arg.defaultEntityTypes[key].functionIndex as number, -1) === -1) {
             return false;
+        }
+        
+        if (arg.defaultEntityTypes[key].subtypes) {
+            if (!Array.isArray(arg.defaultEntityTypes[key].subtypes)) return false;
+            for (let subtype of arg.defaultEntityTypes[key].subtypes) {
+                if (typeof subtype !== "object") return false;
+                if (typeof subtype.name !== "string") return false;
+                if (typeof subtype.color !== "string") return false;
+                if (typeof subtype.functionIndex !== "number") return false;
+                if (isAnonimizeFunctionIndex(subtype.functionIndex as number, -1) === -1) {
+                    return false;
+                }
+            }
         }
     }
     return true;
@@ -47,7 +58,7 @@ export function setProfile(profile: ProfileI | null) {
     }
 
     for (let key in profile.defaultEntityTypes) {
-        updateEntityTypeI(key, profile.defaultEntityTypes[key].color, profile.defaultEntityTypes[key].functionIndex);
+        updateEntityTypeI(key, profile.defaultEntityTypes[key].color, profile.defaultEntityTypes[key].functionIndex, profile.defaultEntityTypes[key].subtypes);
     }
 
     if (!profile.nerRgx) {
