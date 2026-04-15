@@ -16,6 +16,7 @@ services:
       - ANONIMIZADOR_SECRET=${ANONIMIZADOR_SECRET}
       - PORT=${ANONIMIZADOR_PORT:-7999}
       - NLP_SERVER_URL=${NLP_SERVER_URL:-http://nlp_server:5001}
+      - NEXT_PUBLIC_JURIS_URL=${NEXT_PUBLIC_JURIS_URL:-}
     env_file:
       - .env
     ports:

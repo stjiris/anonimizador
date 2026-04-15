@@ -1,17 +1,16 @@
 import { useEffect, useRef, useState } from "react";
+
 import { AnonimizeStateCombined, AnonimizeStateState, AnonimizeVisualState, getAnonimizedStateCombined } from "../../types/AnonimizeState";
 import AnonimizeContent from "./Content";
 import { EntityTable } from "./EntityTable";
 import { HistoryCommands } from "./HistoryCommands";
 import { ImageEditorModal } from "./ImageEditorModal";
 import { SearchModalContent } from "./SearchModalContent";
-import { TypesModalContent } from "./TypesModalContent";
 import { ToolsButton, ToolsModalBody } from "./Tools";
 import { ExportButton } from "./ExportButton";
 import { UserFile } from "@/core/UserFile";
 import { Bicon, Button } from "@/core/BootstrapIcons";
 import { useSave } from "@/core/uses";
-import { getAnonimizeProfiles, loadAnonimizeProfiles } from "@/core/AnonimizeProfiles";
 import { EntitiesStyle } from "@/core/entitiesStyle";
 import { ExitButton, ForceExitButton } from "./ExitButton";
 import { SavedBadge } from "@/components/SavedBadge";
@@ -36,17 +35,7 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
     const [requesting, setRequesting] = useState<boolean>(false);
 
     const anonimizedHTML = useRef<string>("");
-    const [profiles, setProfiles] = useState<{ name: string; label: string }[]>([]);
     const [paginated, setPaginated] = useState<boolean>(false);
-
-    useEffect(() => {
-        loadAnonimizeProfiles()
-            .then(() => {
-                const perfis = getAnonimizeProfiles();
-                setProfiles(perfis); // Isto vai desencadear um re-render com os dados
-            })
-            .catch((err) => console.error("Erro ao carregar perfis:", err));
-    }, []);
 
     useEffect(() => {
         const onExit = (evt: BeforeUnloadEvent) => {
@@ -71,7 +60,7 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
             <div className="col-7 p-0 m-0">
                 <div className="anon-toolbar position-sticky top-0 bg-white p-0 m-0 d-flex" style={{ borderBottom: "5px solid #161616", zIndex: 1 }}>                    {requesting ? <ForceExitButton setUserFile={props.setUserFile} /> : <ExitButton file={file} setUserFile={props.setUserFile} />}
                     <SavedBadge file={file} />
-                    <Button title="Gerir tipos" i="file-earmark-font" text="Tipos" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-types" />
+                    <Button title="Gerir perfil" i="person-badge" text="Perfil" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-profile" />
                     <Sep />
                     <Button title="Documento paginado" i="file-earmark-break" text="Paginar" className={"btn btn-sm m-1 p-1 " + (paginated ? "btn-success" : "btn-danger")} onClick={() => setPaginated(p => !p)} />
                     <select title="Escolher modo" className="text-body btn m-1 p-1 text-start alert alert-primary" onChange={(ev) => setAnonimizeSate(getAnonimizedStateCombined(ev.target.value as AnonimizeVisualState))} defaultValue={AnonimizeVisualState.ALL_TYPES}>
@@ -105,9 +94,6 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
                 </div>
             </div>
         </div>
-        <BootstrapModal id="modal-types">
-            <TypesModalContent file={file} />
-        </BootstrapModal>
         <ImageEditorModal file={file} />
         <BootstrapModal id="modal-info">
             <InfoModalContent file={file} />

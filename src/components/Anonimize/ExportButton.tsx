@@ -5,10 +5,63 @@ import { Button } from "@/core/BootstrapIcons";
 import { SpecificOffsetRange, useTypesDict } from "@/core/uses";
 import { renderBlock } from "./render";
 import { UserFileInterface } from "@/types/UserFileInterface";
+import { useState } from "react";
+
+const JURIS_URL = process.env.NEXT_PUBLIC_JURIS_URL;
 
 export function ExportButton({ file }: { file: UserFileInterface }) {
     const entityTypes = useTypesDict(file);
+    const [sending, setSending] = useState(false);
     const _exportFile = (anonimize: boolean, type: "DOCX" | "PDF" | "JSON") => exportFile(file, entityTypes, anonimize, type);
+
+    const pushToJuris = async () => {
+        if (!file.jurisId) return;
+        setSending(true);
+        try {
+            const offsets: SpecificOffsetRange[] = [];
+            file.pool.entities.forEach(e => e.offsets.forEach(o => offsets.push({ ...o, ent: e })));
+            offsets.sort((a, b) => a.start - b.start);
+
+            const fullAnonimized = renderBlock(file.doc, entityTypes, offsets, AnonimizeStateState.ANONIMIZED, 0, file.images, { current: 0 });
+
+            const parser = new DOMParser();
+            const anonDoc = parser.parseFromString(fullAnonimized, "text/html");
+            const origDoc = parser.parseFromString(file.html_contents, "text/html");
+
+            const anonSumarioEl = anonDoc.querySelector('[data-juris="sumario"]');
+            const anonTextoEl = anonDoc.querySelector('[data-juris="texto"]');
+            const origSumarioEl = origDoc.querySelector('[data-juris="sumario"]');
+            const origTextoEl = origDoc.querySelector('[data-juris="texto"]');
+
+            const anonimizedTexto = anonTextoEl ? anonTextoEl.innerHTML : fullAnonimized;
+            const anonimizedSumario = anonSumarioEl ? anonSumarioEl.innerHTML : null;
+            const originalTexto = origTextoEl ? origTextoEl.innerHTML : file.html_contents;
+            const originalSumario = origSumarioEl ? origSumarioEl.innerHTML : null;
+
+            const entities: Record<string, string[]> = {};
+            for (const entity of file.pool.entities) {
+                if (!entities[entity.type]) entities[entity.type] = [];
+                for (const offset of entity.offsets) {
+                    entities[entity.type].push(offset.preview);
+                }
+            }
+
+            const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/juris/push_document`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ jurisId: file.jurisId, anonimizedTexto, anonimizedSumario, originalTexto, originalSumario, entities }),
+            });
+
+            if (!res.ok) throw new Error(await res.text());
+            window.open(file.jurisDocUrl || JURIS_URL, "_blank", "noopener,noreferrer");
+        } catch (err) {
+            console.error(err);
+            alert("Erro ao enviar documento para o Juris.");
+        } finally {
+            setSending(false);
+        }
+    };
+
     return <>
         <Button i="download" title="Exportar" className="btn m-1 p-1" data-bs-toggle="dropdown" aria-expanded="false" />
         <ul className="dropdown-menu">
@@ -17,6 +70,14 @@ export function ExportButton({ file }: { file: UserFileInterface }) {
             <li><button onClick={() => _exportFile(false, "PDF")} className="dropdown-item">Original (PDF)</button></li>
             <li><button onClick={() => _exportFile(true, "DOCX")} className="dropdown-item">Anonimizado (DOCX)</button></li>
             <li><button onClick={() => _exportFile(true, "PDF")} className="dropdown-item">Anonimizado (PDF)</button></li>
+            {JURIS_URL && file.jurisId && <>
+                <li><hr className="dropdown-divider" /></li>
+                <li>
+                    <button onClick={pushToJuris} disabled={sending} className="dropdown-item">
+                        {sending ? <><span className="spinner-border spinner-border-sm me-2" role="status" />A enviar...</> : "→ Juris"}
+                    </button>
+                </li>
+            </>}
         </ul>
     </>
 }

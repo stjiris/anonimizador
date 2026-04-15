@@ -3,15 +3,38 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { createUserFile, readSavedUserFile, deleteUserFile } from "@/core/UserFileCRUDL";
 import { UserFile } from "@/core/UserFile";
+import { applyNlpEntitiesToPool, RemoteEntity } from "@/core/runRemoteNlp";
+import { EntityPool } from "@/types/EntityPool";
 
 interface ApiDocument {
   id: string;
   "Número de Processo": string;
   "Texto": string;
+  "Texto Não Anonimizado"?: string;
   "Sumário"?: string;
+  "Sumário Não Anonimizado"?: string;
   "Fonte"?: string;
   "UUID"?: string;
   "URL"?: string;
+}
+
+function applyAnonimizedEntitiesToPool(pool: EntityPool, entities: Record<string, string[]>) {
+  const text = pool.originalText;
+  const seen = new Set<string>();
+  for (const [type, previews] of Object.entries(entities)) {
+    for (const preview of previews) {
+      const key = `${type}|${preview}`;
+      if (seen.has(key)) continue;
+      seen.add(key);
+      const escaped = preview.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escaped, 'g');
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        pool.addEntity(match.index, match.index + preview.length - 1, preview, type, false);
+      }
+    }
+  }
+  pool.updateOrder("Restaurar entidades");
 }
 
 export default function DocumentPage() {
@@ -41,8 +64,22 @@ export default function DocumentPage() {
         }
 
         const apiDocument: ApiDocument = data.document;
+        const jurisUrl: string | undefined = data.jurisUrl;
+        const savedEntities: Record<string, string[]> | null = data.entities || null;
+        const nlpData: RemoteEntity[] | null = (() => {
+          if (!data.nlp) return null;
+          try {
+            const parsed = typeof data.nlp === "string" ? JSON.parse(data.nlp) : data.nlp;
+            return Array.isArray(parsed) ? parsed : null;
+          } catch { return null; }
+        })();
+
         const fileName = apiDocument["Número de Processo"] || `Document_${apiDocument.id}`;
-        const textContent = apiDocument["Texto"];
+        const sumario = apiDocument["Sumário Não Anonimizado"] || apiDocument["Sumário"];
+        const texto = apiDocument["Texto Não Anonimizado"] || apiDocument["Texto"];
+        const textContent = sumario
+            ? `<div data-juris="sumario">${sumario}</div><div data-juris="texto">${texto || ""}</div>`
+            : texto;
 
         if (!textContent) {
           setError('Documento não contém texto');
@@ -63,6 +100,25 @@ export default function DocumentPage() {
 
         setStatus('A criar ficheiro...');
         const userFile = UserFile.newFrom(fileName, textContent);
+        userFile.jurisId = apiDocument["UUID"];
+        userFile.jurisDocUrl = jurisUrl;
+
+        if (savedEntities && Object.keys(savedEntities).length > 0) {
+          setStatus('A restaurar entidades da última anonimização...');
+          applyAnonimizedEntitiesToPool(userFile.pool, savedEntities);
+        } else if (nlpData && nlpData.length > 0) {
+          setStatus('A aplicar entidades identificadas...');
+          // Convert NLP entities to preview-map and use the same all-occurrences approach
+          // as the saved path, so first load and subsequent loads behave consistently.
+          const nlpEntities: Record<string, string[]> = {};
+          for (const ent of nlpData) {
+            if (!nlpEntities[ent.label_]) nlpEntities[ent.label_] = [];
+            if (!nlpEntities[ent.label_].includes(ent.text)) {
+              nlpEntities[ent.label_].push(ent.text);
+            }
+          }
+          applyAnonimizedEntitiesToPool(userFile.pool, nlpEntities);
+        }
 
         setStatus('A guardar documento localmente...');
         try {

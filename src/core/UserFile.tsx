@@ -4,6 +4,7 @@ import { EntityPool } from "@/types/EntityPool"
 import { Entity, EntityI, EntityTypeFunction, EntityTypeI } from "@/types/EntityType"
 import { SummaryI } from "@/types/SummaryType"
 import { addEntityTypeI, getEntityTypeI, getEntityTypeIs, restoreEntityTypesColors, updateEntityTypeI } from "./EntityTypeLogic"
+import { ProfileI } from "@/types/ProfileType"
 import { updateUserFile } from "./UserFileCRUDL"
 import { AUTO_ANONIMIZE } from "./anonimizeFunctions"
 import { UserFileInterface } from "@/types/UserFileInterface";
@@ -21,6 +22,8 @@ export interface SavedUserFile {
     summary?: SummaryI[]
     area?: string
     profile?: string
+    jurisId?: string
+    jurisDocUrl?: string
 }
 
 export class UserFile implements UserFileInterface {
@@ -36,6 +39,8 @@ export class UserFile implements UserFileInterface {
     descriptors?: DescriptorI[]
     summary?: SummaryI[]
     profile?: string
+    jurisId?: string
+    jurisDocUrl?: string
 
     typesListeners: ((types: EntityTypeI[]) => void)[]
 
@@ -101,6 +106,8 @@ export class UserFile implements UserFileInterface {
         this.descriptors = obj.descriptors;
         this.area = obj.area;
         this.summary = obj.summary;
+        this.jurisId = obj.jurisId;
+        this.jurisDocUrl = obj.jurisDocUrl;
 
         this.saved = false
         this.save()
@@ -122,6 +129,8 @@ export class UserFile implements UserFileInterface {
             descriptors: this.descriptors,
             summary: this.summary,
             profile: this.profile,
+            jurisId: this.jurisId,
+            jurisDocUrl: this.jurisDocUrl,
         }
     }
 
@@ -288,6 +297,28 @@ export class UserFile implements UserFileInterface {
         for (let cb of this.summaryListeners) {
             cb(this.summary || []);
         }
+    }
+
+    applyProfile(profile: ProfileI | null) {
+        this.profile = profile?.name;
+        if (!profile) {
+            this.notifyType();
+            this.save();
+            return;
+        }
+        for (const [name, { color, functionIndex, subtypes }] of Object.entries(profile.defaultEntityTypes)) {
+            const existing = this.types.find(t => t.name === name);
+            if (existing) {
+                existing.color = color;
+                existing.functionIndex = functionIndex;
+                existing.subtypes = subtypes;
+            } else {
+                this.types.push({ name, color, functionIndex, subtypes });
+            }
+            updateEntityTypeI(name, color, functionIndex, subtypes);
+        }
+        this.notifyType();
+        this.save();
     }
 
     checkCountPES() {
