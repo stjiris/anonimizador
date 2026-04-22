@@ -107,18 +107,24 @@ export const partido_inc: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) 
 const redesSociais = ['Facebook', 'Instagram', 'Twitter', 'WhatsApp', 'Tiktok', 'LinkedIn', 'Snapchat', 'X.', 'Reddit', 'Youtube', 'Discord', 'Telegram']
 
 export const redes_inc: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) => {
-    let strLow = str.toLowerCase()
+    const emailMatch = str.match(/@(.+)$/);
+    if (emailMatch) {
+        return "nome" + typeIdx.toString() + "@" + emailMatch[1];
+    }
 
+    let strLow = str.toLowerCase()
     for (let rede of redesSociais) {
         if(strLow.includes(rede.toLowerCase())) {
             return "nome" + typeIdx.toString() + "@" + rede.toLowerCase() + ".com";
         }
     }
 
-    return "nome" + typeIdx.toString() + "@domínio" + typeIdx.toString() + ".com";
+    return "nome" + typeIdx.toString();
 }
 
 const moradasTypes = ['Rua', 'Avenida', 'Largo', 'Praça', 'Travessa', 'Estrada', 'Calçada', 'Alameda', 'Rotunda', 'Praceta', 'Beco', 'Viela']
+
+export const codigoPostal: AnonimizeFunction = (str) => str.replace(/\d{4}-\d{3}/, "0000-000")
 
 export const moradas_inc: AnonimizeFunction = (str, type, _idx, tidx, funIdx) => {
 
@@ -304,6 +310,12 @@ export const functionsWithDescriptionArray: AnonimizeFunctionDescription[] = [
         "name": "Incremental - Tipo",
         "description": "Substitui ocorrência pelo tipo de entidade e número incremental específico do tipo. Ex: Arguido 1, Arguido 2, Testemunha 1, Testemunha 2, etc.",
         "fun": typeWithIncrement
+    },
+    {
+        //index 21
+        "name": "Ofuscação código postal",
+        "description": "Substitui código postal por 0000-000. Ex: 1500-500 => 0000-000",
+        "fun": codigoPostal
     }
 ]
 

@@ -8,6 +8,12 @@ import string
 import logging
 
 REGEX_PATH = "./src/regex"
+STOPWORDS = {"de", "do", "da", "dos", "das", "em", "no", "na", "nos", "nas",
+             "a", "o", "as", "os", "um", "uma", "uns", "umas", "para", "por",
+             "com", "sem", "sob", "sobre", "entre", "até", "desde", "que", "se",
+             "ou", "e", "mas", "nem", "ao", "aos", "às", "pelo", "pela", "pelos",
+             "pelas", "num", "numa", "nuns", "numas", "esse", "essa", "este", "esta",
+             "aquele", "aquela"}
 
 PATTERN_MATRICULA = "[A-Z0-9]{2}-[A-Z0-9]{2}-[A-Z0-9]{2}"
 PATTERN_PROCESSO = r"\d+(-|\.|_|\s|\/)\d{1,2}(\.)[A-Z0-9]+(-|\.)[A-Z0-9]+(\.)*[A-Z0-9]*"
@@ -81,7 +87,7 @@ def add_ent_by_pattern(ents, text, pattern, label):
     for m in p.finditer(text):
         go = True
         start_pos,end_pos = m.span()
-        for e in ents: 
+        for e in ents:
             if start_pos >= e.start_char and start_pos <= e.end_char or end_pos >= e.start_char and end_pos <= e.end_char:
                 go = False
                 break
@@ -332,6 +338,8 @@ def add_missed_entities(ents, text):
     keyword_processor = KeywordProcessor(case_sensitive=True)
     # Add recognized entities to keyword_processor
     for keyword, label in recognized_entities.items():
+        if keyword.strip().lower() in STOPWORDS:
+            continue
         keyword_processor.add_keyword(keyword, (label, keyword))
 
     # Run keyword_processor and save matches
@@ -415,10 +423,8 @@ def nlp(text, model):
         
         #Runs the model
         doc = model(text)
-        
         for ent in exclude_manual(doc.ents):
             ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
-    
     except RuntimeError:
         
         #Create tokenizer
@@ -438,7 +444,6 @@ def nlp(text, model):
                 ent.start_char += position
                 ent.end_char += position
                 ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
-        
     ents = label_professions(doc, ents)
     ents = process_entities(ents, text)
     ents = add_missed_entities(ents, text)

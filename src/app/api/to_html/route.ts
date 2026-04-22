@@ -9,6 +9,29 @@ import { formatXml, wrapXmlIntoHtml } from '@/core/pdfUtils';
 export const runtime = 'nodejs';
 const XEMF_LUA = path.join(CONFIG_DIR, 'xemf-to-png.lua');
 
+async function convertPdfToHtml(inPath: string, title: string): Promise<string> {
+    const baseOutPath = getTempFilePath();
+    const xmlPath = baseOutPath + ".xml";
+    try {
+        const sub = await runCommand("pdftohtml", ["-xml", "-noframes", "-dataurls", inPath, baseOutPath]);
+
+        try {
+            const outBase = path.basename(baseOutPath);
+            await runCommand("sed", ["-i", `s/href="${outBase}#/href="#/g`, xmlPath]);
+        } catch { }
+
+        if (!sub || sub.code !== 0) {
+            throw new Error(sub ? sub.stderr.toString() : "pdftohtml failed");
+        }
+
+        const outBuf = await fsp.readFile(xmlPath);
+        const raw = decodeBufferWithFallback(outBuf);
+        return wrapXmlIntoHtml(formatXml(raw), title);
+    } finally {
+        try { await fsp.rm(xmlPath, { force: true }); } catch { }
+    }
+}
+
 export function getTempFilePath(prefix = '') {
     const crypto = require('crypto');
     return path.join(os.tmpdir(), `${Date.now()}-${crypto.randomUUID()}${prefix}`);
@@ -88,9 +111,6 @@ export async function POST(req: NextRequest) {
         await fsp.writeFile(inPath, buffer);
 
         outPath = getTempFilePath('.html');
-        const pdfOutPath = getTempFilePath('.xml');
-
-        const baseOutPath = pdfOutPath.replace(/\.xml$/, '');
         const ext = path.extname(originalName).toLowerCase();
 
         const luaFilterArgs = await fsp
@@ -136,17 +156,17 @@ export async function POST(req: NextRequest) {
             ]);
 
         } else if (ext === '.pdf') {
-            subproc = await runCommand('pdftohtml', ['-xml', '-noframes', '-dataurls', inPath, baseOutPath]);
-
-            try {
-                const outBase = path.basename(baseOutPath);
-                await runCommand('sed', [
-                    '-i',
-                    `s/href="${outBase}#/href="#/g`,
-                    baseOutPath + '.xml'
-                ]);
-            } catch { }
-
+            const html = await convertPdfToHtml(inPath, title);
+            console.log(JSON.stringify({
+                requestPath: '/api/to_html',
+                startTime: start.toISOString(),
+                endTime: new Date().toISOString(),
+                fileSize: buffer.length,
+                fileExt: ext,
+            }));
+            return new NextResponse(html, {
+                headers: { 'content-type': 'text/html; charset=utf-8' }
+            });
         } else {
             subproc = await runCommand('pandoc', [
                 inPath,
@@ -168,18 +188,8 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: errMsg }, { status: 500 });
         }
 
-        const finalPath = ext === '.pdf' ? `${baseOutPath}.xml` : outPath;
-        const outBuf = await fsp.readFile(finalPath);
-        const raw = decodeBufferWithFallback(outBuf);
-
-
-        let html = raw;
-
-        if (ext === '.pdf') {
-                
-            const groupedHtml = formatXml(raw);
-            html = wrapXmlIntoHtml(groupedHtml, title);
-        }
+        const outBuf = await fsp.readFile(outPath);
+        const html = decodeBufferWithFallback(outBuf);
 
         console.log(JSON.stringify({
             requestPath: '/api/to_html',
@@ -195,8 +205,9 @@ export async function POST(req: NextRequest) {
         });
 
     } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
         console.error('Error in /api/to_html:', err);
-        return NextResponse.json({ error: 'Failed to convert file' }, { status: 500 });
+        return NextResponse.json({ error: msg }, { status: 500 });
 
     } finally {
         try { if (inPath) await fsp.rm(inPath, { force: true }); } catch { }

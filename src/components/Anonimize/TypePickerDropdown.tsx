@@ -53,8 +53,8 @@ function TypePickerDropdown({ types, anchorRef, onSelect, onClose, onRemove, noA
             className="dropdown-menu show shadow overflow-y-auto"
             data-type-picker="true"
             style={noAutoPosition
-                ? { zIndex: 99999, maxHeight: 300 }
-                : { position: "fixed", top: pickerPos.top, left: pickerPos.left, zIndex: 99999, maxHeight: 300 }}
+                ? { zIndex: 99999, maxHeight: 400 }
+                : { position: "fixed", top: pickerPos.top, left: pickerPos.left, zIndex: 99999, maxHeight: 400 }}
         >
             {onRemove && (
                 <>
@@ -95,6 +95,14 @@ function TypePickerDropdown({ types, anchorRef, onSelect, onClose, onRemove, noA
                     className="dropdown-menu show shadow overflow-y-auto"
                     style={{ position: "fixed", top: subtypePos.top, left: subtypePos.left, zIndex: 99999, maxHeight: 300 }}
                 >
+                    <button
+                        className="dropdown-item d-flex align-items-center gap-2"
+                        onClick={() => handleSelectType(selectedParentType.name)}
+                    >
+                        <span className="badge" style={{ background: selectedParentType.color, minWidth: 12, minHeight: 12 }}>&nbsp;</span>
+                        {selectedParentType.name}
+                    </button>
+                    <div className="dropdown-divider"></div>
                     {selectedParentType.subtypes.map((subtype, idx) => (
                         <button
                             key={idx}

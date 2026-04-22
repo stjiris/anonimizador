@@ -170,6 +170,14 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
                     data-type-picker="true"
                     style={{ zIndex: 10000, maxHeight: 300 }}
                 >
+                    <button
+                        className="dropdown-item d-flex align-items-center gap-2"
+                        onMouseDown={(e) => { e.preventDefault(); handleSelectType(subtypeParent.name); }}
+                    >
+                        <span className="badge" style={{ background: subtypeParent.color, minWidth: 12, minHeight: 12 }}>&nbsp;</span>
+                        {subtypeParent.name}
+                    </button>
+                    <div className="dropdown-divider"></div>
                     {subtypeParent.subtypes.map((subtype, idx) => (
                         <button
                             key={idx}

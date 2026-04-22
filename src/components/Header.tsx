@@ -11,15 +11,7 @@ export default function Header() {
             </div>
         </a>
         <pre className="m-0">  Versão: {process.env.NEXT_PUBLIC_VERSION_COMMIT} ({process.env.NEXT_PUBLIC_VERSION_DATE})</pre>
-        <Button title="Perfil" i="palette2" text={`Perfil${profile?.name ? `: ${profile.name}` : ''}`} className="btn m-1 ms-3" style={{
-            backgroundColor: "#a58f3c",
-            borderWidth: "2px",
-            borderColor: "#55491fff",
-            color: "#6d1b2a",
-            fontWeight: 600,
-            fontSize: "0.9rem",
-            padding: "2px 6px"
-        }} data-bs-toggle="modal" data-bs-target="#modal-profile" />
+        <Button title="Perfil" i="palette2" text={`Perfil${profile?.name ? `: ${profile.name}` : ''}`} className="btn btn-primary m-1 ms-3" data-bs-toggle="modal" data-bs-target="#modal-profile" />
         <div className="flex-fill d-none d-lg-block"></div>
         <nav className="d-print-none">
             <ul className="container d-flex nav align-items-center justify-content-evenly flex-wrap">
