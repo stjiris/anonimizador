@@ -1,5 +1,5 @@
 import { MRT_ColumnDef, MaterialReactTable } from "material-react-table";
-import { functionsWithDescriptionArray } from "@/core/anonimizeFunctions";
+import { AUTO_ANONIMIZE, functionsWithDescriptionArray } from "@/core/anonimizeFunctions";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { EntityTypeIDefaults, EntityTypeI } from "@/types/EntityType";
 import { Bicon, Button } from "@/core/BootstrapIcons";
@@ -154,7 +154,7 @@ const TYPE_COLUMN: (profile: ProfileI, setProfile: (p: ProfileI) => void) => MRT
 const ANON_COLUMN: (profile: ProfileI, setProfile: (p: ProfileI) => void) => MRT_ColumnDef<EntityTypeI> = (profile, setProfile) => ({
     header: "Anonimização",
     Header: <><Bicon n="pencil" /> Anonimização</>,
-    accessorFn: (ent) => functionsWithDescriptionArray[ent.functionIndex].name,
+    accessorFn: (ent) => functionsWithDescriptionArray[ent.functionIndex]?.name ?? functionsWithDescriptionArray[AUTO_ANONIMIZE].name,
     enableEditing: true,
     muiTableBodyCellEditTextFieldProps: ({ row, table }) => ({
         select: true,
@@ -169,7 +169,7 @@ const ANON_COLUMN: (profile: ProfileI, setProfile: (p: ProfileI) => void) => MRT
 
 const EXAMPLE_COLUMN: MRT_ColumnDef<EntityTypeI> = {
     header: "Descrição Anonimização",
-    accessorFn: (row) => functionsWithDescriptionArray[row.functionIndex].description,
+    accessorFn: (row) => functionsWithDescriptionArray[row.functionIndex]?.description ?? functionsWithDescriptionArray[AUTO_ANONIMIZE].description,
     enableEditing: false,
     muiTableBodyCellProps: {
         className: "text-nowrap"

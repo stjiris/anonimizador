@@ -1,4 +1,4 @@
-import { functionsWithDescriptionArray } from "@/core/anonimizeFunctions";
+import { AUTO_ANONIMIZE, functionsWithDescriptionArray } from "@/core/anonimizeFunctions";
 import { Bicon, Button } from "@/core/BootstrapIcons";
 import { useProfile } from "@/core/ProfileTypeLogic";
 import { UserFile } from "@/core/UserFile";
@@ -122,7 +122,7 @@ const TYPE_COLUMN: (file: UserFile, profile: ProfileI | null, setProfile: (p: Pr
 const ANON_COLUMN: (file: UserFile) => MRT_ColumnDef<EntityTypeI> = (file) => ({
     header: "Anonimização",
     Header: <><Bicon n="pencil" /> Anonimização</>,
-    accessorFn: (ent) => functionsWithDescriptionArray[ent.functionIndex].name,
+    accessorFn: (ent) => functionsWithDescriptionArray[ent.functionIndex]?.name ?? functionsWithDescriptionArray[AUTO_ANONIMIZE].name,
     enableEditing: true,
     muiTableBodyCellEditTextFieldProps: ({ row, table }) => ({
         select: true,
@@ -137,7 +137,7 @@ const ANON_COLUMN: (file: UserFile) => MRT_ColumnDef<EntityTypeI> = (file) => ({
 
 const EXAMPLE_COLUMN: MRT_ColumnDef<EntityTypeI> = {
     header: "Descrição Anonimização",
-    accessorFn: (row) => functionsWithDescriptionArray[row.functionIndex].description,
+    accessorFn: (row) => functionsWithDescriptionArray[row.functionIndex]?.description ?? functionsWithDescriptionArray[AUTO_ANONIMIZE].description,
     enableEditing: false,
     muiTableBodyCellProps: {
         className: "text-nowrap"

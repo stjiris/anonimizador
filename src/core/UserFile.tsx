@@ -6,7 +6,7 @@ import { SummaryI } from "@/types/SummaryType"
 import { addEntityTypeI, getEntityTypeI, getEntityTypeIs, restoreEntityTypesColors, updateEntityTypeI } from "./EntityTypeLogic"
 import { ProfileI } from "@/types/ProfileType"
 import { updateUserFile } from "./UserFileCRUDL"
-import { AUTO_ANONIMIZE } from "./anonimizeFunctions"
+import { AUTO_ANONIMIZE, isAnonimizeFunctionIndex } from "./anonimizeFunctions"
 import { UserFileInterface } from "@/types/UserFileInterface";
 
 export interface SavedUserFile {
@@ -67,7 +67,7 @@ export class UserFile implements UserFileInterface {
             return {
                 color: globalType.color,
                 name: f.name,
-                functionIndex: f.functionIndex,
+                functionIndex: isAnonimizeFunctionIndex(f.functionIndex, AUTO_ANONIMIZE),
                 subtypes: globalType.subtypes ?? f.subtypes
             };
         })
