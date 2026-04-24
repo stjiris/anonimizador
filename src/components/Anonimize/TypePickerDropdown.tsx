@@ -9,10 +9,11 @@ export interface TypePickerProps {
     onClose: () => void;
     onRemove?: () => void;
     noAutoPosition?: boolean;
+    extraItems?: React.ReactNode;
 }
 
 export const TypePickerDropdown = forwardRef<HTMLDivElement, TypePickerProps>(
-function TypePickerDropdown({ types, anchorRef, onSelect, onClose, onRemove, noAutoPosition }, forwardedRef) {
+function TypePickerDropdown({ types, anchorRef, onSelect, onClose, onRemove, noAutoPosition, extraItems }, forwardedRef) {
     const [showSubtypePicker, setShowSubtypePicker] = useState(false);
     const [selectedParentType, setSelectedParentType] = useState<EntityTypeI | null>(null);
     const [pickerPos, setPickerPos] = useState({ top: 0, left: 0 });
@@ -67,6 +68,7 @@ function TypePickerDropdown({ types, anchorRef, onSelect, onClose, onRemove, noA
                     <div className="dropdown-divider"></div>
                 </>
             )}
+            {extraItems}
             {sortEntityTypesXLast(types).map((t, i) => (
                 <button
                     key={i}

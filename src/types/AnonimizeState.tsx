@@ -15,10 +15,10 @@ export const enum AnonimizeVisualState {
     ORIGINAL = "Ver - Forma inicial", // Shows original file without any marks
     ALL_TYPES = "Editar - Tipos - Todos", // Shows all types of entities
     NORMAL_TYPES = "Editar - Tipos - Normais", // Shows normal types of entities
-    OTHER_TYPES = "Editar - Tipos - Outros", // Shows other types of entities
+    OTHER_TYPES = "Editar - Tipos - X", // Shows other types of entities
     REPLACE = "Substituições - Todos", // Shows entities highlights
     REPLACE_NORMAL = "Substituições - Normais", // Shows entities highlights
-    REPLACE_OTHER = "Substituições - Outros", // Shows entities highlights
+    REPLACE_OTHER = "Substituições - X", // Shows entities highlights
     ANONIMIZED = "Ver - Anonimização" // Shows file without entities
 }
 

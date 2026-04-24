@@ -406,21 +406,68 @@ const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_
     size: 90, minSize: 60, maxSize: 140,
     enableEditing: false,
     enableColumnActions: false,
-    filterVariant: "select",
-    filterSelectOptions: [
-        { text: "Tipos Normais", value: "__NO_X__" },
-        { text: "Outros Tipos", value: "__ONLY_X__" },
-        ...sortedTypes.map((t) => t.name),
-    ],
     filterFn: (row, _columnId, filterValue) => {
         if (filterValue === "__ONLY_X__") return row.original.type.startsWith("X-");
         if (filterValue === "__NO_X__") return !row.original.type.startsWith("X-");
+        const parentType = sortedTypes.find(t => t.name === filterValue);
+        if (parentType?.subtypes?.length) {
+            return row.original.type === filterValue ||
+                   parentType.subtypes.some(s => s.name === row.original.type);
+        }
         return row.original.type === filterValue;
     },
-    muiTableHeadCellFilterTextFieldProps: {
-        inputRef: (ref: HTMLInputElement | null) => {
-            if (ref && !ref.select) ref.select = () => { };
-        },
+    Filter: ({ column }) => {
+        const [open, setOpen] = useState(false);
+        const btnRef = useRef<HTMLDivElement>(null);
+        const filterValue = column.getFilterValue() as string ?? "";
+
+        const displayLabel = filterValue === "__NO_X__" ? "Entidades Normais"
+            : filterValue === "__ONLY_X__" ? "Entidades X"
+            : filterValue || "";
+
+        const handleFilterSelect = (value: string) => {
+            column.setFilterValue(value || undefined);
+            setOpen(false);
+        };
+
+        return (
+            <>
+                <div ref={btnRef} onClick={() => setOpen(v => !v)}>
+                    <TextField
+                        size="small"
+                        variant="standard"
+                        value={displayLabel}
+                        placeholder="Filtrar"
+                        InputProps={{ readOnly: true, style: { cursor: "pointer", fontSize: "0.85rem" } }}
+                        fullWidth
+                    />
+                </div>
+                {open && (
+                    <Portal>
+                        <TypePickerDropdown
+                            types={sortedTypes}
+                            anchorRef={btnRef}
+                            onSelect={handleFilterSelect}
+                            onClose={() => setOpen(false)}
+                            extraItems={
+                                <>
+                                    <button className="dropdown-item" onClick={() => handleFilterSelect("")}>
+                                        <em>Todos</em>
+                                    </button>
+                                    <button className="dropdown-item" onClick={() => handleFilterSelect("__NO_X__")}>
+                                        Entidades Normais
+                                    </button>
+                                    <button className="dropdown-item" onClick={() => handleFilterSelect("__ONLY_X__")}>
+                                        Entidades X
+                                    </button>
+                                    <div className="dropdown-divider" />
+                                </>
+                            }
+                        />
+                    </Portal>
+                )}
+            </>
+        );
     },
     muiTableHeadCellProps: { align: "center" },
     muiTableBodyCellProps: { align: "center", sx: { px: 1 } },
