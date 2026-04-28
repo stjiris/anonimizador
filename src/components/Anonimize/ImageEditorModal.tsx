@@ -62,6 +62,7 @@ function ImageEditor(props: { file: UserFileInterface, imageElmt: HTMLImageEleme
     let boxes = useRef<[number, number, number, number][]>([])
     let colorInputRef = useRef<HTMLInputElement>(null)
     let checkRemoveInput = useRef<HTMLInputElement>(null)
+    let checkFindOnlyEntities = useRef<HTMLInputElement>(null)
 
     useEffect(() => {
         if (!canvasBackgroundRef.current) return;
@@ -151,12 +152,21 @@ function ImageEditor(props: { file: UserFileInterface, imageElmt: HTMLImageEleme
 
     const onClickRecognize = async () => {
         let { data: { words } } = await props.worker.recognize(canvasBackgroundRef.current!)
-        boxes.current = (props.file.pool.entities.length > 0 ? words.filter(({ text }: any) => props.file.pool.entities.some(e => e.offsets.some(o => normalizeEntityString(o.preview).includes(normalizeEntityString(text))))) : words).filter(({ text }: any) => text.length > 3).map(({ bbox }: any) => [bbox.x0, bbox.y0, bbox.x1, bbox.y1])
+        
+        if(checkFindOnlyEntities.current?.checked) {
+            boxes.current = (props.file.pool.entities.length > 0 ? words.filter(({ text }: any) => props.file.pool.entities.some(e => e.offsets.some(o => normalizeEntityString(o.preview).includes(normalizeEntityString(text))))) : words).filter(({ text }: any) => text.length > 3).map(({ bbox }: any) => [bbox.x0, bbox.y0, bbox.x1, bbox.y1])
+        }
+        else {
+            boxes.current = words.filter(({ text }: any) => text.length > 3).map(({ bbox }: any) => [bbox.x0, bbox.y0, bbox.x1, bbox.y1])
+        }
     }
 
 
     return <>
         <div className="d-flex align-items-center justify-content-center">
+            <input ref={checkFindOnlyEntities} type="checkbox" className="btn-check" id="find-only-entities" autoComplete="off" defaultChecked={false}
+                onChange={(e) => { (e.target.nextElementSibling as HTMLElement).className = `btn ${e.target.checked ? "btn-outline-success" : "btn-outline-danger"}`; }} />
+            <label className="btn btn-outline-danger" htmlFor="find-only-entities"><Bicon n="funnel" /> Só entidades</label>
             <Button className="btn btn-primary" i="search" text="Encontrar texto" onClick={onClickRecognize} />
             <span className="mx-1"><Bicon n="dot" /></span>
             <input type="radio" className="btn-check" name="image-mode" id="add-box-button" autoComplete="off" defaultChecked={true} />

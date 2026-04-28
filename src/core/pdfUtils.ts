@@ -1,7 +1,7 @@
 export function formatXml(xml: string): string {
-    const TOP_MARGIN = 0.08;  // 8% acima da página para remoçao direta de header
+    const TOP_MARGIN = 0.05;  // 8% acima da página para remoçao direta de header
     const POSSIBLE_HEADER = 0.2; // 20% acima da página para considerar como possível header e retirar se se repetir
-    const BOTTOM_MARGIN = 0.92; // 8% abaixo da página
+    const BOTTOM_MARGIN = 0.95; // 8% abaixo da página
     const WRAP_THRESHOLD = 0.75; // 75% da largura da página para considerar quebra de linha como word wrap invés de parágrafo
     const SAME_LINE_THRESHOLD = 2; // 2px de diferença vertical para considerar como mesma linha
 
@@ -124,14 +124,16 @@ export function formatXml(xml: string): string {
             const rounded = Math.round(g / 2) * 2;
             gapCounts.set(rounded, (gapCounts.get(rounded) ?? 0) + 1);
         }
-        const normalLineSpacing = [...gapCounts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+        const gapEntries = [...gapCounts.entries()].sort((a, b) => b[1] - a[1]);
+        const normalLineSpacing = gapEntries.length > 0 ? gapEntries[0][0] : lines[0].height;
 
         const leftCounts = new Map<number, number>();
         for (const l of lines) {
             const rounded = Math.round(l.left / 5) * 5;
             leftCounts.set(rounded, (leftCounts.get(rounded) || 0) + 1);
         }
-        const leftMargin = [...leftCounts.entries()].sort((a, b) => b[1] - a[1])[0][0];
+        const leftEntries = [...leftCounts.entries()].sort((a, b) => b[1] - a[1]);
+        const leftMargin = leftEntries.length > 0 ? leftEntries[0][0] : lines[0].left;
         const maxRight = Math.max(...lines.map(l => l.right));
         
         // O maxRight é o valor máximo que uma linha alcança à direita, por exemplo 700px
