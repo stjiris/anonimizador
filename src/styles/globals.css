@@ -115,8 +115,19 @@ img {
   border-radius: 10px;
 }
 
-.selected {
+/*.selected {
   background-color: var(--secondary-gold);
+}*/
+
+.selected {
+  animation: highlight-flash 1.5s ease-out;
+  border-radius: 3px;
+}
+
+@keyframes highlight-flash {
+  0%   { background-color: #ffe066; }
+  60%  { background-color: #ffe066; }
+  100% { background-color: transparent; }
 }
 
 /* --- doc-preview --- */

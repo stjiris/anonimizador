@@ -340,9 +340,51 @@ const entityDetails =
                     <span
                         role="button"
                         className="text-end flex-grow-1"
-                        onClick={() =>
-                            document.querySelector(`[data-offset="${off.start}"]`)?.scrollIntoView({ block: "center" })
-                        }
+                        //onClick={() =>
+                            //document.querySelector(`[data-offset="${off.start}"]`)?.scrollIntoView({ block: "center" })
+                        //}
+                        onClick={() => {
+                            const elm = document.querySelector<HTMLElement>(`[data-offset="${off.start}"]`);
+                            if (elm) {
+                                elm.scrollIntoView({ block: "center", behavior: "smooth" });
+                                const observer = new IntersectionObserver((entries) => {
+                                    entries.forEach(entry => {
+                                        if (entry.isIntersecting) {
+                                            observer.disconnect();
+                                            const allSpans = document.querySelectorAll<HTMLElement>(`[data-offset]`);
+                                            allSpans.forEach(span => {
+                                                const spanOffset = parseInt(span.getAttribute("data-offset") || "0");
+                                                if (spanOffset >= off.start && spanOffset <= off.end && span.hasAttribute("data-anonimize-type")) {
+                                                    span.style.backgroundColor = "#ffe066";
+                                                    if (span.hasAttribute("data-anonimize-first")) {
+                                                        span.style.borderLeft = "2px solid #cc6600";
+                                                        span.style.borderTop = "2px solid #cc6600";
+                                                        span.style.borderBottom = "2px solid #cc6600";
+                                                    }
+                                                    if (span.hasAttribute("data-anonimize-last")) {
+                                                        span.style.borderRight = "2px solid #cc6600";
+                                                        span.style.borderTop = "2px solid #cc6600";
+                                                        span.style.borderBottom = "2px solid #cc6600";
+                                                    }
+                                                    if (!span.hasAttribute("data-anonimize-first") && !span.hasAttribute("data-anonimize-last")) {
+                                                        span.style.borderTop = "2px solid #cc6600";
+                                                        span.style.borderBottom = "2px solid #cc6600";
+                                                    }
+                                                    setTimeout(() => {
+                                                        span.style.backgroundColor = "";
+                                                        span.style.borderLeft = "";
+                                                        span.style.borderRight = "";
+                                                        span.style.borderTop = "";
+                                                        span.style.borderBottom = "";
+                                                    }, 1500);
+                                                }
+                                            });
+                                        }
+                                    });
+                                }, { threshold: 1.0 });
+                                observer.observe(elm);
+                            }
+                        }}
                     >
                         {off.preview}
                     </span>
@@ -388,9 +430,47 @@ const ENTITY_COL: (pool: EntityPool, count: number) => MRT_ColumnDef<Entity> = (
             const off = row.original.offsets[0];
             const elm = document.querySelector<HTMLElement>(`[data-offset="${off.start}"]`);
             if (elm) {
-                elm.scrollIntoView({ block: "center" });
-                elm.classList.add("selected");
-                setTimeout(() => elm.classList.remove("selected"), 2000);
+                elm.scrollIntoView({ block: "center", behavior: "smooth" });
+    
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            observer.disconnect();
+                            const allSpans = document.querySelectorAll<HTMLElement>(`[data-offset]`);
+                            allSpans.forEach(span => {
+                                const spanOffset = parseInt(span.getAttribute("data-offset") || "0");
+                                if (spanOffset >= off.start && spanOffset <= off.end && span.hasAttribute("data-anonimize-type")) {
+                                    span.style.backgroundColor = "#ffe066";
+        
+                                    if (span.hasAttribute("data-anonimize-first")) {
+                                        span.style.borderLeft = "2px solid #cc6600";
+                                        span.style.borderTop = "2px solid #cc6600";
+                                        span.style.borderBottom = "2px solid #cc6600";
+                                    }
+                                    if (span.hasAttribute("data-anonimize-last")) {
+                                        span.style.borderRight = "2px solid #cc6600";
+                                        span.style.borderTop = "2px solid #cc6600";
+                                        span.style.borderBottom = "2px solid #cc6600";
+                                    }
+                                    if (!span.hasAttribute("data-anonimize-first") && !span.hasAttribute("data-anonimize-last")) {
+                                        span.style.borderTop = "2px solid #cc6600";
+                                        span.style.borderBottom = "2px solid #cc6600";
+                                    }
+        
+                                    setTimeout(() => {
+                                        span.style.backgroundColor = "";
+                                        span.style.borderLeft = "";
+                                        span.style.borderRight = "";
+                                        span.style.borderTop = "";
+                                        span.style.borderBottom = "";
+                                    }, 1500);
+                                }
+                            });
+                        }
+                    });
+                }, { threshold: 1.0 });
+    
+                observer.observe(elm);
             }
         },
         sx: { cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
