@@ -5,6 +5,7 @@ import { isSavedUserFile, SavedUserFile, UserFile } from "@/core/UserFile";
 import { MRT_ColumnDef, MaterialReactTable } from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import { Bicon, Button } from "@/core/BootstrapIcons";
+import ReactDOM from "react-dom";
 
 // https://stackoverflow.com/a/18650828/2573422
 export function formatBytes(a: number, b = 2) { if (!+a) return "0 Bytes"; const c = 0 > b ? 0 : b, d = Math.floor(Math.log(a) / Math.log(1024)); return `${parseFloat((a / Math.pow(1024, d)).toFixed(c))} ${["Bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"][d]}` }
@@ -86,11 +87,23 @@ export default function SelectFile({ setUserFile }: { setUserFile: (file: UserFi
     );
 }
 
-async function onFile(event: React.ChangeEvent<HTMLInputElement>): Promise<UserFile | undefined> {
+async function onFile(event: React.ChangeEvent<HTMLInputElement>, askMemoryAlert: () => Promise<boolean>): Promise<UserFile | undefined> {
     let files = event.target.files;
     if (files == null) return;
 
     let file = files[0];
+
+    if (navigator.storage && navigator.storage.estimate) {
+    const { usage, quota } = await navigator.storage.estimate();
+    const freeSpace = (quota ?? 0) - (usage ?? 0);
+    if (freeSpace < file.size * 3) { //testar: Number.MAX_SAFE_INTEGER) { ||| final: if (freeSpace < file.size * 3) {
+        const continuar = await askMemoryAlert();
+        if (!continuar) {
+            event.target.value = "";
+            return;
+        }
+    }
+}
 
     let formData = new FormData();
     formData.append("file", file);
@@ -160,13 +173,43 @@ async function onFile(event: React.ChangeEvent<HTMLInputElement>): Promise<UserF
 }
 
 export function AddUserFileAction({ setUserFile }: { setUserFile: (file: UserFile) => void }) {
+    
+    const [showMemoryAlert, setShowMemoryAlert] = useState(false);
+    const [resolveMemoryAlert, setResolveMemoryAlert] = useState<((v: boolean) => void) | null>(null);
+
+    const askMemoryAlert = (): Promise<boolean> => {
+        return new Promise((resolve) => {
+            setResolveMemoryAlert(() => resolve);
+            setShowMemoryAlert(true);
+        });
+    };
     const [uploading, setUploading] = useState<boolean>(false);
     const onChange = async (e: ChangeEvent<HTMLInputElement>) => {
         setUploading(true);
-        await onFile(e).then(f => f ? setUserFile(f) : null)
+        await onFile(e, askMemoryAlert).then(f => f ? setUserFile(f) : null)
         setUploading(false);
     }
     return <>
+        {showMemoryAlert && ReactDOM.createPortal(
+            <div className="modal fade show d-block" style={{ backgroundColor: "rgba(0,0,0,0.6)", position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", zIndex: 9999 }} role="dialog">
+                <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: "380px" }}>
+                    <div className="modal-content" style={{ border: "3px solid #dc3545", borderRadius: "12px" }}>
+                        <div className="modal-body text-center p-4">
+                            <div style={{ fontSize: "3rem" }}>⚠️</div>
+                            <h5 className="text-danger fw-bold mt-2">ALERTA DE MEMÓRIA</h5>
+                            <p className="fw-bold">PODERÁ NÃO VIR A TER ESPAÇO PARA TRABALHAR ESTE DOCUMENTO!!!</p>
+                            <p className="text-muted">Remova documentos antigos para libertar espaço...</p>
+                            <p>Deseja continuar mesmo assim?</p>
+                        </div>
+                        <div className="modal-footer justify-content-center border-0 pb-4">
+                            <button className="btn btn-secondary px-4" onClick={() => { setShowMemoryAlert(false); resolveMemoryAlert?.(false); }}>Cancelar</button>
+                            <button className="btn btn-danger px-4" onClick={() => { setShowMemoryAlert(false); resolveMemoryAlert?.(true); }}>Continuar</button>
+                        </div>
+                    </div>
+                </div>
+            </div>,
+            document.body
+        )}
         <label htmlFor="file" role="button" className={`btn btn-primary m-auto ${uploading ? "disabled" : ""}`}>{uploading ? <><span className="spinner-border spinner-border-sm" role="status"></span> A carregar ficheiro...</> : <><Bicon n="file-earmark-plus" /> Adicionar Ficheiro</>}</label>
         <input hidden type="file" name="file" id="file" onChange={onChange}></input>
     </>
