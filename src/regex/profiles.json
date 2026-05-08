@@ -34,7 +34,21 @@
         "E-MAIL":{"color":"#ffeb3b","functionIndex":19},
         "X-E-MAIL":{"color":"#DCDCDC","functionIndex":0},
         "RED":{"color":"#b59379ff","functionIndex":19},
-        "IDP":{"color":"#69bcff","functionIndex":2},
+        "IDP":{
+            "color":"#69bcff",
+            "functionIndex":2,
+            "subtypes":[
+                {"name":"CC", "color": "#69bcff", "functionIndex": 2},
+                {"name":"NIF", "color": "#69bcff", "functionIndex": 2},
+                {"name":"NISS", "color": "#69bcff", "functionIndex": 2},
+                {"name":"NUS", "color": "#69bcff", "functionIndex": 2},
+                {"name":"NIPC", "color": "#69bcff", "functionIndex": 2},
+                {"name":"IBAN", "color": "#69bcff", "functionIndex": 2},
+                {"name":"Carta de Condução", "color": "#69bcff", "functionIndex": 2},
+                {"name":"Passaporte", "color": "#69bcff", "functionIndex": 2},
+                {"name":"Título de Residência", "color": "#69bcff", "functionIndex": 2}
+            ]
+        },
         "X-IDP":{"color":"#DCDCDC","functionIndex":0},
         "INST":{"color":"#71ff77","functionIndex":1},
         "X-INST":{"color":"#DCDCDC","functionIndex":0},
