@@ -51,6 +51,11 @@ export const leter: AnonimizeFunction = (_str, _type, _idx, _tidx, fidx) => {
 }
 
 export const year: AnonimizeFunction = (str: string, ...args) => {
+    let yyyymmdd = str.match(/(\d{4})(.)\d{1,2}\2\d{1,2}/);
+    if (yyyymmdd) {
+        return yyyymmdd[1] + yyyymmdd[2] + "..." + yyyymmdd[2] + "...";
+    }
+
     let ddmmyyyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{4})/);
     if (ddmmyyyy) {
         return "..." + ddmmyyyy[1] + "..." + ddmmyyyy[2] + ddmmyyyy[3];
@@ -60,9 +65,14 @@ export const year: AnonimizeFunction = (str: string, ...args) => {
         return "..." + ddmmyy[1] + "..." + ddmmyy[2] + ddmmyy[3];
     }
 
-    let diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/)
+    let diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/);
     if (diaDeMesDeyyyy) {
         return "... de ... de " + diaDeMesDeyyyy[1];
+    }
+
+    let mesDeAnoDeyyyy = str.match(/.* de (\d{4})/);
+    if (mesDeAnoDeyyyy) {
+        return "... de " + mesDeAnoDeyyyy[1];
     }
 
     return reticiencias(str, ...args);
@@ -71,6 +81,11 @@ export const year: AnonimizeFunction = (str: string, ...args) => {
 //Anonymization technique for dates that uses "D" and "M" as placeholders for "Dia" and "Mês" respectively,
 //instead of "...", leading dates to be returned in the following formats: "D/M/0000", "D-M-0000" or "D de M de 0000";
 export const year2: AnonimizeFunction = (str: string, ...args) => {
+    let yyyymmdd = str.match(/(\d{4})(.)\d{1,2}\2\d{1,2}/);
+    if (yyyymmdd) {
+        return yyyymmdd[1] + yyyymmdd[2] + "M" + yyyymmdd[2] + "D";
+    }
+
     let ddmmyyyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{4})/);
     if (ddmmyyyy) {
         return "D" + ddmmyyyy[1] + "M" + ddmmyyyy[2] + ddmmyyyy[3];
@@ -80,9 +95,14 @@ export const year2: AnonimizeFunction = (str: string, ...args) => {
         return "D" + ddmmyy[1] + "M" + ddmmyy[2] + ddmmyy[3];
     }
 
-    let diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/)
+    let diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/);
     if (diaDeMesDeyyyy) {
         return "D de M de " + diaDeMesDeyyyy[1];
+    }
+
+    let mesDeAnoDeyyyy = str.match(/.* de (\d{4})/);
+    if (mesDeAnoDeyyyy) {
+        return "M de " + mesDeAnoDeyyyy[1];
     }
 
     return str;
@@ -122,7 +142,14 @@ export const redes_inc: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) =>
     return "nome" + typeIdx.toString();
 }
 
-const moradasTypes = ['Rua', 'Avenida', 'Largo', 'Praça', 'Travessa', 'Estrada', 'Calçada', 'Alameda', 'Rotunda', 'Praceta', 'Beco', 'Viela']
+const moradasTypes = [
+    'Rua', 'Avenida', 'Largo', 'Praça', 'Travessa', 'Estrada', 'Calçada', 'Alameda',
+    'Rotunda', 'Praceta', 'Beco', 'Viela', 'Caminho', 'Vereda', 'Azinhaga', 'Escadas',
+    'Escadinhas', 'Pátio', 'Terreiro', 'Rossio', 'Campo', 'Jardim', 'Parque', 'Quinta',
+    'Urbanização', 'Loteamento', 'Lugar', 'Sítio', 'Vila', 'Povoação', 'Aldeia',
+    'Freguesia', 'Concelho', 'Distrito', 'Zona', 'Bloco', 'Lote', 'Edifício', 'Torre',
+    'Impasse', 'Quelha', 'Rampa', 'Ponte', 'Cais', 'Porto', 'Marina', 'Doca',
+]
 
 export const codigoPostal: AnonimizeFunction = (str) => str.replace(/\d{4}-\d{3}/, "0000-000")
 
