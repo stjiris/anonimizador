@@ -43,7 +43,7 @@
                 {"name":"NISS", "color": "#69bcff", "functionIndex": 2},
                 {"name":"NUS", "color": "#69bcff", "functionIndex": 2},
                 {"name":"NIPC", "color": "#69bcff", "functionIndex": 2},
-                {"name":"IBAN", "color": "#69bcff", "functionIndex": 2},
+                {"name":"IBAN", "color": "#69bcff", "functionIndex": 22},
                 {"name":"Carta de Condução", "color": "#69bcff", "functionIndex": 2},
                 {"name":"Passaporte", "color": "#69bcff", "functionIndex": 2},
                 {"name":"Título de Residência", "color": "#69bcff", "functionIndex": 2}
@@ -170,7 +170,7 @@
                 {"name":"NISS", "color": "#69bcff", "functionIndex": 2},
                 {"name":"NUS", "color": "#69bcff", "functionIndex": 2},
                 {"name":"NIPC", "color": "#69bcff", "functionIndex": 2},
-                {"name":"IBAN", "color": "#69bcff", "functionIndex": 2},
+                {"name":"IBAN", "color": "#69bcff", "functionIndex": 22},
                 {"name":"Carta de Condução", "color": "#69bcff", "functionIndex": 2},
                 {"name":"Passaporte", "color": "#69bcff", "functionIndex": 2},
                 {"name":"Título de Residência", "color": "#69bcff", "functionIndex": 2}
@@ -273,7 +273,7 @@
                 {"name":"NISS", "color": "#69bcff", "functionIndex": 2},
                 {"name":"NUS", "color": "#69bcff", "functionIndex": 2},
                 {"name":"NIPC", "color": "#69bcff", "functionIndex": 2},
-                {"name":"IBAN", "color": "#69bcff", "functionIndex": 2},
+                {"name":"IBAN", "color": "#69bcff", "functionIndex": 22},
                 {"name":"Carta de Condução", "color": "#69bcff", "functionIndex": 2},
                 {"name":"Passaporte", "color": "#69bcff", "functionIndex": 2},
                 {"name":"Título de Residência", "color": "#69bcff", "functionIndex": 2}
@@ -365,7 +365,7 @@
                 {"name":"NISS", "color": "#69bcff", "functionIndex": 2},
                 {"name":"NUS", "color": "#69bcff", "functionIndex": 2},
                 {"name":"NIPC", "color": "#69bcff", "functionIndex": 2},
-                {"name":"IBAN", "color": "#69bcff", "functionIndex": 2},
+                {"name":"IBAN", "color": "#69bcff", "functionIndex": 22},
                 {"name":"Carta de Condução", "color": "#69bcff", "functionIndex": 2},
                 {"name":"Passaporte", "color": "#69bcff", "functionIndex": 2},
                 {"name":"Título de Residência", "color": "#69bcff", "functionIndex": 2}
@@ -455,7 +455,7 @@
                 {"name":"NISS", "color": "#69bcff", "functionIndex": 2},
                 {"name":"NUS", "color": "#69bcff", "functionIndex": 2},
                 {"name":"NIPC", "color": "#69bcff", "functionIndex": 2},
-                {"name":"IBAN", "color": "#69bcff", "functionIndex": 2},
+                {"name":"IBAN", "color": "#69bcff", "functionIndex": 22},
                 {"name":"Carta de Condução", "color": "#69bcff", "functionIndex": 2},
                 {"name":"Passaporte", "color": "#69bcff", "functionIndex": 2},
                 {"name":"Título de Residência", "color": "#69bcff", "functionIndex": 2}

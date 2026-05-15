@@ -151,6 +151,14 @@ const moradasTypes = [
     'Impasse', 'Quelha', 'Rampa', 'Ponte', 'Cais', 'Porto', 'Marina', 'Doca',
 ]
 
+export const iban_prefix: AnonimizeFunction = (str) => {
+    const match = str.match(/^([A-Z]{2}\d{2})/);
+    if (match) {
+        return "IBAN " + match[1];
+    }
+    return "IBAN ...";
+}
+
 export const codigoPostal: AnonimizeFunction = (str) => str.replace(/\d{4}-\d{3}/, "0000-000")
 
 export const moradas_inc: AnonimizeFunction = (str, type, _idx, tidx, funIdx) => {
@@ -343,6 +351,12 @@ export const functionsWithDescriptionArray: AnonimizeFunctionDescription[] = [
         "name": "Ofuscação código postal",
         "description": "Substitui código postal por 0000-000. Ex: 1500-500 => 0000-000",
         "fun": codigoPostal
+    },
+    {
+        //index 22
+        "name": "Ofuscação IBAN - Manter identificador",
+        "description": "Substitui IBAN mantendo o identificador (código do país + dígitos de controlo). Ex: PT50 6859 5959 ... => IBAN PT50",
+        "fun": iban_prefix
     }
 ]
 
