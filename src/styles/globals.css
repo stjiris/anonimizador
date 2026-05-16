@@ -278,6 +278,29 @@ img {
   cursor: not-allowed !important;
 }
 
+.resize-handle {
+  width: 1px;
+  position: relative;
+  cursor: col-resize;
+  background-color: #161616;
+  flex-shrink: 0;
+  transition: background-color 0.15s;
+}
+
+.resize-handle::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -6px;
+  right: -6px;
+  cursor: col-resize;
+}
+
+.resize-handle:hover {
+  background-color: #0d6efd;
+}
+
 #entityTable,
 #entityTable * {
   scrollbar-width: thin;

@@ -364,7 +364,7 @@ const COUNT_COL = (totalOcc: number): MRT_ColumnDef<Entity> => ({
     id: "count",
     header: `# (${totalOcc})`,
     accessorFn: (e) => e.offsets.length,
-    size: 70, minSize: 50, maxSize: 132,
+    size: 50, minSize: 40, maxSize: 100,
     sortDescFirst: true,
     enableColumnActions: false,
     muiTableHeadCellProps: { align: "right" },
@@ -401,9 +401,10 @@ const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_
     const sortedTypes = sortEntityTypesXLast(types);
     return ({
     id: "type",
+
     header: "Tipo",
     accessorKey: "type",
-    size: 90, minSize: 60, maxSize: 140,
+    size: 60, minSize: 40, maxSize: 100,
     enableEditing: false,
     enableColumnActions: false,
     filterFn: (row, _columnId, filterValue) => {
@@ -469,8 +470,8 @@ const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_
             </>
         );
     },
-    muiTableHeadCellProps: { align: "center" },
-    muiTableBodyCellProps: { align: "center", sx: { px: 1 } },
+    muiTableHeadCellProps: { align: "left" },
+    muiTableBodyCellProps: { align: "left", sx: { px: 1 } },
     Cell: ({ row}) => {
         const [showTypePicker, setShowTypePicker] = useState(false);
         const badgeRef = useRef<HTMLSpanElement>(null);
