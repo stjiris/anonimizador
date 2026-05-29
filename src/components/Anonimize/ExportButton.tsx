@@ -21,64 +21,72 @@ export function ExportButton({ file }: { file: UserFileInterface }) {
     </>
 }
 
-function exportFile(file: UserFileInterface, entityTypes: Record<string, EntityTypeI>, anonimized: boolean, type: "DOCX" | "PDF" | "JSON") {
+export async function exportFile(file: UserFileInterface, entityTypes: Record<string, EntityTypeI>, anonimized: boolean, type: "DOCX" | "PDF" | "JSON") {
+    const blob = await exportFileBlob(file, entityTypes, anonimized, type);
+    if (!blob) {
+        alert("Não foi possível concluir a operação. Ocorreu um erro.");
+        return;
+    }
+
+    const extension = type.toLowerCase();
+    let fileName = file.name.replace(/\.[^.]+$/, "");
+
     if (type === "JSON") {
-        let blobToDownload = new Blob([JSON.stringify(file.toSavedFile())]);
-        let stubAnchor = document.createElement("a");
-        stubAnchor.href = URL.createObjectURL(blobToDownload);
-        stubAnchor.target = "_blank";
-        stubAnchor.download = `${file.name}.json`;
-        stubAnchor.click();
+        fileName = `${fileName}.json`;
+    } else {
+        fileName = `${anonimized ? "anonimizado" : "original"}_${fileName}.${extension}`;
     }
-    if (type === "DOCX") {
-        const offsets: SpecificOffsetRange[] = [];
-        file.pool.entities.forEach(e => {
-            e.offsets.forEach(o => {
-                offsets.push({ ...o, ent: e })
-            })
-        })
 
-        offsets.sort((a, b) => a.start - b.start);
-        let html = renderBlock(file.doc, entityTypes, offsets, anonimized ? AnonimizeStateState.ANONIMIZED : AnonimizeStateState.ORIGINAL, 0, file.images, { current: 0 })
-        makeDocxDowload(html).then(blob => {
-            if (!blob) {
-                alert("Não foi possível concluir a operação. Ocorreu um erro.")
-                return;
-            }
-            let stubAnchor = document.createElement("a");
-            stubAnchor.href = URL.createObjectURL(blob);
-            stubAnchor.target = "_blank";
-            stubAnchor.download = `${anonimized ? "anonimizado" : "original"}_${file.name}.docx`;
-            stubAnchor.click();
-        })
-    }
-    if (type === "PDF") {
-        const offsets: SpecificOffsetRange[] = [];
-        file.pool.entities.forEach(e => {
-            e.offsets.forEach(o => {
-                offsets.push({ ...o, ent: e })
-            })
-        })
-        offsets.sort((a, b) => a.start - b.start);
-        let html = renderBlock(file.doc, entityTypes, offsets, anonimized ? AnonimizeStateState.ANONIMIZED : AnonimizeStateState.ORIGINAL, 0, file.images, { current: 0 })
-
-        const winHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${file.name}</title></head><body>${html}</body></html>`
-        const winUrl = URL.createObjectURL(new Blob([winHtml], { type: "text/html" }));
-        const win = window.open(winUrl, "_blank");
-        if (win) {
-            win.onload = () => {
-                win.print();
-            }
-        }
-    }
+    const stubAnchor = document.createElement("a");
+    stubAnchor.href = URL.createObjectURL(blob);
+    stubAnchor.target = "_blank";
+    stubAnchor.download = fileName;
+    stubAnchor.click();
+    URL.revokeObjectURL(stubAnchor.href);
 }
 
-function makeDocxDowload(html: string) {
+export async function exportFileBlob(file: UserFileInterface, entityTypes: Record<string, EntityTypeI>, anonimized: boolean, type: "DOCX" | "PDF" | "JSON"): Promise<Blob | null> {
+    if (type === "JSON") {
+        return new Blob([JSON.stringify(file.toSavedFile())], { type: "application/json" });
+    }
+
+    const offsets: SpecificOffsetRange[] = [];
+    file.pool.entities.forEach(e => {
+        e.offsets.forEach(o => {
+            offsets.push({ ...o, ent: e });
+        });
+    });
+
+    offsets.sort((a, b) => a.start - b.start);
+    let html = renderBlock(file.doc, entityTypes, offsets, anonimized ? AnonimizeStateState.ANONIMIZED : AnonimizeStateState.ORIGINAL, 0, file.images, { current: 0 });
+
+    if (type === "DOCX") {
+        return makeDocxDownload(html);
+    }
+
+    if (type === "PDF") {
+        return makePdfDownload(html, file.name);
+    }
+
+    return null;
+}
+
+function makeDocxDownload(html: string) {
     let formData = new FormData();
     let htmlBlob = new Blob([html]);
-    let htmlFile = new File([htmlBlob], "tmp.html")
+    let htmlFile = new File([htmlBlob], "tmp.html");
 
     formData.append("file", htmlFile);
 
-    return fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/export_docx`, { method: "POST", body: formData }).then(r => r.status === 200 ? r.blob() : null)
+    return fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/export_docx`, { method: "POST", body: formData }).then(r => r.status === 200 ? r.blob() : null);
+}
+
+function makePdfDownload(html: string, originalFileName: string) {
+    let formData = new FormData();
+    let htmlBlob = new Blob([html]);
+    let htmlFile = new File([htmlBlob], `${originalFileName}.html`);
+
+    formData.append("file", htmlFile);
+
+    return fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/export_pdf`, { method: "POST", body: formData }).then(r => r.status === 200 ? r.blob() : null);
 }

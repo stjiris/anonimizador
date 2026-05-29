@@ -21,6 +21,7 @@ export interface SavedUserFile {
     summary?: SummaryI[]
     area?: string
     profile?: string
+    importedFromJson?: boolean
 }
 
 export class UserFile implements UserFileInterface {
@@ -31,6 +32,7 @@ export class UserFile implements UserFileInterface {
     images: Record<number, AnonimizeImage>
     imported: Date
     modified: Date
+    importedFromJson?: boolean
     lastTopPosition: number
     area?: string
     descriptors?: DescriptorI[]
@@ -58,6 +60,7 @@ export class UserFile implements UserFileInterface {
         this.types = obj.functions.map(f => ({ color: getEntityTypeI(f.name).color, name: f.name, functionIndex: f.functionIndex }))
         this.imported = new Date(obj.imported)
         this.modified = new Date(obj.modified)
+        this.importedFromJson = obj.importedFromJson
 
         let dom = new DOMParser().parseFromString(this.html_contents, "text/html");
         this.doc = dom.body;
@@ -114,6 +117,7 @@ export class UserFile implements UserFileInterface {
             descriptors: this.descriptors,
             summary: this.summary,
             profile: this.profile,
+            importedFromJson: this.importedFromJson,
         }
     }
 
@@ -307,6 +311,7 @@ export class UserFile implements UserFileInterface {
             descriptors: undefined,
             area: undefined,
             summary: undefined,
+            importedFromJson: false,
         })
     }
 }
