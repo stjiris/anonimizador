@@ -26,8 +26,6 @@ COPY package*.json ./
 
 RUN npm ci
 
-ENV PUBLIC_URL="."
-
 ARG NEXT_PUBLIC_TITLE
 ARG NEXT_PUBLIC_VERSION_DATE
 ARG NEXT_PUBLIC_VERSION_COMMIT
@@ -41,9 +39,7 @@ ENV NEXT_PUBLIC_TITLE=${NEXT_PUBLIC_TITLE} \
 
 COPY . .
 
-RUN cp -r iris-lfs-storage/model-best ./src/scripts/model-best
-RUN cp -r iris-lfs-storage/model-gpt ./src/scripts/model-gpt
-RUN cp -r iris-lfs-storage/model-extended ./src/scripts/model-extended
+COPY src/scripts ./src/scripts
 
 EXPOSE 7999
 

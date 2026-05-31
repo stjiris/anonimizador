@@ -1,0 +1,9 @@
+FROM python:3.8.18-slim-bookworm
+WORKDIR /opt/app
+RUN apt-get update && apt-get install -y git git-lfs
+COPY requirements.txt ./
+RUN pip install --no-cache-dir -r requirements.txt
+COPY src/scripts ./src/scripts
+COPY src/regex ./src/regex
+COPY iris-lfs-storage ./src/iris-lfs-storage
+CMD ["python3", "src/scripts/nlp_server.py"]

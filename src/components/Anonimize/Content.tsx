@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { AnonimizeStateState } from '../../types/AnonimizeState'
 import { UserFile } from '@/core/UserFile';
-import { useImages, useSpecificOffsets, useTypesDict } from '@/core/uses';
+import { useImages, useSpecificOffsets, useTypes, useTypesDict } from '@/core/uses';
 import { planAutoPageBreaks, renderBlock } from './render';
 import AnonimizeTooltip from './Tooltip';
 
@@ -9,6 +9,7 @@ interface AnonimizeContentProps {
     file: UserFile
     anonimizeState: AnonimizeStateState
     showTypes: boolean
+    paginated?: boolean
     accessHtml: (html: string) => void
 }
 
@@ -18,6 +19,7 @@ export default function AnonimizeContent(props: AnonimizeContentProps) {
 
     const offsets = useSpecificOffsets(props.file.pool)
     const entityTypes = useTypesDict(props.file);
+    const typesList = useTypes(props.file);
     const images = useImages(props.file)
     const accessHtml = props.accessHtml;
 
@@ -26,7 +28,6 @@ export default function AnonimizeContent(props: AnonimizeContentProps) {
     }, [props.file.doc]);
 
     const rawHtml = useMemo(() => {
-        const breaksForThisRender = new Set(pageBreaks);
         return renderBlock(
             props.file.doc,
             entityTypes,
@@ -35,9 +36,9 @@ export default function AnonimizeContent(props: AnonimizeContentProps) {
             0,
             images,
             { current: 0 },
-            breaksForThisRender
+            props.paginated ? new Set(pageBreaks) : undefined
         );
-    }, [props.file.doc, images, props.anonimizeState, entityTypes, offsets, pageBreaks]);
+    }, [props.file.doc, images, props.anonimizeState, entityTypes, offsets, pageBreaks, props.paginated]);
 
     const normalizedHtml = useMemo(() => {
         return rawHtml
@@ -63,15 +64,15 @@ export default function AnonimizeContent(props: AnonimizeContentProps) {
 
     return (
         <>
-            <div className="doc-preview">
+            <div className={`doc-preview${props.paginated ? ' doc-preview--paginated' : ''}`}>
                 <div
                     id="content"
                     className={props.showTypes ? 'show-type' : 'show-cod'}
                     ref={contentWrapperRef}
                 >
                     {pages.map((chunk, i) => (
-                        <div className="page" key={i}>
-                            <div className="page__content">
+                        <div className={`page${props.paginated ? ' page--paginated' : ''}`} key={i}>
+                            <div className={`page__content${props.paginated ? ' page__content--paginated' : ''}`}>
                                 <div dangerouslySetInnerHTML={{ __html: chunk }} />
                             </div>
                         </div>
@@ -80,7 +81,7 @@ export default function AnonimizeContent(props: AnonimizeContentProps) {
             </div>
 
             <AnonimizeTooltip
-                entityTypes={Object.values(entityTypes)}
+                entityTypes={typesList}
                 pool={props.file.pool}
                 contentRef={contentWrapperRef}
                 nodesRef={nodesRef}

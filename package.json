@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -H 0.0.0.0 -p 7999",
+    "dev": "ts-node server.ts",
     "build": "next build",
-    "start": "next start",
+    "start": "NODE_ENV=production ts-node server.ts",
     "lint": "next lint"
   },
   "dependencies": {
@@ -13,9 +13,10 @@
     "@emotion/styled": "^11.14.1",
     "@mui/icons-material": "^7.3.6",
     "@mui/material": "^7.3.6",
+    "@popperjs/core": "^2.11.8",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
-    "material-react-table": "^3.2.1",
+    "material-react-table": "^1.7.3",
     "multer": "^2.0.2",
     "next": "16.0.10",
     "react": "18.3.1",
@@ -30,6 +31,7 @@
     "babel-plugin-react-compiler": "1.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
+    "ts-node": "latest",
     "typescript": "^5"
   }
 }

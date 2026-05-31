@@ -4,6 +4,7 @@ import { EntityPool } from "@/types/EntityPool"
 import { Entity, EntityI, EntityTypeFunction, EntityTypeI } from "@/types/EntityType"
 import { SummaryI } from "@/types/SummaryType"
 import { addEntityTypeI, getEntityTypeI, getEntityTypeIs, restoreEntityTypesColors, updateEntityTypeI } from "./EntityTypeLogic"
+import { ProfileI } from "@/types/ProfileType"
 import { updateUserFile } from "./UserFileCRUDL"
 import { AUTO_ANONIMIZE } from "./anonimizeFunctions"
 import { UserFileInterface } from "@/types/UserFileInterface";
@@ -11,7 +12,7 @@ import { UserFileInterface } from "@/types/UserFileInterface";
 export interface SavedUserFile {
     name: string
     html_contents: string
-    functions: EntityTypeFunction[]
+    functions: (EntityTypeFunction & { subtypes?: EntityTypeI[] })[]
     ents: EntityI[]
     imported: string
     modified: string
@@ -22,6 +23,8 @@ export interface SavedUserFile {
     area?: string
     profile?: string
     importedFromJson?: boolean
+    jurisId?: string
+    jurisDocUrl?: string
 }
 
 export class UserFile implements UserFileInterface {
@@ -38,6 +41,8 @@ export class UserFile implements UserFileInterface {
     descriptors?: DescriptorI[]
     summary?: SummaryI[]
     profile?: string
+    jurisId?: string
+    jurisDocUrl?: string
 
     typesListeners: ((types: EntityTypeI[]) => void)[]
 
@@ -57,7 +62,15 @@ export class UserFile implements UserFileInterface {
     constructor(obj: SavedUserFile) {
         this.name = obj.name
         this.html_contents = obj.html_contents
-        this.types = obj.functions.map(f => ({ color: getEntityTypeI(f.name).color, name: f.name, functionIndex: f.functionIndex }))
+        this.types = obj.functions.map(f => {
+            const globalType = getEntityTypeI(f.name);
+            return {
+                color: globalType.color,
+                name: f.name,
+                functionIndex: f.functionIndex,
+                subtypes: globalType.subtypes ?? f.subtypes
+            };
+        })
         this.imported = new Date(obj.imported)
         this.modified = new Date(obj.modified)
         this.importedFromJson = obj.importedFromJson
@@ -96,6 +109,8 @@ export class UserFile implements UserFileInterface {
         this.descriptors = obj.descriptors;
         this.area = obj.area;
         this.summary = obj.summary;
+        this.jurisId = obj.jurisId;
+        this.jurisDocUrl = obj.jurisDocUrl;
 
         this.saved = false
         this.save()
@@ -107,7 +122,7 @@ export class UserFile implements UserFileInterface {
         return {
             name: this.name,
             html_contents: this.html_contents,
-            functions: this.types.map(t => ({ name: t.name, functionIndex: t.functionIndex })),
+            functions: this.types.map(t => ({ name: t.name, functionIndex: t.functionIndex, subtypes: t.subtypes })),
             ents: this.pool.entities.map(e => e.toStub()),
             imported: this.imported.toString(),
             modified: this.modified.toString(),
@@ -118,6 +133,8 @@ export class UserFile implements UserFileInterface {
             summary: this.summary,
             profile: this.profile,
             importedFromJson: this.importedFromJson,
+            jurisId: this.jurisId,
+            jurisDocUrl: this.jurisDocUrl,
         }
     }
 
@@ -148,29 +165,30 @@ export class UserFile implements UserFileInterface {
         }
     }
 
-    addType(key: string, color: string, funcIndex: number) {
+    addType(key: string, color: string, funcIndex: number, subtypes?: EntityTypeI[]) {
         if (this.types.some(t => t.name === key)) {
             return this.updateType(key, color, funcIndex)
         }
 
-        addEntityTypeI(key, color, funcIndex)
-        this.types.push({ name: key, color: color, functionIndex: funcIndex })
+        addEntityTypeI(key, color, funcIndex, subtypes)
+        this.types.push({ name: key, color: color, functionIndex: funcIndex, subtypes: subtypes })
         this.notifyType()
         this.save()
     }
 
-    updateType(key: string, color: string, funcIndex: number) {
+    updateType(key: string, color: string, funcIndex: number, subtypes?: EntityTypeI[]) {
         let updated = false;
         for (let t of this.types) {
             if (t.name === key) {
                 updated = color !== t.color || t.functionIndex !== funcIndex
                 t.color = color;
                 t.functionIndex = funcIndex;
+                t.subtypes = subtypes
                 break;
             }
         }
         if (updated) {
-            updateEntityTypeI(key, color, funcIndex)
+            updateEntityTypeI(key, color, funcIndex, subtypes)
             this.notifyType()
             this.save()
         }
@@ -283,6 +301,28 @@ export class UserFile implements UserFileInterface {
         for (let cb of this.summaryListeners) {
             cb(this.summary || []);
         }
+    }
+
+    applyProfile(profile: ProfileI | null) {
+        this.profile = profile?.name;
+        if (!profile) {
+            this.notifyType();
+            this.save();
+            return;
+        }
+        for (const [name, { color, functionIndex, subtypes }] of Object.entries(profile.defaultEntityTypes)) {
+            const existing = this.types.find(t => t.name === name);
+            if (existing) {
+                existing.color = color;
+                existing.functionIndex = functionIndex;
+                existing.subtypes = subtypes;
+            } else {
+                this.types.push({ name, color, functionIndex, subtypes });
+            }
+            updateEntityTypeI(name, color, functionIndex, subtypes);
+        }
+        this.notifyType();
+        this.save();
     }
 
     checkCountPES() {

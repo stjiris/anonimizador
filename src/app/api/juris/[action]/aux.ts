@@ -12,16 +12,16 @@ interface ApiDocument {
     [key: string]: any;
 }
 
-const temp_documents = new Map<string, { document: ApiDocument; expiresAt: number }>();
+const temp_documents = new Map<string, { document: ApiDocument; nlp?: any; jurisUrl?: string; entities?: Record<string, string[]>; expiresAt: number }>();
 
 export function transformApiDocumentToSavedUserFile(apiDoc: ApiDocument): SavedUserFile {
     let htmlContents: string = "";
 
-    const summary = apiDoc["Sumário"];
+    const summary = apiDoc["Sumário Não Anonimizado"] || apiDoc["Sumário"];
     if (summary) {
         htmlContents += `<div class="alert alert-info" role="alert">${summary}</div>`;
     }
-    htmlContents = apiDoc["Texto"] || "";
+    htmlContents = apiDoc["Texto Não Anonimizado"] || apiDoc["Texto"] || "";
 
     const name = apiDoc["Número de Processo"] || `Document_${apiDoc.id}`;
 
@@ -46,9 +46,9 @@ export function transformApiDocumentToSavedUserFile(apiDoc: ApiDocument): SavedU
 }
 
 
-export function saveDocument(token: string, document: any, ttlSeconds = 3600) {
+export function saveDocument(token: string, document: any, ttlSeconds = 3600, nlp?: any, jurisUrl?: string, entities?: Record<string, string[]>) {
     const expiresAt = Date.now() + ttlSeconds * 1000;
-    temp_documents.set(token, { document, expiresAt });
+    temp_documents.set(token, { document, nlp, jurisUrl, entities, expiresAt });
 
     console.log("Document saved for token:", token);
     console.log("Map size:", temp_documents.size);
@@ -79,5 +79,5 @@ export function getAndDeleteDocument(token: string) {
     }
 
     temp_documents.delete(token);
-    return data.document;
+    return { document: data.document, nlp: data.nlp, jurisUrl: data.jurisUrl, entities: data.entities };
 }

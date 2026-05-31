@@ -1,11 +1,12 @@
 import { UserFile } from "@/core/UserFile"
 import { AddEntityDryRun, EntityPool } from "@/types/EntityPool"
-import { EntityTypeColor } from "@/types/EntityType"
+import { EntityTypeI } from "@/types/EntityType"
 import { TokenSelection } from "@/types/SelectionType"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState, useCallback } from "react"
+import { createPopper, Instance } from "@popperjs/core"
 
 interface AnonimizeTooltipProps {
-    entityTypes: EntityTypeColor[]
+    entityTypes: EntityTypeI[]
     pool: EntityPool
     contentRef: React.RefObject<HTMLDivElement>
     nodesRef: React.MutableRefObject<HTMLElement[]>
@@ -18,118 +19,182 @@ interface SelectionState {
     affects: number | undefined
 }
 
-
 export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
     const [selection, setSelection] = useState<SelectionState>({ selection: undefined, would: undefined, affects: undefined });
+    const [subtypeParent, setSubtypeParent] = useState<EntityTypeI | null>(null);
+    const menuRef = useRef<HTMLDivElement>(null);
+    const subtypeRef = useRef<HTMLDivElement>(null);
+    const popperRef = useRef<Instance | null>(null);
+    const subtypePopperRef = useRef<Instance | null>(null);
 
-    let fileA = props.file;
-
-    const onMouseup = (ev: React.MouseEvent<HTMLDivElement>) => {
+    const onMouseup = useCallback((ev: MouseEvent) => {
+        if ((ev.target as HTMLElement).closest('[data-type-picker]')) return;
         if (props.contentRef.current) {
-            updateSelection(ev, props.contentRef.current, props.nodesRef.current, props.pool, selection, setSelection)
+            updateSelection(ev as any, props.contentRef.current, props.nodesRef.current, props.pool, selection, setSelection)
         }
-    }
+    }, [props.contentRef, props.nodesRef, props.pool, selection]);
+
     useEffect(() => {
-        window.addEventListener("mouseup", onMouseup as any)
+        window.addEventListener("mouseup", onMouseup)
+        return () => window.removeEventListener("mouseup", onMouseup)
+    }, [onMouseup])
+
+    // reset subtype panel whenever the selection changes
+    useEffect(() => {
+        setSubtypeParent(null);
+    }, [selection.selection]);
+
+    // popper for the subtype panel, anchored to the main dropdown
+    useEffect(() => {
+        subtypePopperRef.current?.destroy();
+        subtypePopperRef.current = null;
+
+        if (!subtypeParent || !menuRef.current || !subtypeRef.current) return;
+
+        subtypePopperRef.current = createPopper(menuRef.current, subtypeRef.current, {
+            placement: "right-start",
+            modifiers: [
+                { name: "flip", enabled: true },
+                { name: "preventOverflow", options: { boundary: "viewport" } },
+            ],
+        });
+
         return () => {
-            window.removeEventListener("mouseup", onMouseup as any)
+            subtypePopperRef.current?.destroy();
+            subtypePopperRef.current = null;
+        };
+    }, [subtypeParent]);
+
+    // hook para o dropdown seguir o texto selecionado
+    useEffect(() => {
+        if (!selection.selection || !menuRef.current) {
+            popperRef.current?.destroy();
+            popperRef.current = null;
+            return;
         }
-    })
 
-    if (!selection.selection) return <></>
+        const anchor = document.querySelector(`[data-offset="${selection.selection.start}"]`);
+        if (!anchor) return;
 
-    let sel = selection.selection;
-    let start = document.querySelector(`[data-offset="${sel.start}"]`);
-    if (!start) return <></>;
-    let rects = start.getClientRects();
+        popperRef.current = createPopper(anchor as HTMLElement, menuRef.current, {
+            placement: "bottom-start",
+            modifiers: [
+                { name: "flip", enabled: true },
+                {
+                    name: "preventOverflow",
+                    options: { boundary: props.contentRef.current || "viewport" }
+                },
+                { name: "hide", enabled: true },
+                {
+                    name: "detectHidden",
+                    enabled: true,
+                    phase: "main",
+                    fn({ state }) {
+                        // se sair do ecrã, esconder o menu e limpar a seleção
+                        if (state.modifiersData.hide?.isReferenceHidden) {
+                            window.getSelection()?.removeAllRanges();
+                            setSelection({ selection: undefined, would: undefined, affects: undefined });
+                        }
+                    },
+                },
+            ],
+        });
 
-    let style: React.CSSProperties = {
-        position: "fixed",
-        display: "block",
-        bottom: window.innerHeight - rects[0].top,
-        top: rects[0].top + rects[0].height,
-        left: rects[0].left,
-        width: "fit-content"
+        return () => {
+            popperRef.current?.destroy();
+            popperRef.current = null;
+        };
+    }, [selection.selection, props.contentRef]);
+
+    if (!selection.selection || selection.would === undefined) return <></>;
+
+    const handleSelectType = (typeName: string) => {
+        setType(props.pool, selection.selection!, typeName, props.file);
+        setSelection({ selection: undefined, would: undefined, affects: undefined });
+        setSubtypeParent(null);
     };
 
-    if (rects[0].top > window.innerHeight / 2) {
-        delete style.top;
-    }
-    else {
-        delete style.bottom;
-    }
+    const handleRemove = () => {
+        removeType(props.pool, selection.selection!, props.file);
+        setSelection({ selection: undefined, would: undefined, affects: undefined });
+        setSubtypeParent(null);
+    };
 
-    switch (selection.would) {
-        case AddEntityDryRun.CHANGE_ARRAY:
-            return (
-                <div style={style}>
-                    <div className="d-flex flex-column gap-1 bg-white p-1 border"
-                        style={{ maxHeight: 400, overflowY: "auto" }}>
-                        {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
-                            <span
-                                key={i}
-                                role="button"
-                                className="badge text-body"
-                                style={{ background: t.color }}
-                                onMouseDown={() => setType(props.pool!, sel, t, fileA)}
-                            >
-                                {t.name}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            );
-        case AddEntityDryRun.CHANGE_OFFSET:
-            return (
-                <div style={style}>
-                    <div className="d-flex flex-column gap-1 bg-white p-1 border"
-                        style={{ maxHeight: 400, overflowY: "auto" }}>
-                        {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
-                            <span
-                                key={i}
-                                role="button"
-                                className="badge text-body"
-                                style={{ background: t.color }}
-                                onMouseDown={() => setType(props.pool!, sel, t, fileA)}
-                            >
-                                {t.name}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            );
-        case AddEntityDryRun.CHANGE_TYPE:
-            return (
-                <div style={style}>
-                    <div className="d-flex flex-column gap-1 bg-white p-1 border"
-                        style={{ maxHeight: 400, overflowY: "auto" }}>
-                        <span
-                            role="button"
-                            onMouseDown={() => removeType(props.pool!, sel, fileA)}
+    const handleOpenSubtype = (type: EntityTypeI) => {
+        setSubtypeParent(type);
+    };
+
+    return (
+        <>
+            <div
+                ref={menuRef}
+                className="dropdown-menu show shadow"
+                data-type-picker="true"
+                style={{ maxHeight: 400, overflowY: "auto", minWidth: 160, zIndex: 9999 }}
+            >
+                {selection.would === AddEntityDryRun.CHANGE_TYPE && (
+                    <>
+                        <button
+                            className="dropdown-item text-danger"
+                            onMouseDown={(e) => { e.preventDefault(); handleRemove(); }}
                         >
-                            <i className="bi bi-trash"></i> Remover
-                        </span>
-                        {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
-                            <span
-                                key={i}
-                                role="button"
-                                className="badge text-body"
-                                style={{ background: t.color }}
-                                onMouseDown={() => setType(props.pool!, sel, t, fileA)}
-                            >
-                                {t.name}
-                            </span>
-                        ))}
-                    </div>
+                            <i className="bi bi-trash me-1"></i> Remover
+                        </button>
+                        <div className="dropdown-divider"></div>
+                    </>
+                )}
+                {sortEntityTypesXLast(props.entityTypes).map((t, i) => (
+                    <button
+                        key={i}
+                        className="dropdown-item d-flex align-items-center gap-2"
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            if (!t.subtypes?.length) {
+                                handleSelectType(t.name);
+                            } else {
+                                handleOpenSubtype(t);
+                            }
+                        }}
+                    >
+                        <span className="badge" style={{ background: t.color, minWidth: 12, minHeight: 12 }}>&nbsp;</span>
+                        {t.name}
+                        {!!t.subtypes?.length && <i className="bi bi-chevron-right ms-auto" style={{ fontSize: "0.8rem" }} />}
+                    </button>
+                ))}
+            </div>
+
+            {subtypeParent?.subtypes && (
+                <div
+                    ref={subtypeRef}
+                    className="dropdown-menu show shadow overflow-y-auto"
+                    data-type-picker="true"
+                    style={{ zIndex: 10000, maxHeight: 300 }}
+                >
+                    <button
+                        className="dropdown-item d-flex align-items-center gap-2"
+                        onMouseDown={(e) => { e.preventDefault(); handleSelectType(subtypeParent.name); }}
+                    >
+                        <span className="badge" style={{ background: subtypeParent.color, minWidth: 12, minHeight: 12 }}>&nbsp;</span>
+                        {subtypeParent.name}
+                    </button>
+                    <div className="dropdown-divider"></div>
+                    {subtypeParent.subtypes.map((subtype, idx) => (
+                        <button
+                            key={idx}
+                            className="dropdown-item d-flex align-items-center gap-2"
+                            onMouseDown={(e) => { e.preventDefault(); handleSelectType(subtype.name); }}
+                        >
+                            <span className="badge" style={{ background: subtype.color, minWidth: 12, minHeight: 12 }}>&nbsp;</span>
+                            {subtype.name}
+                        </button>
+                    ))}
                 </div>
-            );
-        default:
-            return <></>
-    }
+            )}
+        </>
+    );
 }
 
-
-export function sortEntityTypesXLast(types: EntityTypeColor[]): EntityTypeColor[] {
+export function sortEntityTypesXLast(types: EntityTypeI[]): EntityTypeI[] {
     return [...types].sort((a, b) => {
         const aIsX = a.name.startsWith("X");
         const bIsX = b.name.startsWith("X");
@@ -139,9 +204,9 @@ export function sortEntityTypesXLast(types: EntityTypeColor[]): EntityTypeColor[
     });
 }
 
-function setType(pool: EntityPool, selection: TokenSelection, type: EntityTypeColor, file: UserFile) {
+function setType(pool: EntityPool, selection: TokenSelection, typeName: string, file: UserFile) {
     pool.removeOffset(selection.start, selection.end, false);
-    pool.addEntity(selection.start, selection.end, selection.text, type.name);
+    pool.addEntity(selection.start, selection.end, selection.text, typeName);
     file.checkCountPES();
 }
 
@@ -149,8 +214,6 @@ function removeType(pool: EntityPool, selection: TokenSelection, file: UserFile)
     pool.removeOffset(selection.start, selection.end)
     file.checkCountPES();
 }
-
-
 
 function updateSelection(ev: React.MouseEvent<HTMLDivElement>, contentDiv: HTMLDivElement, nodes: HTMLElement[], pool: EntityPool, selection: SelectionState, setSelection: (s: SelectionState) => void) {
     let sel = window.getSelection();
@@ -226,4 +289,3 @@ function updateSelection(ev: React.MouseEvent<HTMLDivElement>, contentDiv: HTMLD
         }
     }
 }
-

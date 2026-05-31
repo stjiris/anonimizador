@@ -4,9 +4,33 @@ import os from 'os';
 import { promises as fsp } from 'fs';
 import { spawn } from 'child_process';
 import { CONFIG_DIR } from '@/server_constants';
+import { formatXml, wrapXmlIntoHtml } from '@/core/pdfUtils';
 
 export const runtime = 'nodejs';
 const XEMF_LUA = path.join(CONFIG_DIR, 'xemf-to-png.lua');
+
+async function convertPdfToHtml(inPath: string, title: string): Promise<string> {
+    const baseOutPath = getTempFilePath();
+    const xmlPath = baseOutPath + ".xml";
+    try {
+        const sub = await runCommand("pdftohtml", ["-xml", "-noframes", "-dataurls", inPath, baseOutPath]);
+
+        try {
+            const outBase = path.basename(baseOutPath);
+            await runCommand("sed", ["-i", `s/href="${outBase}#/href="#/g`, xmlPath]);
+        } catch { }
+
+        if (!sub || sub.code !== 0) {
+            throw new Error(sub ? sub.stderr.toString() : "pdftohtml failed");
+        }
+
+        const outBuf = await fsp.readFile(xmlPath);
+        const raw = decodeBufferWithFallback(outBuf);
+        return wrapXmlIntoHtml(formatXml(raw), title);
+    } finally {
+        try { await fsp.rm(xmlPath, { force: true }); } catch { }
+    }
+}
 
 export function getTempFilePath(prefix = '') {
     const crypto = require('crypto');
@@ -21,7 +45,16 @@ function decodeBufferWithFallback(buf: Buffer): string {
     return utf8;
 }
 
-function runCommand(command: string, args: string[], timeoutMs = 15000): Promise<{ code: number | null, signal: NodeJS.Signals | null, stdout: Buffer, stderr: Buffer }> {
+function runCommand(
+    command: string,
+    args: string[],
+    timeoutMs = 15000
+): Promise<{
+    code: number | null,
+    signal: NodeJS.Signals | null,
+    stdout: Buffer,
+    stderr: Buffer
+}> {
     return new Promise((resolve, reject) => {
         const child = spawn(command, args);
 
@@ -47,7 +80,12 @@ function runCommand(command: string, args: string[], timeoutMs = 15000): Promise
         child.on('exit', (code, signal) => {
             clearTimeout(timer);
             finished = true;
-            resolve({ code, signal, stdout: Buffer.concat(stdoutChunks), stderr: Buffer.concat(stderrChunks) });
+            resolve({
+                code,
+                signal,
+                stdout: Buffer.concat(stdoutChunks),
+                stderr: Buffer.concat(stderrChunks)
+            });
         });
     });
 }
@@ -61,7 +99,9 @@ export async function POST(req: NextRequest) {
     try {
         const formData = await req.formData();
         const file = formData.get('file') as File | null;
-        if (!file) return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+        if (!file) {
+            return NextResponse.json({ error: 'No file provided' }, { status: 400 });
+        }
 
         const originalName = file.name || `upload-${Date.now()}`;
         const title = originalName.replace(/\.[^/.]+$/, '') || 'Anonymized Document';
@@ -74,7 +114,8 @@ export async function POST(req: NextRequest) {
         const ext = path.extname(originalName).toLowerCase();
 
         const luaFilterArgs = await fsp
-            .access(XEMF_LUA).then(() => ['--lua-filter', XEMF_LUA])
+            .access(XEMF_LUA)
+            .then(() => ['--lua-filter', XEMF_LUA])
             .catch(() => []);
 
         let subproc;
@@ -87,29 +128,45 @@ export async function POST(req: NextRequest) {
                 '-o', outPath,
                 '--self-contained',
                 '--wrap', 'none',
-                '--metadata', `title=${title}`,
                 ...luaFilterArgs
             ]);
+
         } else if (ext === '.doc' || ext === '.docx') {
             const base = path.basename(inPath, ext);
             tmpDocx = path.join(os.tmpdir(), `${base}.docx`);
-            const conv = await runCommand('lowriter', ['--headless', '--convert-to', 'docx', inPath, '--outdir', os.tmpdir()]);
-            if (conv.code !== 0) throw new Error('lowriter conversion failed: ' + conv.stderr.toString());
+
+            const conv = await runCommand('lowriter', [
+                '--headless',
+                '--convert-to', 'docx',
+                inPath,
+                '--outdir', os.tmpdir()
+            ]);
+
+            if (conv.code !== 0) {
+                throw new Error('lowriter conversion failed: ' + conv.stderr.toString());
+            }
+
             subproc = await runCommand('pandoc', [
                 tmpDocx,
                 '-t', 'html',
                 '-o', outPath,
                 '--self-contained',
                 '--wrap', 'none',
-                '--metadata', `title=${title}`,
                 ...luaFilterArgs
             ]);
+
         } else if (ext === '.pdf') {
-            subproc = await runCommand('pdftohtml', ['-s', '-dataurls', '-noframes', inPath, outPath]);
-            try {
-                const outBase = path.basename(outPath);
-                await runCommand('sed', ['-i', `s/href="${outBase}#/href="#/g`, outPath]);
-            } catch { }
+            const html = await convertPdfToHtml(inPath, title);
+            console.log(JSON.stringify({
+                requestPath: '/api/to_html',
+                startTime: start.toISOString(),
+                endTime: new Date().toISOString(),
+                fileSize: buffer.length,
+                fileExt: ext,
+            }));
+            return new NextResponse(html, {
+                headers: { 'content-type': 'text/html; charset=utf-8' }
+            });
         } else {
             subproc = await runCommand('pandoc', [
                 inPath,
@@ -117,13 +174,14 @@ export async function POST(req: NextRequest) {
                 '-o', outPath,
                 '--self-contained',
                 '--wrap', 'none',
-                '--metadata', `title=${title}`,
                 ...luaFilterArgs
             ]);
         }
 
         console.log('spawn finished:', subproc.code, subproc.signal);
-        if (subproc.stderr.length) console.error(subproc.stderr.toString());
+        if (subproc.stderr.length) {
+            console.error(subproc.stderr.toString());
+        }
 
         if (!subproc || subproc.code !== 0) {
             const errMsg = subproc ? subproc.stderr.toString() : 'converter failed';
@@ -142,10 +200,15 @@ export async function POST(req: NextRequest) {
             exitCode: subproc.code,
         }));
 
-        return new NextResponse(html, { headers: { 'content-type': 'text/html; charset=utf-8' } });
+        return new NextResponse(html, {
+            headers: { 'content-type': 'text/html; charset=utf-8' }
+        });
+
     } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
         console.error('Error in /api/to_html:', err);
-        return NextResponse.json({ error: 'Failed to convert file' }, { status: 500 });
+        return NextResponse.json({ error: msg }, { status: 500 });
+
     } finally {
         try { if (inPath) await fsp.rm(inPath, { force: true }); } catch { }
         try { if (outPath) await fsp.rm(outPath, { force: true }); } catch { }

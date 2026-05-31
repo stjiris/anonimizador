@@ -8,13 +8,15 @@ services:
       context: .
       dockerfile: ./Dockerfile
       args:
-        - NEXT_PUBLIC_BASE_PATH=${BASE_PATH:-/anonimizador}
+        - NEXT_PUBLIC_BASE_PATH=${BASE_PATH:-}
         - NEXT_PUBLIC_TITLE=${ANONIMIZADOR_TITLE:-Anonimizador}
         - NEXT_PUBLIC_VERSION_COMMIT=${VERSION_COMMIT:-0000000}
         - NEXT_PUBLIC_VERSION_DATE=${VERSION_DATE:-01/01/1990}
     environment:
       - ANONIMIZADOR_SECRET=${ANONIMIZADOR_SECRET}
       - PORT=${ANONIMIZADOR_PORT:-7999}
+      - NLP_SERVER_URL=${NLP_SERVER_URL:-http://nlp_server:5001}
+      - NEXT_PUBLIC_JURIS_URL=${NEXT_PUBLIC_JURIS_URL:-}
     env_file:
       - .env
     ports:
@@ -22,32 +24,48 @@ services:
     volumes:
       - logs:/opt/app/logs
     restart: unless-stopped
-    #networks:
-    #  - juris-network
+    networks:
+      - juris-network
+    depends_on:
+      nlp_server:
+        condition: service_started
+
   anonimizador_dev:
     build:
       context: .
       dockerfile: ./Dockerfile_dev
       args:
-        - NEXT_PUBLIC_BASE_PATH=${BASE_PATH:-/anonimizador}
+        - NEXT_PUBLIC_BASE_PATH=${BASE_PATH:-}
         - NEXT_PUBLIC_TITLE=${ANONIMIZADOR_TITLE:-Anonimizador}
         - NEXT_PUBLIC_VERSION_COMMIT=${VERSION_COMMIT:-0000000}
         - NEXT_PUBLIC_VERSION_DATE=${VERSION_DATE:-01/01/1990}
     environment:
       - ANONIMIZADOR_SECRET=${ANONIMIZADOR_SECRET}
       - PORT=${ANONIMIZADOR_PORT:-7999}
+      - NLP_SERVER_URL=${NLP_SERVER_URL:-http://nlp_server:5001}
     env_file:
       - .env
     ports:
       - ${ANONIMIZADOR_PORT:-7999}:7999
     volumes:
       - logs:/opt/app/logs
-      - ./iris-lfs-storage/model-best:/opt/app/src/scripts/model-best
-      - ./iris-lfs-storage/model-gpt:/opt/app/src/scripts/model-gpt
-      - ./iris-lfs-storage/model-extended:/opt/app/src/scripts/model-extended
       - .:/opt/app
       - /opt/app/node_modules
     restart: unless-stopped
+    networks:
+      - juris-network
+    depends_on:
+      nlp_server:
+        condition: service_started
+  nlp_server:
+    build:
+      context: .
+      dockerfile: ./Dockerfile_nlp
+    restart: unless-stopped
+    volumes:
+      - ./iris-lfs-storage/model-best:/opt/app/src/scripts/model-best
+      - ./iris-lfs-storage/model-gpt:/opt/app/src/scripts/model-gpt
+      - ./iris-lfs-storage/model-extended:/opt/app/src/scripts/model-extended
     networks:
       - juris-network
   sumarizador:

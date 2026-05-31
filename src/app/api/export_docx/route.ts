@@ -14,7 +14,7 @@ function getTempFilePath(suffix = "") {
 
 function runPandoc(inPath: string, outPath: string, refArg: string[], timeoutMs = 15000): Promise<void> {
     return new Promise((resolve, reject) => {
-        const child = spawn("pandoc", [inPath, "-t", "docx", "-o", outPath, ...refArg]);
+        const child = spawn("pandoc", [inPath, "-f", "html", "-t", "docx", "-o", outPath, ...refArg]);
 
         const timer = setTimeout(() => {
             child.kill("SIGTERM");

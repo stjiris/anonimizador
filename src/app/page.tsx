@@ -1,14 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { CatchError } from "@/components/CatchError";
 import Anonimize from "@/components/Anonimize/Main";
 import Header from "@/components/Header";
 import SelectFile from "@/components/SelectFile";
 import { Banner } from "@/components/Banner";
 import BootstrapModal from "@/core/BootstrapModal";
-import { ProfileProvider, ProfileSelector } from "@/core/ProfileTypeLogic";
+import { ProfileProvider, getProfile } from "@/core/ProfileTypeLogic";
 import { UserFileInterface } from "@/types/UserFileInterface";
+import { ProfileSelector } from "@/components/Anonimize/ProfileTypesTable";
+import { ProfileI } from "@/types/ProfileType";
 
 export default function ClientRoot() {
   const [userFile, setUserFile] = useState<UserFileInterface | undefined>();
@@ -17,6 +19,13 @@ export default function ClientRoot() {
 
   useEffect(() => {
     setMounted(true);
+  }, []);
+
+  const onProfileChange = useCallback((profile: ProfileI | null) => {
+    setUserFile(current => {
+      current?.applyProfile(profile);
+      return current;
+    });
   }, []);
 
   const setUserFileProxy = (file: UserFileInterface | undefined) => {
@@ -29,6 +38,8 @@ export default function ClientRoot() {
     } else {
       setLoading(true);
       setTimeout(() => {
+        const currentProfile = getProfile();
+        if (currentProfile) file.applyProfile(currentProfile);
         setUserFile(file);
         (window as any).currentFile = file;
       }, 200);
@@ -38,7 +49,7 @@ export default function ClientRoot() {
   if (!mounted) return;
 
   return (
-    <ProfileProvider>
+    <ProfileProvider onChange={onProfileChange}>
       <div className="App vh-100">
         {userFile ? (
           <CatchError userFile={userFile} setUserFile={setUserFileProxy}>
@@ -60,14 +71,13 @@ export default function ClientRoot() {
               <SelectFile setUserFile={setUserFileProxy} />
             )}
 
-            <BootstrapModal id="modal-profile">
-              <ProfileSelector />
-            </BootstrapModal>
-
             <Banner />
           </>
         )}
       </div>
+      <BootstrapModal id="modal-profile">
+        <ProfileSelector />
+      </BootstrapModal>
     </ProfileProvider>
   );
 }

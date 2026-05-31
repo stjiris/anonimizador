@@ -4,6 +4,7 @@ import { AnonimizeStateState } from "@/types/AnonimizeState";
 import { EntityTypeI } from "@/types/EntityType";
 
 const TAGS_TO_IGNORE = "script,style,link,meta,head,html,svg,iframe,canvas,object,embed,applet,frameset,frame,noembed,noscript,param,source,track".split(",");
+const VOID_ELEMENTS = new Set(["area", "base", "br", "col", "embed", "img", "input", "link", "meta", "param", "source", "track", "wbr"]);
 
 const SAFE_SPLIT_TAGS = new Set([
     "p", "h1", "h2", "h3", "h4", "h5", "h6",
@@ -98,7 +99,7 @@ export function renderBlock(
     offset: number,
     images: Record<number, AnonimizeImage>,
     imageIndex: { current: number },
-    pageBreaks?: Set<number>
+    pageBreaks?: Set<number>,
 ) {
     let elmt = doc;
 
@@ -265,6 +266,10 @@ export function renderBlock(
             }
         }
         imageIndex.current++;
+    }
+
+    if (VOID_ELEMENTS.has(Tag)) {
+        return `<${Tag} ${attrs.join(" ")}>`;
     }
 
     return `<${Tag} ${attrs.join(" ")}>${ht}</${Tag}>`;

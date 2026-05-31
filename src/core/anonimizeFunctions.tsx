@@ -1,8 +1,34 @@
 "use client";
 export type AnonimizeFunction = (str: string, type: string, idx: number, typeIdx: number, funIdx: number) => string;
 
+const typeFullNameMap: { [key: string]: string } = {
+    "PES": "Pessoa",
+    "DAT": "Data",
+    "ORG": "Organização",
+    "PART": "Partido",
+    "LOC": "Localização",
+    "MOR": "Morada",
+    "PRO": "Processo",
+    "MAT": "Matrícula",
+    "CEP": "CEP",
+    "TEL": "Telefone",
+    "E-MAIL": "Email",
+    "RED": "Rede Social",
+    "IDP": "Identificador",
+    "INST": "Instituição",
+    "PROF": "Profissão",
+    "URL": "WWW"
+}
+
 export const identity: AnonimizeFunction = (str) => str
-export const increment: AnonimizeFunction = (_str, type, _idx, tidx) => type.toString() + tidx.toString().padStart(4, '0')
+export const increment: AnonimizeFunction = (_str, type, _idx, tidx) => {
+    const fullName = typeFullNameMap[type] || type;
+
+    if(!fullName) {
+        return type + " " + tidx.toString()
+    }
+    return fullName.toString() + " " + tidx.toString();
+}
 
 export const reticiencias: AnonimizeFunction = () => "..."
 export const ofuscateFirst: AnonimizeFunction = (str) => str[0] + str.slice(1).replace(/\S/g, ".")
@@ -25,6 +51,11 @@ export const leter: AnonimizeFunction = (_str, _type, _idx, _tidx, fidx) => {
 }
 
 export const year: AnonimizeFunction = (str: string, ...args) => {
+    let yyyymmdd = str.match(/(\d{4})(.)\d{1,2}\2\d{1,2}/);
+    if (yyyymmdd) {
+        return yyyymmdd[1] + yyyymmdd[2] + "..." + yyyymmdd[2] + "...";
+    }
+
     let ddmmyyyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{4})/);
     if (ddmmyyyy) {
         return "..." + ddmmyyyy[1] + "..." + ddmmyyyy[2] + ddmmyyyy[3];
@@ -34,9 +65,14 @@ export const year: AnonimizeFunction = (str: string, ...args) => {
         return "..." + ddmmyy[1] + "..." + ddmmyy[2] + ddmmyy[3];
     }
 
-    let diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/)
+    let diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/);
     if (diaDeMesDeyyyy) {
         return "... de ... de " + diaDeMesDeyyyy[1];
+    }
+
+    let mesDeAnoDeyyyy = str.match(/.* de (\d{4})/);
+    if (mesDeAnoDeyyyy) {
+        return "... de " + mesDeAnoDeyyyy[1];
     }
 
     return reticiencias(str, ...args);
@@ -45,6 +81,11 @@ export const year: AnonimizeFunction = (str: string, ...args) => {
 //Anonymization technique for dates that uses "D" and "M" as placeholders for "Dia" and "Mês" respectively,
 //instead of "...", leading dates to be returned in the following formats: "D/M/0000", "D-M-0000" or "D de M de 0000";
 export const year2: AnonimizeFunction = (str: string, ...args) => {
+    let yyyymmdd = str.match(/(\d{4})(.)\d{1,2}\2\d{1,2}/);
+    if (yyyymmdd) {
+        return yyyymmdd[1] + yyyymmdd[2] + "M" + yyyymmdd[2] + "D";
+    }
+
     let ddmmyyyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{4})/);
     if (ddmmyyyy) {
         return "D" + ddmmyyyy[1] + "M" + ddmmyyyy[2] + ddmmyyyy[3];
@@ -54,9 +95,14 @@ export const year2: AnonimizeFunction = (str: string, ...args) => {
         return "D" + ddmmyy[1] + "M" + ddmmyy[2] + ddmmyy[3];
     }
 
-    let diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/)
+    let diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/);
     if (diaDeMesDeyyyy) {
         return "D de M de " + diaDeMesDeyyyy[1];
+    }
+
+    let mesDeAnoDeyyyy = str.match(/.* de (\d{4})/);
+    if (mesDeAnoDeyyyy) {
+        return "M de " + mesDeAnoDeyyyy[1];
     }
 
     return str;
@@ -81,18 +127,39 @@ export const partido_inc: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) 
 const redesSociais = ['Facebook', 'Instagram', 'Twitter', 'WhatsApp', 'Tiktok', 'LinkedIn', 'Snapchat', 'X.', 'Reddit', 'Youtube', 'Discord', 'Telegram']
 
 export const redes_inc: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) => {
-    let strLow = str.toLowerCase()
+    const emailMatch = str.match(/@(.+)$/);
+    if (emailMatch) {
+        return "nome" + typeIdx.toString() + "@" + emailMatch[1];
+    }
 
+    let strLow = str.toLowerCase()
     for (let rede of redesSociais) {
         if(strLow.includes(rede.toLowerCase())) {
             return "nome" + typeIdx.toString() + "@" + rede.toLowerCase() + ".com";
         }
     }
 
-    return "nome" + typeIdx.toString() + "@domínio" + typeIdx.toString() + ".com";
+    return "nome" + typeIdx.toString();
 }
 
-const moradasTypes = ['Rua', 'Avenida', 'Largo', 'Praça', 'Travessa', 'Estrada', 'Calçada', 'Alameda', 'Rotunda', 'Praceta', 'Beco', 'Viela']
+const moradasTypes = [
+    'Rua', 'Avenida', 'Largo', 'Praça', 'Travessa', 'Estrada', 'Calçada', 'Alameda',
+    'Rotunda', 'Praceta', 'Beco', 'Viela', 'Caminho', 'Vereda', 'Azinhaga', 'Escadas',
+    'Escadinhas', 'Pátio', 'Terreiro', 'Rossio', 'Campo', 'Jardim', 'Parque', 'Quinta',
+    'Urbanização', 'Loteamento', 'Lugar', 'Sítio', 'Vila', 'Povoação', 'Aldeia',
+    'Freguesia', 'Concelho', 'Distrito', 'Zona', 'Bloco', 'Lote', 'Edifício', 'Torre',
+    'Impasse', 'Quelha', 'Rampa', 'Ponte', 'Cais', 'Porto', 'Marina', 'Doca',
+]
+
+export const iban_prefix: AnonimizeFunction = (str) => {
+    const match = str.match(/^([A-Z]{2}\d{2})/);
+    if (match) {
+        return "IBAN " + match[1];
+    }
+    return "IBAN ...";
+}
+
+export const codigoPostal: AnonimizeFunction = (str) => str.replace(/\d{4}-\d{3}/, "0000-000")
 
 export const moradas_inc: AnonimizeFunction = (str, type, _idx, tidx, funIdx) => {
 
@@ -106,6 +173,9 @@ export const moradas_inc: AnonimizeFunction = (str, type, _idx, tidx, funIdx) =>
 
     return "Localização " + tidx.toString();
 }
+
+//Anonymization technique that uses the type name coupled with a numerical increment specific to that type;
+export const typeWithIncrement: AnonimizeFunction = (str, type, idx, typeIdx) => type + " " + typeIdx.toString()
 
 export const automatic: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) => {
     if (type === "PES")
@@ -129,6 +199,8 @@ export const automatic: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) =>
 }
 
 
+
+
 export interface AnonimizeFunctionDescription {
     name: string,
     description: string,
@@ -142,110 +214,149 @@ export const FULL_ANONIMIZE = 4
 //To add functions and keep compability this array should only be appended
 export const functionsWithDescriptionArray: AnonimizeFunctionDescription[] = [
     {
+        //index 0
         "name": "Não anonimizar",
         "description": "Mantem a ocorrência original sem a modificar.",
         "fun": identity
     },
     {
+        //index 1
         "name": "Automático",
         "description": "Utiliza alguma das restantes funções consoante o tipo de entidade.",
         "fun": automatic
     },
     {
+        //index 2
         "name": "Incremental - Tipo",
         "description": "Substitui ocorrência com TIPO e o número da ocurrência. Ex: TIPO0001, TIPO0002, etc.",
         "fun": increment
     },
     {
+        //index 3
         "name": "Incremental - Letra",
         "description": "Substitui ocorrência com duas ou mais letras. Ex: AA, BB, etc.",
         "fun": leter
     },
     {
+        //index 4
         "name": "Ofuscação total",
         "description": "Substitui ocorrência com reticências. Ex: ...",
         "fun": reticiencias
     },
     {
+        //index 5
         "name": "Ofuscação parcial - 1.ª Letra",
         "description": "Substitui ocorrência por ponto, mantendo a 1.ª letra. Ex: INESC => I....",
         "fun": ofuscateFirst
     },
     {
+        //index 6
         "name": "Ofuscação parcial - 2 Letras",
         "description": "Substitui ocorrência por ponto, mantendo as primeiras 2 letras. Ex: INESC => IN...",
         "fun": ofuscateFirstTwo
     },
     {
+        //index 7
         "name": "Ofuscação parcial - 1.ª Palavra",
         "description": "Substitui ocorrência por reticências, mantendo a 1.ª palavra. Ex: Universidade de Lisboa => Universidade de ...",
         "fun": firstWord
     },
     {
+        //index 8
         "name": "Ofuscação parcial - Última Letra",
         "description": "Substitui ocorrência por ponto, mantendo a última letra. Ex: INESC => ....C",
         "fun": ofuscateLast
     },
     {
+        //index 9
         "name": "Ofuscação parcial - Últimas 2 Letras",
         "description": "Substitui ocorrência por ponto, mantendo as últimas 2 letras. Ex: INESC => ...SC",
         "fun": ofuscateLastTwo
     },
     {
+        //index 10
         "name": "Ofuscação data - Manter Ano",
         "description": "Substitui ocorrência por reticências, mantendo o ano visível. Ex: 06/06/1997 => .../.../1997",
         "fun": year
     },
     {
+        //index 11
         "name": "Ofuscação processo - Manter início",
         "description": "Substitui ocorrência por reticências, mantendo parte inicial do processo. Ex: 27871/19.4T8LSB.L1.S1 => 27871/19.4...",
         "fun": processo
     },
     {
+        //index 12
         "name": "Ofuscação matrícula - Manter letras",
         "description": "Substitui ocorrência por reticências, mantendo as letras da matrícula. Ex: ..-OO-..",
         "fun": matriculaLeter
     },
     {
+        //index 13
         "name": "Ofuscação matrícula - Manter números",
         "description": "Substitui ocorrência por reticências, mantendo os números da matrícula. Ex: 00-..-..",
         "fun": matriculaNumber
     },
     //Adding the new AA increment function to the list of functions with index 14;
     {
+        //index 14
         "name": "Incremental - AA",
         "description": "Substitui ocorrência pelas letras AA incrementadas numericamente. Ex: AA1, AA2, AA3, etc.",
         "fun": AA_inc
     },
     //Adding the new incremental function for addresses, "moradas", to the list of functions with index 15;
     {
+        //index 15
         "name": "Incremental - Tipo de morada",
         "description": "Substitui ocorrência por tipo de morada com incremento. Ex: Rua 1, Praça 2, etc.",
         "fun": moradas_inc
     },
     //Adding the new anonymization function for dates to the list of functions with index 16;
     {
+        //index 16
         "name": "Ofuscação data - Manter Ano (sem reticências)",
         "description": "Substitui ocorrência por D/M/YYYY, mantendo o ano visível. Ex: 06/06/1997 => D/M/1997",
         "fun": year2
     },
     //Adding the new matricula increment function to the list of functions with index 17;
     {
+        //index 17
         "name": "Incremental - Matrícula",
         "description": "Substitui ocorrência por V + número incremental. Ex: V1, V2, etc.",
         "fun": matricula_inc
     },
     //Adding the new partido increment function to the list of functions with index 18;
     {
+        //index 18
         "name": "Incremental - Partido",
         "description": "Substitui ocorrência por P + número incremental. Ex: P1, P2, etc.",
         "fun": partido_inc
     },
     //Adding the new social media anonymization function to the list of functions with index 19;
     {
+        //index 19
         "name": "Incremental - Rede Social",
         "description": "Substitui ocorrência por nome + número incremental + @ + rede social + .com. Ex: nome@facebook.com",
         "fun": redes_inc
+    },
+    //Adding the new type with increment function to the list of functions with index 20;
+    {
+        //index 20
+        "name": "Incremental - Tipo",
+        "description": "Substitui ocorrência pelo tipo de entidade e número incremental específico do tipo. Ex: Arguido 1, Arguido 2, Testemunha 1, Testemunha 2, etc.",
+        "fun": typeWithIncrement
+    },
+    {
+        //index 21
+        "name": "Ofuscação código postal",
+        "description": "Substitui código postal por 0000-000. Ex: 1500-500 => 0000-000",
+        "fun": codigoPostal
+    },
+    {
+        //index 22
+        "name": "Ofuscação IBAN - Manter identificador",
+        "description": "Substitui IBAN mantendo o identificador (código do país + dígitos de controlo). Ex: PT50 6859 5959 ... => IBAN PT50",
+        "fun": iban_prefix
     }
 ]
 

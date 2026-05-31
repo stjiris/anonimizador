@@ -3,6 +3,7 @@ import { AnonimizeImage } from "./AnonimizeImage"
 import { DescriptorI } from "./DescriptorType"
 import { EntityPool } from "./EntityPool"
 import { EntityTypeI } from "./EntityType"
+import { ProfileI } from "./ProfileType"
 import { SummaryI } from "./SummaryType"
 
 export interface UserFileInterface {
@@ -18,6 +19,8 @@ export interface UserFileInterface {
     descriptors?: DescriptorI[]
     summary?: SummaryI[]
     profile?: string
+    jurisId?: string
+    jurisDocUrl?: string
     typesListeners: ((types: EntityTypeI[]) => void)[]
     savedListeners: ((saved: boolean) => void)[]
     imagesListeners: ((images: Record<number, AnonimizeImage>) => void)[]
@@ -47,6 +50,7 @@ export interface UserFileInterface {
     onSummary(cb: (summary: SummaryI[]) => void): void
     offSummary(cb: (summary: SummaryI[]) => void): void
     notifySummary(): void
+    applyProfile(profile: ProfileI | null): void
     checkCountPES(): void
     toSavedFile(): SavedUserFile
     save(): Promise<boolean>

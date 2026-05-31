@@ -1,26 +1,63 @@
-import { useMemo, useState } from "react";
-import { MaterialReactTable, MRT_ColumnDef, MRT_Row, MRT_TableInstance } from "material-react-table";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { MaterialReactTable, MRT_ColumnDef, MRT_ColumnFiltersState, MRT_Row, MRT_TableInstance, } from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
-import { IconButton, Tooltip, TextField, Badge, ToggleButton, ToggleButtonGroup } from "@mui/material";
+
+import { IconButton, Tooltip, TextField, Badge, ToggleButton, ToggleButtonGroup, Menu, MenuItem, Portal } from "@mui/material";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import { useEntities, useTypesDict } from "@/core/uses";
 import { UserFile } from "@/core/UserFile";
+import { useEntities, useTypes, useTypesDict } from "@/core/uses";
 import { Entity, EntityTypeI } from "@/types/EntityType";
 import { EntityPool } from "@/types/EntityPool";
 import { Button } from "@/core/BootstrapIcons";
 import { FULL_ANONIMIZE } from "@/core/anonimizeFunctions";
+import { EntitiesStyle } from "@/core/entitiesStyle";
+import { sortEntityTypesXLast } from "@/components/Anonimize/Tooltip";
+import { TypePickerDropdown } from "@/components/Anonimize/TypePickerDropdown";
 
+const TODAS = Number.MAX_SAFE_INTEGER;
+
+const getType = (types: EntityTypeI[], typeName: string): EntityTypeI => {
+    
+    let found = types.find(t => t.name === typeName);
+    if (found) return found;
+    
+    for (const type of types) {
+        if (type.subtypes) {
+            found = type.subtypes.find(s => s.name === typeName);
+            if (found) return found;
+        }
+    }
+
+    return { name: `${typeName}*`, color: "red", functionIndex: FULL_ANONIMIZE } as EntityTypeI;
+};
 
 export function EntityTable({ file }: { file: UserFile }) {
     const [showOnlyMarks, setShowOnlyMarks] = useState(false);
+    const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
 
     const ents = useEntities(file.pool);
-    const filteredEnts = showOnlyMarks ? ents.filter((e) => e.type === "Marca") : ents;
+    const filteredEnts = useMemo(
+        () => showOnlyMarks ? ents.filter((e) => e.type === "Marca") : ents,
+        [ents, showOnlyMarks]
+    );
+    const entityCount = filteredEnts.length;
+    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 });
 
-    const typesDict = useTypesDict(file);
-    const typesList = useMemo(() => Object.values(typesDict), [typesDict]);
+    const typesList = useTypes(file);
+
+    const wasEmpty = useRef(true);
+
+    useEffect(() => {
+        if (entityCount === 0) {
+            wasEmpty.current = true;
+        }
+        if (wasEmpty.current && entityCount > 0) {
+            setPagination(prev => ({ ...prev, pageSize: TODAS }));
+            wasEmpty.current = false;
+        }
+    }, [entityCount]);
 
     const totalOcc = useMemo(
         () => filteredEnts.reduce((acc, e) => acc + (e.offsets?.length ?? 0), 0),
@@ -29,15 +66,21 @@ export function EntityTable({ file }: { file: UserFile }) {
 
     const columns = useMemo<MRT_ColumnDef<Entity>[]>(() => {
         return [
-            TYPE_COL(typesList),
+            TYPE_COL(typesList, file.pool, file),
             COUNT_COL(totalOcc),
-            ENTITY_COL(file.pool),
-            ANONIMIZE_COL(file.pool, typesDict),
+            ENTITY_COL(file.pool, ents.length),
+            ANONIMIZE_COL(file.pool, typesList),
         ];
-    }, [typesList, totalOcc, file.pool, typesDict]);
+    }, [typesList, totalOcc, file.pool, ents.length]);
+
+    const handleToggle = (_: React.MouseEvent<HTMLElement>, v: string | null) => {
+        setShowOnlyMarks(v === "marcas");
+        setColumnFilters([]);
+        setPagination(prev => ({ ...prev, pageIndex: 0 }));
+    };
 
     return (
-        <MaterialReactTable<Entity>
+        <MaterialReactTable
             key="ent-table"
             columns={columns}
             data={filteredEnts}
@@ -45,18 +88,21 @@ export function EntityTable({ file }: { file: UserFile }) {
 
             enableRowSelection
             enableEditing
-            editDisplayMode="cell"
+            editingMode="cell"
             positionActionsColumn="last"
 
             enableColumnOrdering={false}
             enableColumnDragging={false}
             enableColumnActions={false}
-            enableGlobalFilter={false}
+            enableGlobalFilter
 
             enableRowVirtualization={false}
             enableColumnResizing
             columnResizeMode="onChange"
-            muiTableProps={{ sx: { tableLayout: "grid", width: "100%" } }}
+            muiTableContainerProps={{
+                sx: { maxWidth: "100%", overflowX: "hidden" }
+            }}
+            muiTableProps={{ sx: { tableLayout: "fixed", width: "100%" } }}
             displayColumnDefOptions={{
                 "mrt-row-select": { size: 44, minSize: 44, maxSize: 44, enableResizing: false },
                 "mrt-row-expand": { size: 44, minSize: 44, maxSize: 44, enableResizing: false },
@@ -81,7 +127,7 @@ export function EntityTable({ file }: { file: UserFile }) {
             }}
             muiTableBodyCellProps={{ sx: { py: 0.75, px: 1, lineHeight: 1.25 } }}
 
-            getRowId={(r: { index: { toString: () => any; }; }) => r.index.toString()}
+            getRowId={(r) => r.index.toString()}
 
             renderDetailPanel={entityDetails(file.pool)}
 
@@ -110,7 +156,7 @@ export function EntityTable({ file }: { file: UserFile }) {
                                 size="small"
                                 disabled={row.original.offsets.length <= 1}
                                 onClick={() => {
-                                    row.original.offsets.forEach((off: { start: number; end: number; }) => file.pool.splitOffset(off.start, off.end));
+                                    row.original.offsets.forEach((off) => file.pool.splitOffset(off.start, off.end));
                                     file.checkCountPES();
                                 }}
                             >
@@ -135,7 +181,7 @@ export function EntityTable({ file }: { file: UserFile }) {
                 </div>
             )}
 
-            renderTopToolbarCustomActions={toolbar(file.pool, file, showOnlyMarks, setShowOnlyMarks)}
+            renderTopToolbarCustomActions={toolbar(file.pool, file, showOnlyMarks, handleToggle, typesList)}
 
             enableStickyHeader
             enableHiding
@@ -145,77 +191,107 @@ export function EntityTable({ file }: { file: UserFile }) {
             muiTableBodyRowProps={() => ({
                 sx: { "&:hover": { backgroundColor: "rgba(244,236,206,.35)" } },
             })}
-            muiPaginationProps={{
-                rowsPerPageOptions: [10, 25, 50, 100],
+            muiTablePaginationProps={{
+                rowsPerPageOptions: [
+                    { label: "25", value: 25 },
+                    { label: "50", value: 50 },
+                    { label: "100", value: 100 },
+                    { label: "Todas", value: TODAS },
+                ]
             }}
-            muiTablePaperProps={{
-                sx: { display: "flex", flexDirection: "column" },
-            }}
-            positionToolbarAlertBanner="bottom"
             initialState={{
                 density: "compact",
                 sorting: [{ id: "count", desc: true }],
-                columnPinning: { right: ["mrt-row-actions"] },
-                pagination: { pageIndex: 0, pageSize: 25 }
             }}
+            state={{
+                columnFilters,
+                pagination,
+            }}
+            onColumnFiltersChange={setColumnFilters}
+            onPaginationChange={setPagination}
         />
     );
 }
 
 const toolbar =
-    (pool: EntityPool, file: UserFile, showOnlyMarks: boolean, setShowOnlyMarks: (v: boolean) => void) =>
+    (pool: EntityPool, file: UserFile, showOnlyMarks: boolean, onToggle: (e: React.MouseEvent<HTMLElement>, v: string | null) => void, typesList: EntityTypeI[]) =>
         ({ table }: { table: MRT_TableInstance<Entity> }) => {
             const selectedCount = Object.keys(table.getState().rowSelection).length;
             const isJoinDisabled = showOnlyMarks || selectedCount <= 1;
             const isSplitDisabled = showOnlyMarks || selectedCount === 0;
+            const [showTypePicker, setShowTypePicker] = useState(false);
+            const btnRef = useRef<HTMLSpanElement>(null);
 
             return (
                 <div className="d-flex w-100 align-items-center gap-2">
-                    <Badge badgeContent={selectedCount} color={selectedCount ? "primary" : "default"}>
+                    <span title="Juntar" className="d-inline-flex flex-shrink-0 align-middle">
+                        <Badge badgeContent={selectedCount} color={selectedCount ? "primary" : "default"}>
+                            <Button
+                                i="union"
+                                text="Juntar"
+                                className="btn btn-primary my-0 mx-1 p-1"
+                                disabled={isJoinDisabled}
+                                onClick={() => {
+                                    if (!isJoinDisabled) joinSelectedEntities(table, pool, file);
+                                }}
+                            />
+                        </Badge>
+                    </span>
+
+                    <span title="Separar" className="d-inline-flex flex-shrink-0 align-middle">
                         <Button
-                            i="union"
-                            text="Juntar"
-                            className="btn btn-primary my-0 mx-1 p-1"
-                            disabled={isJoinDisabled}
+                            i="exclude"
+                            text="Separar"
+                            className="btn btn-warning my-0 mx-1 p-1"
+                            disabled={isSplitDisabled}
                             onClick={() => {
-                                if (!isJoinDisabled) joinSelectedEntities(table, pool, file);
+                                if (!isSplitDisabled) splitSelectedEntities(table, pool, file);
                             }}
                         />
-                    </Badge>
+                    </span>
 
-                    <Button
-                        i="exclude"
-                        text="Separar"
-                        className="btn btn-warning my-0 mx-1 p-1"
-                        disabled={isSplitDisabled}
-                        onClick={() => {
-                            if (!isSplitDisabled) splitSelectedEntities(table, pool, file);
-                        }}
-                    />
+                    <span title="Remover" className="d-inline-flex flex-shrink-0 align-middle">
+                        <Button
+                            i="trash"
+                            text="Remover"
+                            className="btn btn-danger my-0 mx-1 p-1"
+                            disabled={selectedCount === 0}
+                            onClick={() => removeSelectedEntities(table, pool, file)}
 
-                    <Button
-                        i="trash"
-                        text="Remover"
-                        className="btn btn-danger my-0 mx-1 p-1"
-                        disabled={selectedCount === 0}
-                        onClick={() => removeSelectedEntities(table, pool, file)}
-                    />
+                        />
+                    </span>
+
+                    <span ref={btnRef} title="Mudar Tipo" className="d-inline-flex flex-shrink-0 align-middle">
+                        <Button
+                            i="pencil"
+                            text="Mudar Tipo"
+                            className="btn btn-secondary my-0 mx-1 p-1"
+                            disabled={selectedCount === 0 || showOnlyMarks}
+                            onClick={() => {
+                                setShowTypePicker(v => !v);
+                            }}
+                        />
+                        {showTypePicker && (
+                            <Portal>
+                                <TypePickerDropdown
+                                    types={typesList}
+                                    anchorRef={btnRef}  
+                                    onSelect={(newType) => {
+                                        changeSelectedEntitiesType(table, pool, file, newType);
+                                    }}
+                                    onClose={() => setShowTypePicker(false)}
+                                />
+                            </Portal>
+                        )}
+                    </span>
 
                     <div className="flex-grow-1" />
-
-                    <TextField
-                        size="small"
-                        placeholder="Pesquisar…"
-                        value={table.getState().globalFilter ?? ""}
-                        onChange={(e) => table.setGlobalFilter(e.target.value)}
-                        sx={{ minWidth: 220 }}
-                    />
 
                     <ToggleButtonGroup
                         size="small"
                         value={showOnlyMarks ? "marcas" : "todas"}
                         exclusive
-                        onChange={(_, v) => setShowOnlyMarks(v === "marcas")}
+                        onChange={onToggle}
                     >
                         <ToggleButton value="todas">Todas</ToggleButton>
                         <ToggleButton value="marcas">Marcas</ToggleButton>
@@ -228,9 +304,6 @@ const selectedIndexes = (table: MRT_TableInstance<Entity>) =>
     Object.keys(table.getState().rowSelection)
         .map((k) => parseInt(k, 10) - 1)
         .filter((k) => !isNaN(k));
-
-//const selectedIndexes = (table: MRT_TableInstance<Entity>) =>
-//  table.getSelectedRowModel().rows.map((row) => row.original.index);
 
 const removeTableSelection = (table: MRT_TableInstance<Entity>) => table.setRowSelection({});
 
@@ -245,12 +318,17 @@ const splitSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPoo
     removeTableSelection(table);
     file.checkCountPES();
 };
+    
+const changeSelectedEntitiesType = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile, newType: string) => {
+    pool.changeEntitiesType(selectedIndexes(table), newType);
+    removeTableSelection(table);
+    file.checkCountPES();
+}
+
 
 const removeSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
     pool.removeEntities(selectedIndexes(table));
     removeTableSelection(table);
-    console.log("Selected indexes LENGTH:", selectedIndexes(table).length);
-    console.log("Selected indexes FULL:", selectedIndexes(table));
     file.checkCountPES();
 };
 
@@ -286,9 +364,7 @@ const COUNT_COL = (totalOcc: number): MRT_ColumnDef<Entity> => ({
     id: "count",
     header: `# (${totalOcc})`,
     accessorFn: (e) => e.offsets.length,
-    size: 90,
-    minSize: 90,
-    maxSize: 132,
+    size: 50, minSize: 40, maxSize: 100,
     sortDescFirst: true,
     enableColumnActions: false,
     muiTableHeadCellProps: { align: "right" },
@@ -296,13 +372,11 @@ const COUNT_COL = (totalOcc: number): MRT_ColumnDef<Entity> => ({
     Cell: ({ cell }) => <strong>{cell.getValue<number>() ?? 0}</strong>,
 });
 
-const ENTITY_COL: (pool: EntityPool) => MRT_ColumnDef<Entity> = (pool) => ({
+const ENTITY_COL: (pool: EntityPool, count: number) => MRT_ColumnDef<Entity> = (pool, count) => ({
     id: "entity",
-    header: `Entidade (${pool.entities.length})`,
+    header: `Entidade (${count})`,
     accessorFn: (ent) => ent.offsets[0]?.preview ?? "",
-    size: 210,
-    minSize: 200,
-    maxSize: 280,
+    size: 160, minSize: 100, maxSize: 280,
     enableEditing: false,
     enableColumnFilter: true,
     enableColumnDragging: false,
@@ -323,46 +397,137 @@ const ENTITY_COL: (pool: EntityPool) => MRT_ColumnDef<Entity> = (pool) => ({
     }),
 });
 
-const TYPE_COL: (types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (types) => ({
+const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_ColumnDef<Entity> = (types, pool, file) => {
+    const sortedTypes = sortEntityTypesXLast(types);
+    return ({
     id: "type",
+
     header: "Tipo",
     accessorKey: "type",
-    size: 95,
-    minSize: 90,
-    maxSize: 140,
+    size: 60, minSize: 40, maxSize: 100,
     enableEditing: false,
     enableColumnActions: false,
-    filterVariant: "select",
-    filterSelectOptions: types.map((t) => t.name),
-    muiTableHeadCellProps: { align: "center" },
-    muiTableBodyCellProps: { align: "center", sx: { px: 1 } },
-    Cell: ({ row, table }) => {
-        const t =
-            types.find((x) => x.name === row.original.type) ||
-            ({ name: `${row.original.type}*`, color: "red", functionIndex: FULL_ANONIMIZE } as EntityTypeI);
+    filterFn: (row, _columnId, filterValue) => {
+        if (filterValue === "__ONLY_X__") return row.original.type.startsWith("X-");
+        if (filterValue === "__NO_X__") return !row.original.type.startsWith("X-");
+        const parentType = sortedTypes.find(t => t.name === filterValue);
+        if (parentType?.subtypes?.length) {
+            return row.original.type === filterValue ||
+                   parentType.subtypes.some(s => s.name === row.original.type);
+        }
+        return row.original.type === filterValue;
+    },
+    Filter: ({ column }) => {
+        const [open, setOpen] = useState(false);
+        const btnRef = useRef<HTMLDivElement>(null);
+        const filterValue = column.getFilterValue() as string ?? "";
+
+        const displayLabel = filterValue === "__NO_X__" ? "Entidades Normais"
+            : filterValue === "__ONLY_X__" ? "Entidades X"
+            : filterValue || "";
+
+        const handleFilterSelect = (value: string) => {
+            column.setFilterValue(value || undefined);
+            setOpen(false);
+        };
+
         return (
-            <span
-                className="badge text-body"
-                title="Filtrar por este tipo"
-                style={{ background: t.color, cursor: "pointer" }}
-                onClick={() => table.getColumn("type")?.setFilterValue(t.name)}
-            >
-                {t.name}
-            </span>
+            <>
+                <div ref={btnRef} onClick={() => setOpen(v => !v)}>
+                    <TextField
+                        size="small"
+                        variant="standard"
+                        value={displayLabel}
+                        placeholder="Filtrar"
+                        InputProps={{ readOnly: true, style: { cursor: "pointer", fontSize: "0.85rem" } }}
+                        fullWidth
+                    />
+                </div>
+                {open && (
+                    <Portal>
+                        <TypePickerDropdown
+                            types={sortedTypes}
+                            anchorRef={btnRef}
+                            onSelect={handleFilterSelect}
+                            onClose={() => setOpen(false)}
+                            extraItems={
+                                <>
+                                    <button className="dropdown-item" onClick={() => handleFilterSelect("")}>
+                                        <em>Todos</em>
+                                    </button>
+                                    <button className="dropdown-item" onClick={() => handleFilterSelect("__NO_X__")}>
+                                        Entidades Normais
+                                    </button>
+                                    <button className="dropdown-item" onClick={() => handleFilterSelect("__ONLY_X__")}>
+                                        Entidades X
+                                    </button>
+                                    <div className="dropdown-divider" />
+                                </>
+                            }
+                        />
+                    </Portal>
+                )}
+            </>
         );
     },
-});
+    muiTableHeadCellProps: { align: "left" },
+    muiTableBodyCellProps: { align: "left", sx: { px: 1 } },
+    Cell: ({ row}) => {
+        const [showTypePicker, setShowTypePicker] = useState(false);
+        const badgeRef = useRef<HTMLSpanElement>(null);
 
-const ANONIMIZE_COL: (pool: EntityPool, types: Record<string, EntityTypeI>) => MRT_ColumnDef<Entity> = (
+        const t = getType(types, row.original.type);
+
+        const handleClick = (evt: React.MouseEvent<HTMLSpanElement>) => {
+            evt.stopPropagation();
+            setShowTypePicker(v => !v);
+        };
+
+        const handleSelectType = (newType: string) => {
+            pool.changeEntitiesType([row.original.index - 1], newType);
+            file.checkCountPES();
+        };
+
+        return (
+            <>
+                <span
+                    ref={badgeRef}
+                    className="badge text-body"
+                    title="Alterar tipo de todas as ocorrências"
+                    style={{ background: t.color, cursor: "pointer" }}
+                    onClick={handleClick}
+                >
+                    {t.name}
+                </span>
+                {showTypePicker && (
+                    <Portal>
+                        <TypePickerDropdown
+                            types={types}
+                            anchorRef={badgeRef}
+                            onSelect={handleSelectType}
+                            onClose={() => setShowTypePicker(false)}
+                        />
+                    </Portal>
+                )}
+            </>
+        );
+    },
+    });
+};
+const ANONIMIZE_COL: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (
     pool,
     types,
 ) => ({
     id: "anon",
     header: "Anonimização",
-    accessorKey: "overwriteAnonimization",
-    size: 196,
-    minSize: 180,
-    maxSize: 280,
+    accessorFn: (row) => row.overwriteAnonimization || row.anonimizingFunction(getType(types, row.type))(
+        row.offsets[0]?.preview,
+        row.type,
+        row.index,
+        row.typeIndex,
+        row.funcIndex,
+    ),
+    size: 160, minSize: 100, maxSize: 280,
     enableColumnActions: false,
     muiTableHeadCellProps: { align: "left" },
     muiTableBodyCellProps: {
@@ -370,7 +535,7 @@ const ANONIMIZE_COL: (pool: EntityPool, types: Record<string, EntityTypeI>) => M
         sx: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
     },
     Cell: ({ row }) => {
-        const generated = row.original.anonimizingFunction(types[row.original.type])(
+        const generated = row.original.anonimizingFunction(getType(types, row.original.type))(
             row.original.offsets[0].preview,
             row.original.type,
             row.original.index,
@@ -390,15 +555,15 @@ const ANONIMIZE_COL: (pool: EntityPool, types: Record<string, EntityTypeI>) => M
             </code>
         );
     },
-    muiTableBodyCellEditTextFieldProps: (row: { original: { anonimizingFunction: (arg0: EntityTypeI) => { (arg0: any, arg1: any, arg2: any, arg3: any, arg4: any): any; new(): any; }; type: string | number; offsets: { preview: any; }[]; index: any; typeIndex: any; funcIndex: any; overwriteAnonimization: any; }; }) => ({
-        placeholder: row.original.anonimizingFunction(types[row.original.type])(
+    muiTableBodyCellEditTextFieldProps: ({ row }) => ({
+        placeholder: row.original.anonimizingFunction(getType(types, row.original.type))(
             row.original.offsets[0].preview,
             row.original.type,
             row.original.index,
             row.original.typeIndex,
             row.original.funcIndex,
         ),
-        onBlur: (event: { target: { value: any; }; }) => {
+        onBlur: (event) => {
             const old = row.original.overwriteAnonimization;
             row.original.overwriteAnonimization = event.target.value;
             if (old !== row.original.overwriteAnonimization) pool.updateOrder("Modificar anonimização de entidade");

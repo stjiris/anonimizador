@@ -1,6 +1,8 @@
 import { AnonimizeFunction, AnonimizeFunctionDescription, AUTO_ANONIMIZE, DONT_ANONIMIZE, functionsWithDescriptionArray } from "@/core/anonimizeFunctions"
 
-export interface EntityTypeI extends EntityTypeColor, EntityTypeFunction { }
+export interface EntityTypeI extends EntityTypeColor, EntityTypeFunction { 
+    subtypes?: EntityTypeI[]
+}
 
 export interface EntityTypeFunction {
     name: string
@@ -15,7 +17,26 @@ export interface EntityTypeColor {
 export const EntityTypeIVersion = "EntityTypeI.v0.1"
 
 export const EntityTypeIDefaults: { [key: string]: EntityTypeI } = {
-    PES: { name: "PES", color: "#00e2ff", functionIndex: AUTO_ANONIMIZE },
+    PES: {
+        name: "PES",
+        color: "#00e2ff",
+        functionIndex: AUTO_ANONIMIZE,
+        subtypes: [
+            { name: "Autor", color: "#00E2FF", functionIndex: AUTO_ANONIMIZE },
+            { name: "Réu", color: "#00E2FF", functionIndex: AUTO_ANONIMIZE },
+            { name: "Lesado", color: "#00E2FF", functionIndex: AUTO_ANONIMIZE },
+            { name: "Vítima", color: "#00E2FF", functionIndex: AUTO_ANONIMIZE },
+            { name: "Ofendido", color: "#00E2FF", functionIndex: AUTO_ANONIMIZE },
+            { name: "Demandante", color: "#00E2FF", functionIndex: AUTO_ANONIMIZE },
+            { name: "Assistente", color: "#00E2FF", functionIndex: AUTO_ANONIMIZE },
+            { name: "Arguido", color: "#00E2FF", functionIndex: AUTO_ANONIMIZE },
+            { name: "Exequente", color: "#00E2FF", functionIndex: AUTO_ANONIMIZE },
+            { name: "Executado", color: "#00E2FF", functionIndex: AUTO_ANONIMIZE },
+            { name: "Insolvente", color: "#00E2FF", functionIndex: AUTO_ANONIMIZE },
+            { name: "Testemunha", color: "#00E2FF", functionIndex: AUTO_ANONIMIZE },
+            { name: "Ré", color: "#00E2FF", functionIndex: AUTO_ANONIMIZE }
+        ]
+    },
     "X-PES": { name: "X-PES", color: "#DCDCDC", functionIndex: DONT_ANONIMIZE },
     DAT: { name: "DAT", color: "#b7ff63", functionIndex: AUTO_ANONIMIZE },
     "X-DAT": { name: "X-DAT", color: "#DCDCDC", functionIndex: DONT_ANONIMIZE },
@@ -95,7 +116,7 @@ export class Entity implements EntityI {
             { name: "Valor exato", description: "", fun: () => this.overwriteAnonimization! } :
             functionsWithDescriptionArray[entityType.functionIndex];
     }
-
+    
     toStub(): EntityI {
         return {
             type: this.type,
