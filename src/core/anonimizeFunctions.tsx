@@ -75,6 +75,11 @@ export const year: AnonimizeFunction = (str: string, ...args) => {
         return "... de " + mesDeAnoDeyyyy[1];
     }
 
+    let diaDeMes = str.match(/^\d{1,2} de .+/);
+    if (diaDeMes) {
+        return "... de ...";
+    }
+
     return reticiencias(str, ...args);
 }
 
@@ -103,6 +108,11 @@ export const year2: AnonimizeFunction = (str: string, ...args) => {
     let mesDeAnoDeyyyy = str.match(/.* de (\d{4})/);
     if (mesDeAnoDeyyyy) {
         return "M de " + mesDeAnoDeyyyy[1];
+    }
+
+    let diaDeMes = str.match(/^\d{1,2} de .+/);
+    if (diaDeMes) {
+        return "D de M";
     }
 
     return str;
@@ -152,7 +162,7 @@ const moradasTypes = [
 ]
 
 export const iban_prefix: AnonimizeFunction = (str) => {
-    const match = str.match(/^([A-Z]{2}\d{2})/);
+    const match = str.match(/^(?:IBAN\s+)?([A-Z]{2}\d{2})/);
     if (match) {
         return "IBAN " + match[1];
     }
