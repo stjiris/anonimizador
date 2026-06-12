@@ -1,4 +1,4 @@
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { MaterialReactTable, MRT_ColumnDef, MRT_ColumnFiltersState, MRT_Row, MRT_TableInstance, } from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 
@@ -15,6 +15,7 @@ import { FULL_ANONIMIZE } from "@/core/anonimizeFunctions";
 import { EntitiesStyle } from "@/core/entitiesStyle";
 import { sortEntityTypesXLast } from "@/components/Anonimize/Tooltip";
 import { TypePickerDropdown } from "@/components/Anonimize/TypePickerDropdown";
+import { planAutoPageBreaks } from "@/components/Anonimize/render";
 
 const TODAS = Number.MAX_SAFE_INTEGER;
 
@@ -63,6 +64,23 @@ export function EntityTable({ file }: { file: UserFile }) {
         () => filteredEnts.reduce((acc, e) => acc + (e.offsets?.length ?? 0), 0),
         [filteredEnts]
     );
+
+    const sortedPageBreaks = useMemo(() => {
+        const breaks = planAutoPageBreaks(file.doc, 2300);
+        return Array.from(breaks).sort((a, b) => a - b);
+    }, [file.doc]);
+
+    const totalPages = sortedPageBreaks.length + 1;
+
+    const getPageNumber = useCallback((offset: number) => {
+        let lo = 0, hi = sortedPageBreaks.length;
+        while (lo < hi) {
+            const mid = (lo + hi) >>> 1;
+            if (sortedPageBreaks[mid] <= offset) lo = mid + 1;
+            else hi = mid;
+        }
+        return lo + 1;
+    }, [sortedPageBreaks]);
 
     const columns = useMemo<MRT_ColumnDef<Entity>[]>(() => {
         return [
@@ -129,7 +147,7 @@ export function EntityTable({ file }: { file: UserFile }) {
 
             getRowId={(r) => r.index.toString()}
 
-            renderDetailPanel={entityDetails(file.pool, file.doc.textContent?.length ?? 0)}
+            renderDetailPanel={entityDetails(file.pool, totalPages, getPageNumber)}
 
             renderRowActions={({ row, table }) => (
                 <div style={{ display: "flex", gap: 6 }}>
@@ -333,15 +351,20 @@ const removeSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPo
 };
 
 const entityDetails =
-    (pool: EntityPool, totalChars: number) =>
+    (pool: EntityPool, totalPages: number, getPageNumber: (offset: number) => number) =>
         ({ row }: { row: MRT_Row<Entity> }) =>
             row.original.offsets.map((off, i) => {
-                const pct = totalChars > 0 ? Math.round((off.start / totalChars) * 100) : 0;
-                const segment = Math.min(Math.floor(pct / (100 / 7)), 6);
+                const page = getPageNumber(off.start);
                 return (
                 <div key={i} className="d-flex align-items-center border-bottom">
                     <div className="d-flex align-items-center justify-content-end flex-grow-1" style={{ gap: 8 }}>
-                    <PositionIcon segment={segment} />
+                    <span
+                        className="text-muted small text-nowrap"
+                        title={`Página ${page} de ${totalPages}`}
+                        style={{ fontVariantNumeric: "tabular-nums" }}
+                    >
+                        {page}/{totalPages}
+                    </span>
                     <span
                         role="button"
                         className="text-end"
@@ -420,68 +443,6 @@ const COUNT_COL = (totalOcc: number): MRT_ColumnDef<Entity> => ({
     muiTableBodyCellProps: { align: "right" },
     Cell: ({ cell }) => <strong>{cell.getValue<number>() ?? 0}</strong>,
 });
-
-function PositionIcon({ segment }: { segment: number }) {
-    const rawId = useId();
-    const safeId = rawId.replace(/:/g, "");
-    const gradId = `posGrad-${safeId}`;
-
-    const totalSegments = 7;
-    const vialWidth = 18;
-    const height = 38;
-    const bodyHeight = 26;
-    const barHeight = 5;
-    const barOverflow = 4;
-    const stroke = 2;
-    const svgWidth = vialWidth + barOverflow * 2;
-
-    const topPadding = 3;
-    const bottomPadding = 5;
-    const barTop = topPadding + (segment / (totalSegments - 1)) * (height - barHeight - topPadding - bottomPadding);
-
-    const inset = stroke / 2;
-    const left = barOverflow + inset;
-    const right = svgWidth - barOverflow - inset;
-    const centerX = svgWidth / 2;
-    const path = `M ${left},${inset} L ${right},${inset} L ${right},${bodyHeight} L ${centerX},${height - inset} L ${left},${bodyHeight} Z`;
-
-    return (
-        <div title={`~${Math.round((segment / 6) * 100)}% do documento`} style={{
-            width: svgWidth,
-            height,
-            flexShrink: 0,
-            lineHeight: 0,
-        }}>
-            <svg width={svgWidth} height={height} viewBox={`0 0 ${svgWidth} ${height}`} style={{ display: "block", overflow: "visible" }}>
-                <defs>
-                    <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#e8f0fe" />
-                        <stop offset="100%" stopColor="#ffffff" />
-                    </linearGradient>
-                </defs>
-
-                <path d={path} fill={`url(#${gradId})`} />
-
-                <path
-                    d={path}
-                    fill="none"
-                    stroke="#aaa"
-                    strokeWidth={stroke}
-                    strokeLinejoin="round"
-                />
-
-                <rect
-                    x={0}
-                    y={barTop}
-                    width={svgWidth}
-                    height={barHeight}
-                    fill="#1a6096"
-                    shapeRendering="crispEdges"
-                />
-            </svg>
-        </div>
-    );
-}
 
 const ENTITY_COL: (pool: EntityPool, count: number) => MRT_ColumnDef<Entity> = (pool, count) => ({
     id: "entity",
