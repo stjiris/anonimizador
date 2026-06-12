@@ -1,7 +1,7 @@
 export function formatXml(xml: string): string {
-    const TOP_MARGIN = 0.05;  // 8% acima da página para remoçao direta de header
+    const TOP_MARGIN = 0.07;  // 7% acima da página para remoçao direta de header
     const POSSIBLE_HEADER = 0.2; // 20% acima da página para considerar como possível header e retirar se se repetir
-    const BOTTOM_MARGIN = 0.95; // 8% abaixo da página
+    const BOTTOM_MARGIN = 0.91; // 7% abaixo da página
     const WRAP_THRESHOLD = 0.75; // 75% da largura da página para considerar quebra de linha como word wrap invés de parágrafo
     const SAME_LINE_THRESHOLD = 2; // 2px de diferença vertical para considerar como mesma linha
 
