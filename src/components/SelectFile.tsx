@@ -1,5 +1,5 @@
 'use client'
-import React, { ChangeEvent, useEffect, useState } from "react";
+import React, { ChangeEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { createUserFile, deleteUserFile, readSavedUserFile, listUserFile } from "@/core/UserFileCRUDL";
 import { isSavedUserFile, SavedUserFile, UserFile } from "@/core/UserFile";
 import { MRT_ColumnDef, MaterialReactTable } from "material-react-table";
@@ -10,41 +10,43 @@ import ReactDOM from "react-dom";
 // https://stackoverflow.com/a/18650828/2573422
 export function formatBytes(a: number, b = 2) { if (!+a) return "0 Bytes"; const c = 0 > b ? 0 : b, d = Math.floor(Math.log(a) / Math.log(1024)); return `${parseFloat((a / Math.pow(1024, d)).toFixed(c))} ${["Bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"][d]}` }
 
-const intl = new Intl.DateTimeFormat(["pt", "en"], { dateStyle: "short", timeStyle: "medium" });
+// "38/80 KiB" — value and total share the unit, picked from the total's magnitude.
+export function formatBytesPair(value: number, total: number, decimals = 2): string {
+    if (!+total) return formatBytes(value, decimals);
+    const c = Math.max(0, decimals);
+    const d = Math.floor(Math.log(total) / Math.log(1024));
+    const unit = ["Bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"][d];
+    const v = parseFloat((value / Math.pow(1024, d)).toFixed(c));
+    const t = parseFloat((total / Math.pow(1024, d)).toFixed(c));
+    return `${v}/${t} ${unit}`;
+}
 
-const cols: MRT_ColumnDef<SavedUserFile>[] = [
-    {
-        header: "Ficheiros Locais",
-        Header: <><i className="bi bi-file-earmark-fill"></i> Ficheiros Locais</>,
-        accessorKey: "name",
-        size: 80,
-        Cell: ({ row }) => <Button i="file-earmark" className="text-nowrap text-primary btn m-0 p-0" title={`Abrir ${row.original.name}`} text={row.original.name} />
-    },
-    {
-        header: "Tamanho",
-        accessorFn: file => formatBytes(new Blob([JSON.stringify(file)]).size) // Overengeneering text.length
-    },
-    {
-        header: "N.º de Entidades / Ocorrências",
-        accessorFn: file => `${file.ents.reduce((acc, c) => acc + 1, 0)} / ${file.ents.reduce((acc, c) => acc + c.offsets.length, 0)}`
-    },
-    {
-        header: "Importado", accessorKey: "imported", accessorFn: (file) => intl.format(new Date(file.imported))
-    },
-    {
-        header: "Modificado", accessorKey: "modified", accessorFn: (file) => intl.format(new Date(file.modified))
-    }
-]
+type StorageInfo = { usage: number; quota: number };
+
+async function readStorageInfo(): Promise<StorageInfo | null> {
+    if (typeof navigator === "undefined" || !navigator.storage?.estimate) return null;
+    const { usage, quota } = await navigator.storage.estimate();
+    return { usage: usage ?? 0, quota: quota ?? 0 };
+}
+
+const intl = new Intl.DateTimeFormat(["pt", "en"], { dateStyle: "short", timeStyle: "medium" });
 
 export default function SelectFile({ setUserFile }: { setUserFile: (file: UserFile) => void }) {
     const [list, setList] = useState<SavedUserFile[]>([]);
+    const [storage, setStorage] = useState<StorageInfo | null>(null);
+
+    const refreshStorage = useCallback(async () => {
+        const info = await readStorageInfo();
+        if (info) setStorage(info);
+    }, []);
 
     useEffect(() => {
         (async () => {
             const files = await listUserFile();
             setList(files);
         })();
-    }, []);
+        refreshStorage();
+    }, [refreshStorage]);
 
     useEffect(() => {
         const update = () => {
@@ -52,10 +54,40 @@ export default function SelectFile({ setUserFile }: { setUserFile: (file: UserFi
                 const files = await listUserFile();
                 setList(files);
             })();
+            refreshStorage();
         };
         window.addEventListener("AlertUpdateListUserFile", update);
         return () => window.removeEventListener("AlertUpdateListUserFile", update);
-    }, []);
+    }, [refreshStorage]);
+
+    const docsSize = useMemo(
+        () => list.reduce((acc, f) => acc + new Blob([JSON.stringify(f)]).size, 0),
+        [list]
+    );
+
+    const cols = useMemo<MRT_ColumnDef<SavedUserFile>[]>(() => [
+        {
+            header: "Ficheiros Locais",
+            Header: <><i className="bi bi-file-earmark-fill"></i> Ficheiros Locais</>,
+            accessorKey: "name",
+            size: 80,
+            Cell: ({ row }) => <Button i="file-earmark" className="text-nowrap text-primary btn m-0 p-0" title={`Abrir ${row.original.name}`} text={row.original.name} />
+        },
+        {
+            header: "Tamanho",
+            accessorFn: file => formatBytes(new Blob([JSON.stringify(file)]).size)
+        },
+        {
+            header: "N.º de Entidades / Ocorrências",
+            accessorFn: file => `${file.ents.reduce((acc, c) => acc + 1, 0)} / ${file.ents.reduce((acc, c) => acc + c.offsets.length, 0)}`
+        },
+        {
+            header: "Importado", accessorKey: "imported", accessorFn: (file) => intl.format(new Date(file.imported))
+        },
+        {
+            header: "Modificado", accessorKey: "modified", accessorFn: (file) => intl.format(new Date(file.modified))
+        }
+    ], []);
 
     return (
         <MaterialReactTable
@@ -69,7 +101,12 @@ export default function SelectFile({ setUserFile }: { setUserFile: (file: UserFi
             muiTableBodyRowProps={({ row }) => ({
                 onClick: () => setUserFile(new UserFile(row.original))
             })}
-            renderTopToolbarCustomActions={() => <AddUserFileAction setUserFile={setUserFile} />}
+            renderTopToolbarCustomActions={() => (
+                <div className="d-flex w-100 align-items-center gap-3 flex-wrap">
+                    <AddUserFileAction setUserFile={setUserFile} />
+                    {storage && <StorageSummary storage={storage} docsSize={docsSize} />}
+                </div>
+            )}
             enablePagination={false}
             enableDensityToggle={false}
             enableHiding={false}
@@ -87,7 +124,9 @@ export default function SelectFile({ setUserFile }: { setUserFile: (file: UserFi
     );
 }
 
-async function onFile(event: React.ChangeEvent<HTMLInputElement>, askMemoryAlert: () => Promise<boolean>): Promise<UserFile | undefined> {
+type MemoryAlertInfo = { fileSize: number; usage: number; quota: number };
+
+async function onFile(event: React.ChangeEvent<HTMLInputElement>, askMemoryAlert: (info: MemoryAlertInfo) => Promise<boolean>): Promise<UserFile | undefined> {
     let files = event.target.files;
     if (files == null) return;
 
@@ -97,7 +136,7 @@ async function onFile(event: React.ChangeEvent<HTMLInputElement>, askMemoryAlert
     const { usage, quota } = await navigator.storage.estimate();
     const freeSpace = (quota ?? 0) - (usage ?? 0);
     if (freeSpace < file.size * 3) { //testar: Number.MAX_SAFE_INTEGER) { ||| final: if (freeSpace < file.size * 3) {
-        const continuar = await askMemoryAlert();
+        const continuar = await askMemoryAlert({ fileSize: file.size, usage: usage ?? 0, quota: quota ?? 0 });
         if (!continuar) {
             event.target.value = "";
             return;
@@ -173,12 +212,14 @@ async function onFile(event: React.ChangeEvent<HTMLInputElement>, askMemoryAlert
 }
 
 export function AddUserFileAction({ setUserFile }: { setUserFile: (file: UserFile) => void }) {
-    
+
     const [showMemoryAlert, setShowMemoryAlert] = useState(false);
     const [resolveMemoryAlert, setResolveMemoryAlert] = useState<((v: boolean) => void) | null>(null);
+    const [memoryInfo, setMemoryInfo] = useState<MemoryAlertInfo | null>(null);
 
-    const askMemoryAlert = (): Promise<boolean> => {
+    const askMemoryAlert = (info: MemoryAlertInfo): Promise<boolean> => {
         return new Promise((resolve) => {
+            setMemoryInfo(info);
             setResolveMemoryAlert(() => resolve);
             setShowMemoryAlert(true);
         });
@@ -198,6 +239,18 @@ export function AddUserFileAction({ setUserFile }: { setUserFile: (file: UserFil
                             <div style={{ fontSize: "3rem" }}>⚠️</div>
                             <h5 className="text-danger fw-bold mt-2">ALERTA DE MEMÓRIA</h5>
                             <p className="fw-bold">PODERÁ NÃO VIR A TER ESPAÇO PARA TRABALHAR ESTE DOCUMENTO!!!</p>
+                            {memoryInfo && (
+                                <div className="my-3 p-2 border rounded bg-light text-start small">
+                                    <div className="d-flex justify-content-between">
+                                        <span className="text-muted">Tamanho do documento:</span>
+                                        <span className="fw-bold">{formatBytes(memoryInfo.fileSize)}</span>
+                                    </div>
+                                    <div className="d-flex justify-content-between">
+                                        <span className="text-muted">Espaço usado / total:</span>
+                                        <span className="fw-bold">{formatBytesPair(memoryInfo.usage, memoryInfo.quota)}</span>
+                                    </div>
+                                </div>
+                            )}
                             <p className="text-muted">Remova documentos antigos para libertar espaço...</p>
                             <p>Deseja continuar mesmo assim?</p>
                         </div>
@@ -218,4 +271,22 @@ export function AddUserFileAction({ setUserFile }: { setUserFile: (file: UserFil
 
 export function UserFileActions(props: { file: SavedUserFile, setUserFile: (file: UserFile) => void }) {
     return <Button className="m-1 p-1 text-danger btn" title="Eliminar" onClick={(ev) => { ev.stopPropagation(); deleteUserFile(props.file) }} i="trash" />
+}
+
+function StorageSummary({ storage, docsSize }: { storage: StorageInfo; docsSize: number }) {
+    const free = Math.max(0, storage.quota - storage.usage);
+    const pct = storage.quota > 0 ? Math.min(100, (storage.usage / storage.quota) * 100) : 0;
+    const isLow = pct >= 90;
+    const tone = isLow ? "text-danger" : pct >= 75 ? "text-warning" : "text-success";
+    return (
+        <div className="ms-auto d-flex align-items-center gap-2 small text-muted" title="Soma dos documentos guardados · espaço livre no browser">
+            <i className="bi bi-hdd"></i>
+            <span>Documentos: <span className="fw-bold text-body">{formatBytes(docsSize)}</span></span>
+            <span>·</span>
+            <span>Livre: <span className={`fw-bold ${tone}`}>{formatBytes(free)}</span></span>
+            <div style={{ width: 80, height: 6, background: "#e9ecef", borderRadius: 3, overflow: "hidden" }}>
+                <div style={{ width: `${pct}%`, height: "100%", background: isLow ? "#dc3545" : pct >= 75 ? "#fd7e14" : "#198754", transition: "width .2s" }} />
+            </div>
+        </div>
+    );
 }
