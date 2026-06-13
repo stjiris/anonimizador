@@ -363,7 +363,7 @@ const entityDetails =
                         title={`Página ${page} de ${totalPages}`}
                         style={{ fontVariantNumeric: "tabular-nums" }}
                     >
-                        {page}/{totalPages}
+                        Pág. {page} de {totalPages}
                     </span>
                     <span
                         role="button"
