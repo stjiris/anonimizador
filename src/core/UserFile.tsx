@@ -24,6 +24,7 @@ export interface SavedUserFile {
     profile?: string
     jurisId?: string
     jurisDocUrl?: string
+    importedFromJson?: boolean
 }
 
 export class UserFile implements UserFileInterface {
@@ -34,6 +35,7 @@ export class UserFile implements UserFileInterface {
     images: Record<number, AnonimizeImage>
     imported: Date
     modified: Date
+    importedFromJson?: boolean
     lastTopPosition: number
     area?: string
     descriptors?: DescriptorI[]
@@ -71,6 +73,7 @@ export class UserFile implements UserFileInterface {
         })
         this.imported = new Date(obj.imported)
         this.modified = new Date(obj.modified)
+        this.importedFromJson = obj.importedFromJson
 
         let dom = new DOMParser().parseFromString(this.html_contents, "text/html");
         this.doc = dom.body;
@@ -131,6 +134,7 @@ export class UserFile implements UserFileInterface {
             profile: this.profile,
             jurisId: this.jurisId,
             jurisDocUrl: this.jurisDocUrl,
+            importedFromJson: this.importedFromJson,
         }
     }
 
@@ -347,6 +351,7 @@ export class UserFile implements UserFileInterface {
             descriptors: undefined,
             area: undefined,
             summary: undefined,
+            importedFromJson: false,
         })
     }
 }
