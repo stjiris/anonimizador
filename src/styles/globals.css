@@ -115,13 +115,19 @@ img {
   border-radius: 10px;
 }
 
-/*.selected {
-  background-color: var(--secondary-gold);
-}*/
-
-.selected {
-  animation: highlight-flash 1.5s ease-out;
+.entity-highlight {
+  border-top: 2px solid #cc6600;
+  border-bottom: 2px solid #cc6600;
   border-radius: 3px;
+  animation: highlight-flash 1.5s ease-out;
+}
+
+.entity-highlight[data-anonimize-first] {
+  border-left: 2px solid #cc6600;
+}
+
+.entity-highlight[data-anonimize-last] {
+  border-right: 2px solid #cc6600;
 }
 
 @keyframes highlight-flash {
