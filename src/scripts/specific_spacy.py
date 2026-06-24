@@ -1,3 +1,4 @@
+import os
 import re
 import csv
 from spacy.language import Language
@@ -295,7 +296,16 @@ def process_entities(ents, text):
             
     return ents
 
-def split_into_chunks(text, tokenizer, max_length=500000):
+# Max characters fed to the transformer in a single pass. The NER model is a
+# spacy-transformers (BERT-style) pipeline that keeps the wordpiece embeddings
+# for the WHOLE doc in memory, so feeding it very large texts blows up RAM and
+# the container gets OOM-killed (seen as ECONNRESET on the caller). This is far
+# below spaCy's 1M-char length guard on purpose: larger texts are processed in
+# chunks of this size. Tune it via the NLP_CHUNK_CHARS env var (see .env for
+# recommended values per available RAM); lower it if the container still OOMs.
+NLP_CHUNK_CHARS = int(os.environ.get("NLP_CHUNK_CHARS", "50000"))
+
+def split_into_chunks(text, tokenizer, max_length=NLP_CHUNK_CHARS):
     """Split ``text`` into consecutive chunks of at most ``max_length`` characters.
 
     Returns ``(chunks, positions)`` where ``positions[i]`` is the character
@@ -428,10 +438,11 @@ def nlp(text, model):
 
     try:
 
-        # spaCy refuses texts longer than ``model.max_length`` (default 1M
-        # chars) to guard against excessive memory use, so pre-empt that here
-        # and fall through to the chunked path below.
-        if len(text) > model.max_length:
+        # The transformer keeps the whole doc's embeddings in memory, so any
+        # text beyond a memory-safe budget must be processed chunk by chunk —
+        # not just texts past spaCy's 1M-char guard. Running, say, a 600k-char
+        # decision in a single pass would still OOM-kill the container.
+        if len(text) > NLP_CHUNK_CHARS:
             raise RuntimeError
 
         #Runs the model
@@ -444,7 +455,7 @@ def nlp(text, model):
         # check, or an out-of-memory error): process it chunk by chunk.
 
         #Split text into chunks and keep each chunk's char offset in the document
-        chunks, positions = split_into_chunks(text, model.tokenizer, max_length=model.max_length // 2)
+        chunks, positions = split_into_chunks(text, model.tokenizer, max_length=NLP_CHUNK_CHARS)
 
         #Run the model for each chunk, mapping offsets back to the full document
         for chunk, offset in zip(chunks, positions):
