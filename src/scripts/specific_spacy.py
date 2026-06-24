@@ -1,6 +1,7 @@
 import os
 import re
 import csv
+import time
 from spacy.language import Language
 from spacy.matcher import Matcher, PhraseMatcher
 from flashtext import KeywordProcessor
@@ -363,19 +364,27 @@ def add_missed_entities(ents, text):
     # Sort the matches by length in descending order
     matches = sorted(matches, key=lambda x: x[2] - x[1], reverse=True)
 
-    # To keep track of spans already added
-    added_spans = []
+    # Track which character positions are already covered by an added span.
+    # ``covered[i]`` is 1 when char ``i`` sits inside an entity we've kept.
+    # This makes the overlap check O(1) per match instead of scanning every
+    # previously-added span (the old ``any(... for ... in added_spans)`` was
+    # O(matches^2) and dominated the runtime on big documents).
+    covered = bytearray(len(text))
 
     new_ents = []
     # Loop matches to add with original label to new_ents list
     for match in matches:
         label_keyword, start, end = match
         label, keyword = label_keyword
-        # Check if this span overlaps with any of the spans already added
-        if not any(old_start <= start <= old_end or old_start <= end <= old_end for old_start, old_end in added_spans):
-            # If not, add it to new_ents
+        if start >= len(text):
+            continue
+        end = min(end, len(text))
+        # Overlap if either endpoint already falls inside an added span. Matches
+        # are sorted longest-first, so a shorter later span can't fully contain
+        # an earlier one — checking the endpoints reproduces the old behaviour.
+        if not (covered[start] or covered[end - 1]):
             new_ents.append(FakeEntity(label, start, end, keyword))
-            added_spans.append((start, end))
+            covered[start:end] = b"\x01" * (end - start)
 
     return new_ents
 
@@ -436,6 +445,15 @@ def nlp(text, model):
     # only detected in the last chunk.
     matcher_doc = None
 
+    # Lightweight per-stage timing so the logs show where time actually goes on
+    # a slow (e.g. big-decision) request. Each line is one pipeline stage.
+    def _stage(label, fn, *args):
+        t = time.perf_counter()
+        result = fn(*args)
+        print(f"[nlp timing] {label}: {time.perf_counter() - t:.2f}s", flush=True)
+        return result
+
+    _t = time.perf_counter()
     try:
 
         # The transformer keeps the whole doc's embeddings in memory, so any
@@ -467,14 +485,15 @@ def nlp(text, model):
         # The tokenizer (unlike model(text)) has no length guard, so this works
         # for arbitrarily long documents without running the NER pipeline again.
         matcher_doc = model.tokenizer(text)
+    print(f"[nlp timing] ner ({len(text)} chars): {time.perf_counter() - _t:.2f}s", flush=True)
 
-    ents = label_professions(matcher_doc, ents)
-    ents = process_entities(ents, text)
-    ents = add_missed_entities(ents, text)
-    ents = label_parties(ents, text, matcher_doc)
-    ents = label_X_entities_and_addresses(ents)
-    ents = label_social_media(matcher_doc, ents)
+    ents = _stage("label_professions", label_professions, matcher_doc, ents)
+    ents = _stage("process_entities", process_entities, ents, text)
+    ents = _stage("add_missed_entities", add_missed_entities, ents, text)
+    ents = _stage("label_parties", label_parties, ents, text, matcher_doc)
+    ents = _stage("label_X_entities_and_addresses", label_X_entities_and_addresses, ents)
+    ents = _stage("label_social_media", label_social_media, matcher_doc, ents)
     ents = sorted(ents,key=lambda x: x.start_char)
-    ents = merge(ents, text)
+    ents = _stage("merge", merge, ents, text)
 
     return FakeDoc(ents, text)
