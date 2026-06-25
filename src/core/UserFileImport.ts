@@ -33,6 +33,27 @@ async function parseSavedUserFileJson(content: string) {
     return isSavedUserFile(obj) ? obj : null;
 }
 
+function fileToDataUrl(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+    });
+}
+
+async function getOriginalPdfSource(file: File) {
+    if (file.type !== "application/pdf" && !file.name.toLowerCase().endsWith(".pdf")) {
+        return undefined;
+    }
+
+    return {
+        name: file.name,
+        type: file.type || "application/pdf",
+        dataUrl: await fileToDataUrl(file),
+    };
+}
+
 async function importJsonUserFile(file: File, callbacks: ImportCallbacks) {
     const loadedUserFile = await file.text()
         .then(parseSavedUserFileJson)
@@ -67,7 +88,9 @@ async function importConvertedUserFile(file: File, callbacks: ImportCallbacks) {
 
         const documentDom = new DOMParser().parseFromString(content, "text/html");
 
-        return UserFile.newFrom(file.name, documentDom.body.innerHTML);
+        return UserFile.newFrom(file.name, documentDom.body.innerHTML, {
+            originalPdf: await getOriginalPdfSource(file),
+        });
 
     }).catch(error => {
         console.error(error);

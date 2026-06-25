@@ -25,6 +25,13 @@ export interface SavedUserFile {
     importedFromJson?: boolean
     jurisId?: string
     jurisDocUrl?: string
+    originalPdf?: OriginalPdfSource
+}
+
+export interface OriginalPdfSource {
+    name: string
+    type: string
+    dataUrl: string
 }
 
 export class UserFile implements UserFileInterface {
@@ -43,6 +50,7 @@ export class UserFile implements UserFileInterface {
     profile?: string
     jurisId?: string
     jurisDocUrl?: string
+    originalPdf?: OriginalPdfSource
 
     typesListeners: ((types: EntityTypeI[]) => void)[]
 
@@ -111,6 +119,7 @@ export class UserFile implements UserFileInterface {
         this.summary = obj.summary;
         this.jurisId = obj.jurisId;
         this.jurisDocUrl = obj.jurisDocUrl;
+        this.originalPdf = obj.originalPdf;
 
         this.saved = false
         this.save()
@@ -135,6 +144,7 @@ export class UserFile implements UserFileInterface {
             importedFromJson: this.importedFromJson,
             jurisId: this.jurisId,
             jurisDocUrl: this.jurisDocUrl,
+            originalPdf: this.originalPdf,
         }
     }
 
@@ -339,7 +349,7 @@ export class UserFile implements UserFileInterface {
         }
     }
 
-    static newFrom(name: string, innerHTML: string) {
+    static newFrom(name: string, innerHTML: string, extra?: Partial<Pick<SavedUserFile, "originalPdf">>) {
         return new UserFile({
             html_contents: innerHTML,
             name: name,
@@ -352,6 +362,7 @@ export class UserFile implements UserFileInterface {
             area: undefined,
             summary: undefined,
             importedFromJson: false,
+            ...extra,
         })
     }
 }

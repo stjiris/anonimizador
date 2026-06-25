@@ -8,6 +8,7 @@ import { ImageEditorModal } from "./ImageEditorModal";
 import { SearchModalContent } from "./SearchModalContent";
 import { ToolsButton, ToolsModalBody } from "./Tools";
 import { ExportButton } from "./ExportButton";
+import { CropButton } from "./CropButton";
 import { UserFile } from "@/core/UserFile";
 import { Bicon, Button } from "@/core/BootstrapIcons";
 import { useSave } from "@/core/uses";
@@ -102,7 +103,7 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
                         <option value={AnonimizeVisualState.OTHER_TYPES}>{AnonimizeVisualState.OTHER_TYPES}</option>
                         <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
                     </select>
-                    <ExportButton file={file} />
+                    <ExportButton file={file} /> <CropButton file={file} />
                     <Sep />
                     <Button title="Pesquisar" i="search" text="Pesquisar" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-search" />
                     <SuggestButton file={file} state={anonimizeState.state} setRequesting={setRequesting} requesting={requesting} />

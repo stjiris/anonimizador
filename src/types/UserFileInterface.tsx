@@ -1,4 +1,4 @@
-import { SavedUserFile } from "@/core/UserFile"
+import { OriginalPdfSource, SavedUserFile } from "@/core/UserFile"
 import { AnonimizeImage } from "./AnonimizeImage"
 import { DescriptorI } from "./DescriptorType"
 import { EntityPool } from "./EntityPool"
@@ -21,6 +21,7 @@ export interface UserFileInterface {
     profile?: string
     jurisId?: string
     jurisDocUrl?: string
+    originalPdf?: OriginalPdfSource
     typesListeners: ((types: EntityTypeI[]) => void)[]
     savedListeners: ((saved: boolean) => void)[]
     imagesListeners: ((images: Record<number, AnonimizeImage>) => void)[]

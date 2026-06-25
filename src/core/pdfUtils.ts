@@ -1,7 +1,54 @@
-export function formatXml(xml: string): string {
-    const TOP_MARGIN = 0.05;  // 8% acima da página para remoçao direta de header
-    const POSSIBLE_HEADER = 0.2; // 20% acima da página para considerar como possível header e retirar se se repetir
-    const BOTTOM_MARGIN = 0.95; // 8% abaixo da página
+export interface PdfCropMargins {
+    headerPercent: number;
+    footerPercent: number;
+}
+
+function getRepeatedZoneContents(xml: string, zone: "header" | "footer", zoneRatio: number): Set<string> {
+    const pageRegex = /<page\b([^>]*)>([\s\S]*?)<\/page>/g;
+    const textRegex = /<text\b([^>]*)>([\s\S]*?)<\/text>/g;
+    const pagesByContent = new Map<string, Set<number>>();
+    let pageMatch;
+    let pageIndex = 0;
+
+    while ((pageMatch = pageRegex.exec(xml)) !== null) {
+        const pageAttrs = pageMatch[1];
+        const pageContent = pageMatch[2];
+        const pageHeightMatch = pageAttrs.match(/\bheight="(\d+)"/);
+        const pageHeight = pageHeightMatch ? parseInt(pageHeightMatch[1], 10) : 1000;
+        const zoneStart = zone === "footer" ? pageHeight * (1 - zoneRatio) : 0;
+        const zoneEnd = zone === "footer" ? pageHeight : pageHeight * zoneRatio;
+
+        textRegex.lastIndex = 0;
+        let textMatch;
+        while ((textMatch = textRegex.exec(pageContent)) !== null) {
+            const attrs = textMatch[1];
+            const content = textMatch[2].trim().replace(/ {2,}/g, ' ');
+            if (!content) continue;
+
+            const topMatch = attrs.match(/\btop="(\d+)"/);
+            const top = topMatch ? parseInt(topMatch[1], 10) : 0;
+            if (top < zoneStart || top >= zoneEnd) continue;
+
+            if (!pagesByContent.has(content)) {
+                pagesByContent.set(content, new Set());
+            }
+            pagesByContent.get(content)?.add(pageIndex);
+        }
+
+        pageIndex++;
+    }
+
+    return new Set(
+        [...pagesByContent.entries()]
+            .filter(([, pages]) => pages.size > 1)
+            .map(([content]) => content)
+    );
+}
+
+export function formatXml(xml: string, cropMargins?: PdfCropMargins): string {
+    const TOP_MARGIN = cropMargins ? cropMargins.headerPercent / 100 : 0.05;  // 8% acima da página para remoçao direta de header
+    const POSSIBLE_HEADER = cropMargins ? cropMargins.headerPercent / 100 : 0.2; // 20% acima da página para considerar como possível header e retirar se se repetir
+    const BOTTOM_MARGIN = cropMargins ? 1 - cropMargins.footerPercent / 100 : 0.95; // 8% abaixo da página
     const WRAP_THRESHOLD = 0.75; // 75% da largura da página para considerar quebra de linha como word wrap invés de parágrafo
     const SAME_LINE_THRESHOLD = 2; // 2px de diferença vertical para considerar como mesma linha
 
@@ -9,8 +56,9 @@ export function formatXml(xml: string): string {
     let result = '';
     let pageMatch;
     let prevPageLastLineWasLong = false;
-    const headerSeen: string[] = [];
-    const repeatedHeaders = new Set<string>();
+    const repeatedHeaders = cropMargins
+        ? new Set<string>()
+        : getRepeatedZoneContents(xml, "header", POSSIBLE_HEADER);
     while ((pageMatch = pageRegex.exec(xml)) !== null) {
         const pageAttrs = pageMatch[1];
         const pageContent = pageMatch[2];
@@ -65,20 +113,12 @@ export function formatXml(xml: string): string {
             const leftMatch = attrs.match(/\bleft="(\d+)"/);
             const widthMatch = attrs.match(/\bwidth="(\d+)"/);
 
-            const top = topMatch    ? parseInt(topMatch[1],    10) : 0;
+            const top = topMatch ? parseInt(topMatch[1], 10) : 0;
             const height = heightMatch ? parseInt(heightMatch[1], 10) : 12;
-            const left = leftMatch   ? parseInt(leftMatch[1],   10) : 0;
-            const width = widthMatch  ? parseInt(widthMatch[1],  10) : 0;
-            
-            if(top < possibleHeaderZone) {
-                if (headerSeen.includes(content)){
-                    repeatedHeaders.add(content);
-                    continue;
-                }
-                else{
-                    headerSeen.push(content);
-                }
-            }
+            const left = leftMatch ? parseInt(leftMatch[1], 10) : 0;
+            const width = widthMatch ? parseInt(widthMatch[1], 10) : 0;
+
+            if (top < possibleHeaderZone && repeatedHeaders.has(content)) continue;
 
             if (top < headerZoneMax || top > footerZoneMin) continue;
 
@@ -97,10 +137,10 @@ export function formatXml(xml: string): string {
 
         for (const { top, height, left, width, content } of fragments) {
             const overlapping = lines.find(l => {
-                
+
                 const aTop = l.top;
                 const aBottom = l.top + l.height;
-                const bTop = top; 
+                const bTop = top;
                 const bBottom = top + height;
                 const verticalOverlap = aTop < bBottom && bTop < aBottom;
                 return verticalOverlap || Math.abs(l.top - top) <= SAME_LINE_THRESHOLD;
@@ -135,11 +175,11 @@ export function formatXml(xml: string): string {
         const leftEntries = [...leftCounts.entries()].sort((a, b) => b[1] - a[1]);
         const leftMargin = leftEntries.length > 0 ? leftEntries[0][0] : lines[0].left;
         const maxRight = Math.max(...lines.map(l => l.right));
-        
+
         // O maxRight é o valor máximo que uma linha alcança à direita, por exemplo 700px
         // se uma linha tem right >= 525px (75% de 700px) e a próxima linha começa perto da margem esquerda (leftMargin), 
         // consideramos que é um word wrap, ou seja, a linha foi quebrada por falta de espaço e não por um parágrafo novo
-        const wrapThreshold = maxRight * WRAP_THRESHOLD;   
+        const wrapThreshold = maxRight * WRAP_THRESHOLD;
 
         // Sort imagens pelo top para colocá-las pela ordem certa em relação ao texto
         images.sort((a, b) => a.top - b.top);
@@ -204,18 +244,11 @@ export function formatXml(xml: string): string {
         output += flushImages(Infinity);
         result += output;
         result += `</page>\n`;
-        
+
         // determina se a última linha da página é longa para decidir se na próxima página
         // o texto vai ser juntado com a última linha da página anterior (word wrap) ou se começa um novo parágrafo
         const lastLine = lines[lines.length - 1];
         prevPageLastLineWasLong = lastLine.right >= wrapThreshold;
-    }
-
-    for (const header of repeatedHeaders) {
-        const escaped = header.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-        result = result.replace(new RegExp(`<p>${escaped}</p>\\n?`), '');
-        result = result.replace(new RegExp(`<br>${escaped}`), '');
-        result = result.replace(new RegExp(escaped), '');
     }
 
     return result;
