@@ -1,5 +1,7 @@
+import os
 import re
 import csv
+import time
 from spacy.language import Language
 from spacy.matcher import Matcher, PhraseMatcher
 from flashtext import KeywordProcessor
@@ -212,8 +214,8 @@ def label_parties(ents, text, doc):
 
     for match_id, start, end in matches:
         span = doc[start:end]
-        if len(span.text) <= 5:        
-            ents.append(FakeEntity("PART", start, end, span.text))
+        if len(span.text) <= 5:
+            ents.append(FakeEntity("PART", span.start_char, span.end_char, span.text))
         
     return ents
 
@@ -275,7 +277,7 @@ def label_professions(doc, ents):
     #Finds where match is on document and adds it to entity list
     for match_id, start, end in matches:
         span = doc[start:end]
-        entities.append(FakeEntity("PROF", start, end, span.text))
+        entities.append(FakeEntity("PROF", span.start_char, span.end_char, span.text))
         
     #Return new entities
     return entities
@@ -295,39 +297,53 @@ def process_entities(ents, text):
             
     return ents
 
-def split_into_chunks(text, tokenizer, max_length=512):
+# Max characters fed to the transformer in a single pass. The NER model is a
+# spacy-transformers (BERT-style) pipeline that keeps the wordpiece embeddings
+# for the WHOLE doc in memory, so feeding it very large texts blows up RAM and
+# the container gets OOM-killed (seen as ECONNRESET on the caller). This is far
+# below spaCy's 1M-char length guard on purpose: larger texts are processed in
+# chunks of this size. Tune it via the NLP_CHUNK_CHARS env var (see .env for
+# recommended values per available RAM); lower it if the container still OOMs.
+NLP_CHUNK_CHARS = int(os.environ.get("NLP_CHUNK_CHARS", "50000"))
+
+def split_into_chunks(text, tokenizer, max_length=NLP_CHUNK_CHARS):
+    """Split ``text`` into consecutive chunks of at most ``max_length`` characters.
+
+    Returns ``(chunks, positions)`` where ``positions[i]`` is the character
+    offset of ``chunks[i]`` within the original ``text``. Entity offsets found
+    in a chunk are mapped back to the full document with
+    ``start_char + positions[i]``.
+
+    Boundaries are always placed between tokens (never inside one) and the
+    offsets are taken straight from the tokenizer (``token.idx``), so the
+    whitespace between tokens is accounted for and offsets do not drift on long
+    documents — which was the bug that made the old implementation lose the tail
+    of big documents and misplace every entity.
+    """
+    doc = tokenizer(text)
     chunks = []
-    tokens = tokenizer(text)
-    current_chunk = []
-    current_length = 0
-    positions=[0]
-    position=0
-    final_position=0
+    positions = []
 
-    for token in tokens:
-        if current_length + len(token.text) <= max_length:
-            current_chunk.append(token.text)
-            current_length += len(token.text)
-            position = current_length
-        else:
-            chunk_text = text[positions[-1]:positions[-1] + position]
+    chunk_start = None  # char offset of the first token in the current chunk
+    last_end = None      # char offset just past the last token in the current chunk
 
-            chunks.append(chunk_text)
-            
-            final_position+=position
-            positions.append(final_position)
-            current_chunk = [token.text]
-            current_length = len(token.text)
-            position = current_length
+    for token in doc:
+        if chunk_start is None:
+            chunk_start = token.idx
+        token_end = token.idx + len(token.text)
 
-    if current_chunk:
-        chunk_text = text[positions[-1]:positions[-1] + position]
+        # If adding this token would overflow the current chunk, close the
+        # chunk before it and start a new one at this token.
+        if last_end is not None and token_end - chunk_start > max_length:
+            chunks.append(text[chunk_start:last_end])
+            positions.append(chunk_start)
+            chunk_start = token.idx
 
-        chunks.append(chunk_text)
-        
-        
-        final_position+=position
-        positions.append(final_position)
+        last_end = token_end
+
+    if chunk_start is not None and last_end is not None:
+        chunks.append(text[chunk_start:last_end])
+        positions.append(chunk_start)
 
     return chunks, positions
 
@@ -348,19 +364,27 @@ def add_missed_entities(ents, text):
     # Sort the matches by length in descending order
     matches = sorted(matches, key=lambda x: x[2] - x[1], reverse=True)
 
-    # To keep track of spans already added
-    added_spans = []
+    # Track which character positions are already covered by an added span.
+    # ``covered[i]`` is 1 when char ``i`` sits inside an entity we've kept.
+    # This makes the overlap check O(1) per match instead of scanning every
+    # previously-added span (the old ``any(... for ... in added_spans)`` was
+    # O(matches^2) and dominated the runtime on big documents).
+    covered = bytearray(len(text))
 
     new_ents = []
     # Loop matches to add with original label to new_ents list
     for match in matches:
         label_keyword, start, end = match
         label, keyword = label_keyword
-        # Check if this span overlaps with any of the spans already added
-        if not any(old_start <= start <= old_end or old_start <= end <= old_end for old_start, old_end in added_spans):
-            # If not, add it to new_ents
+        if start >= len(text):
+            continue
+        end = min(end, len(text))
+        # Overlap if either endpoint already falls inside an added span. Matches
+        # are sorted longest-first, so a shorter later span can't fully contain
+        # an earlier one — checking the endpoints reproduces the old behaviour.
+        if not (covered[start] or covered[end - 1]):
             new_ents.append(FakeEntity(label, start, end, keyword))
-            added_spans.append((start, end))
+            covered[start:end] = b"\x01" * (end - start)
 
     return new_ents
 
@@ -415,42 +439,61 @@ def nlp(text, model):
 
     # Create entity list
     ents = []
-    
+
+    # Doc used for the Matcher/PhraseMatcher passes below. It MUST span the
+    # whole document, otherwise (in the chunked path) professions/parties are
+    # only detected in the last chunk.
+    matcher_doc = None
+
+    # Lightweight per-stage timing so the logs show where time actually goes on
+    # a slow (e.g. big-decision) request. Each line is one pipeline stage.
+    def _stage(label, fn, *args):
+        t = time.perf_counter()
+        result = fn(*args)
+        print(f"[nlp timing] {label}: {time.perf_counter() - t:.2f}s", flush=True)
+        return result
+
+    _t = time.perf_counter()
     try:
-        
-        if len(text) > 999999:
+
+        # The transformer keeps the whole doc's embeddings in memory, so any
+        # text beyond a memory-safe budget must be processed chunk by chunk —
+        # not just texts past spaCy's 1M-char guard. Running, say, a 600k-char
+        # decision in a single pass would still OOM-kill the container.
+        if len(text) > NLP_CHUNK_CHARS:
             raise RuntimeError
-        
+
         #Runs the model
         doc = model(text)
+        matcher_doc = doc
         for ent in exclude_manual(doc.ents):
             ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
-    except RuntimeError:
-        
-        #Create tokenizer
-        tokenizer = model.tokenizer
-        
-        #Split text into chunks if they exceed the token limit and keep their offsets
-        #text_chunks is a tuple: (chunks,positions)
-        text_chunks = split_into_chunks(text, tokenizer)
-        
-        #Run the model for each chunk
-        for chunk, position in zip(text_chunks[0],text_chunks[1]):
-            
-            #Run the model for current chunk
-            doc=model(chunk)
-            
-            for ent in exclude_manual(doc.ents):
-                ent.start_char += position
-                ent.end_char += position
-                ents.append(FakeEntity(ent.label_,ent.start_char,ent.end_char,ent.text))
-    ents = label_professions(doc, ents)
-    ents = process_entities(ents, text)
-    ents = add_missed_entities(ents, text)
-    ents = label_parties(ents, text, doc)
-    ents = label_X_entities_and_addresses(ents)
-    ents = label_social_media(doc, ents)
-    ents = sorted(ents,key=lambda x: x.start_char)
-    ents = merge(ents, text)
+    except (RuntimeError, ValueError, MemoryError):
+        # Text too large for a single pass (our guard above, spaCy's length
+        # check, or an out-of-memory error): process it chunk by chunk.
 
-    return FakeDoc(ents, doc.text)
+        #Split text into chunks and keep each chunk's char offset in the document
+        chunks, positions = split_into_chunks(text, model.tokenizer, max_length=NLP_CHUNK_CHARS)
+
+        #Run the model for each chunk, mapping offsets back to the full document
+        for chunk, offset in zip(chunks, positions):
+            doc = model(chunk)
+            for ent in exclude_manual(doc.ents):
+                ents.append(FakeEntity(ent.label_, ent.start_char + offset, ent.end_char + offset, ent.text))
+
+        # Build a tokenized doc spanning the FULL text for the Matcher passes.
+        # The tokenizer (unlike model(text)) has no length guard, so this works
+        # for arbitrarily long documents without running the NER pipeline again.
+        matcher_doc = model.tokenizer(text)
+    print(f"[nlp timing] ner ({len(text)} chars): {time.perf_counter() - _t:.2f}s", flush=True)
+
+    ents = _stage("label_professions", label_professions, matcher_doc, ents)
+    ents = _stage("process_entities", process_entities, ents, text)
+    ents = _stage("add_missed_entities", add_missed_entities, ents, text)
+    ents = _stage("label_parties", label_parties, ents, text, matcher_doc)
+    ents = _stage("label_X_entities_and_addresses", label_X_entities_and_addresses, ents)
+    ents = _stage("label_social_media", label_social_media, matcher_doc, ents)
+    ents = sorted(ents,key=lambda x: x.start_char)
+    ents = _stage("merge", merge, ents, text)
+
+    return FakeDoc(ents, text)

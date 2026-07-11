@@ -62,6 +62,9 @@ services:
       context: .
       dockerfile: ./Dockerfile_nlp
     restart: unless-stopped
+    environment:
+      - NLP_CHUNK_CHARS=${NLP_CHUNK_CHARS:-50000}
+      - NLP_THREADS=${NLP_THREADS:-0}
     volumes:
       - ./iris-lfs-storage/model-best:/opt/app/src/scripts/model-best
       - ./iris-lfs-storage/model-gpt:/opt/app/src/scripts/model-gpt

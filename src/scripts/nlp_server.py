@@ -1,10 +1,18 @@
 from specific_spacy import nlp, FakeDoc
+import os
 import spacy
 import json
 import torch
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
-torch.set_num_threads(4)
+# Number of CPU threads the transformer uses. This is the main lever for how
+# fast a big decision is processed (NER inference is CPU-bound). NLP_THREADS=0
+# (or unset) lets PyTorch use all available cores; set a number to pin it lower
+# if the nlp_server has to share the box with other services.
+_nlp_threads = int(os.environ.get("NLP_THREADS", "0"))
+if _nlp_threads > 0:
+    torch.set_num_threads(_nlp_threads)
+print(f"Torch threads: {torch.get_num_threads()}", flush=True)
 
 model = None
 try:
