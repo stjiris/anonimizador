@@ -48,7 +48,7 @@ function decodeBufferWithFallback(buf: Buffer): string {
 function runCommand(
     command: string,
     args: string[],
-    timeoutMs = 15000
+    timeoutMs = 100000
 ): Promise<{
     code: number | null,
     signal: NodeJS.Signals | null,
@@ -113,8 +113,7 @@ export async function POST(req: NextRequest) {
         outPath = getTempFilePath('.html');
         const ext = path.extname(originalName).toLowerCase();
 
-        const luaFilterArgs = await fsp
-            .access(XEMF_LUA)
+        const luaFilterArgs = await fsp.access(XEMF_LUA)
             .then(() => ['--lua-filter', XEMF_LUA])
             .catch(() => []);
 
@@ -128,6 +127,7 @@ export async function POST(req: NextRequest) {
                 '-o', outPath,
                 '--self-contained',
                 '--wrap', 'none',
+                '--metadata', `title=${title}`,
                 ...luaFilterArgs
             ]);
 
@@ -152,6 +152,7 @@ export async function POST(req: NextRequest) {
                 '-o', outPath,
                 '--self-contained',
                 '--wrap', 'none',
+                '--metadata', `title=${title}`,
                 ...luaFilterArgs
             ]);
 
@@ -174,6 +175,7 @@ export async function POST(req: NextRequest) {
                 '-o', outPath,
                 '--self-contained',
                 '--wrap', 'none',
+                '--metadata', `title=${title}`,
                 ...luaFilterArgs
             ]);
         }
