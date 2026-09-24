@@ -29,7 +29,7 @@ const Sep = () => (
     </small>
 );
 
-export default function Anonimize({ file, ...props }: AnonimizeProps) {
+export default function Main({ file, ...props }: AnonimizeProps) {
     const [anonimizeState, setAnonimizeSate] = useState<AnonimizeStateCombined>(getAnonimizedStateCombined(AnonimizeVisualState.ALL_TYPES));
     const saved = useSave(file);
     const [requesting, setRequesting] = useState<boolean>(false);
@@ -84,42 +84,41 @@ export default function Anonimize({ file, ...props }: AnonimizeProps) {
     }, []);
 
     return <>
-        <div id="doc" ref={containerRef} className="w-100 m-0 p-0 bg-white" style={{ display: "flex" }}>
+        <div id="doc" ref={containerRef} className="vh-100 vw-100 d-flex flex-column overflow-hidden">
             <EntitiesStyle file={file} />
-            <div className="p-0 m-0" style={{ width: `${100 - tableWidthPercent}%`, minWidth: 0 }}>
-                <div className="anon-toolbar position-sticky top-0 bg-white p-0 m-0 d-flex" style={{ borderBottom: "1px solid #161616", zIndex: 1 }}>                    {requesting ? <ForceExitButton setUserFile={props.setUserFile} /> : <ExitButton file={file} setUserFile={props.setUserFile} />}
-                    <SavedBadge file={file} />
-                    <Button title="Gerir perfil" i="person-badge" text="Perfil" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-profile" />
-                    <Sep />
-                    <Button title="Documento paginado" i="file-earmark-break" text="Paginar" className={"btn btn-sm m-1 p-1 " + (paginated ? "btn-success" : "btn-danger")} onClick={() => setPaginated(p => !p)} />
-                    <select title="Escolher modo" className="text-body btn m-1 p-1 text-start alert alert-primary" onChange={(ev) => setAnonimizeSate(getAnonimizedStateCombined(ev.target.value as AnonimizeVisualState))} defaultValue={AnonimizeVisualState.ALL_TYPES}>
-                        <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
-                        <option value={AnonimizeVisualState.REPLACE}>{AnonimizeVisualState.REPLACE}</option>
-                        <option value={AnonimizeVisualState.REPLACE_NORMAL}>{AnonimizeVisualState.REPLACE_NORMAL}</option>
-                        <option value={AnonimizeVisualState.REPLACE_OTHER}>{AnonimizeVisualState.REPLACE_OTHER}</option>
-                        <option value={AnonimizeVisualState.ALL_TYPES}>{AnonimizeVisualState.ALL_TYPES}</option>
-                        <option value={AnonimizeVisualState.NORMAL_TYPES}>{AnonimizeVisualState.NORMAL_TYPES}</option>
-                        <option value={AnonimizeVisualState.OTHER_TYPES}>{AnonimizeVisualState.OTHER_TYPES}</option>
-                        <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
-                    </select>
-                    <ExportButton file={file} />
-                    <Sep />
-                    <Button title="Pesquisar" i="search" text="Pesquisar" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-search" />
-                    <SuggestButton file={file} state={anonimizeState.state} setRequesting={setRequesting} requesting={requesting} />
-                    <HistoryCommands pool={file.pool} />
-                    <a className="red-link m-1 p-1 btn" href="https://docs.google.com/document/d/e/2PACX-1vTaR6kTasw0iGYSSMbJpq2wMgrBN5K37jg5ab_qMih_VpXRO5ZAAeeeDiRYzvyrD_VDxBM2ccW-VuBQ/pub" target="_blank" title="Abrir ajuda" rel="noreferrer"><Bicon n="question-circle" /></a>
-                </div>
-                <div className="bg-white p-4">
+            <header className="anon-toolbar d-flex" style={{ borderBottom: "1px solid #161616" }}>
+                {requesting ? <ForceExitButton setUserFile={props.setUserFile} /> : <ExitButton file={file} setUserFile={props.setUserFile} />}
+                <SavedBadge file={file} />
+                <Button title="Gerir perfil" i="person-badge" text="Perfil" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-profile" />
+                <Sep />
+                <Button title="Documento paginado" i="file-earmark-break" text="Paginar" className={"btn btn-sm m-1 p-1 " + (paginated ? "btn-success" : "btn-danger")} onClick={() => setPaginated(p => !p)} />
+                <select title="Escolher modo" className="text-body btn m-1 p-1 text-start alert alert-primary" onChange={(ev) => setAnonimizeSate(getAnonimizedStateCombined(ev.target.value as AnonimizeVisualState))} defaultValue={AnonimizeVisualState.ALL_TYPES}>
+                    <option value={AnonimizeVisualState.ORIGINAL}>{AnonimizeVisualState.ORIGINAL}</option>
+                    <option value={AnonimizeVisualState.REPLACE}>{AnonimizeVisualState.REPLACE}</option>
+                    <option value={AnonimizeVisualState.REPLACE_NORMAL}>{AnonimizeVisualState.REPLACE_NORMAL}</option>
+                    <option value={AnonimizeVisualState.REPLACE_OTHER}>{AnonimizeVisualState.REPLACE_OTHER}</option>
+                    <option value={AnonimizeVisualState.ALL_TYPES}>{AnonimizeVisualState.ALL_TYPES}</option>
+                    <option value={AnonimizeVisualState.NORMAL_TYPES}>{AnonimizeVisualState.NORMAL_TYPES}</option>
+                    <option value={AnonimizeVisualState.OTHER_TYPES}>{AnonimizeVisualState.OTHER_TYPES}</option>
+                    <option value={AnonimizeVisualState.ANONIMIZED}>{AnonimizeVisualState.ANONIMIZED}</option>
+                </select>
+                <ExportButton file={file} />
+                <Sep />
+                <Button title="Pesquisar" i="search" text="Pesquisar" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-search" />
+                <SuggestButton file={file} state={anonimizeState.state} setRequesting={setRequesting} requesting={requesting} />
+                <HistoryCommands pool={file.pool} />
+                <a className="red-link m-1 p-1 btn" href="https://docs.google.com/document/d/e/2PACX-1vTaR6kTasw0iGYSSMbJpq2wMgrBN5K37jg5ab_qMih_VpXRO5ZAAeeeDiRYzvyrD_VDxBM2ccW-VuBQ/pub" target="_blank" title="Abrir ajuda" rel="noreferrer"><Bicon n="question-circle" /></a>
+            </header>
+            <div className="d-flex" style={{ minHeight: 0 }}>
+                <div className="overflow-y-auto" style={{ width: `${100 - tableWidthPercent}%`, minWidth: 0 }}>
                     {requesting && anonimizeState.state === AnonimizeStateState.TAGGED ?
                         <div className="alert alert-info">A processar o documento, esta operação poderá demorar.</div>
                         :
                         <AnonimizeContent paginated={paginated} accessHtml={(html) => anonimizedHTML.current = html} showTypes={anonimizeState.showTypes} file={file} anonimizeState={anonimizeState.state} />
                     }
                 </div>
-            </div>
-            <div className="resize-handle" onMouseDown={onMouseDown} />
-            <div id="entityTable" className="p-0 m-0" style={{ width: `${tableWidthPercent}%`, minWidth: 0 }}>
-                <div className="m-0 position-sticky top-0">
+                <div role="separator" className="resize-handle" onMouseDown={onMouseDown} />
+                <div id="entityTable" style={{ width: `${tableWidthPercent}%`, minWidth: 0 }}>
                     <EntityTable file={file} />
                 </div>
             </div>

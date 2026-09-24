@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { CatchError } from "@/components/CatchError";
-import Anonimize from "@/components/Anonimize/Main";
+import Main from "@/components/Anonimize/Main";
 import Header from "@/components/Header";
 import SelectFile from "@/components/SelectFile";
 import { Banner } from "@/components/Banner";
@@ -53,7 +53,7 @@ export default function ClientRoot() {
       <div className="App vh-100">
         {userFile ? (
           <CatchError userFile={userFile} setUserFile={setUserFileProxy}>
-            <Anonimize setUserFile={setUserFileProxy} file={userFile} />
+            <Main setUserFile={setUserFileProxy} file={userFile} />
           </CatchError>
         ) : (
           <>

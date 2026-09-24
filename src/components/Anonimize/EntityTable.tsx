@@ -126,6 +126,7 @@ export function EntityTable({ file }: { file: UserFile }) {
             enableEditing
             editingMode="cell"
             positionActionsColumn="last"
+            positionToolbarAlertBanner="bottom"
 
             enableColumnOrdering={false}
             enableColumnDragging={false}
@@ -135,10 +136,15 @@ export function EntityTable({ file }: { file: UserFile }) {
             enableRowVirtualization={false}
             enableColumnResizing
             columnResizeMode="onChange"
-            muiTableContainerProps={{
-                sx: { maxWidth: "100%", overflowX: "hidden" }
-            }}
             muiTableProps={{ sx: { tableLayout: "fixed", width: "100%" } }}
+            muiTablePaperProps={{
+                sx: {
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                }
+            }}
+
             displayColumnDefOptions={{
                 "mrt-row-select": { size: 44, minSize: 44, maxSize: 44, enableResizing: false },
                 "mrt-row-expand": { size: 44, minSize: 44, maxSize: 44, enableResizing: false },
