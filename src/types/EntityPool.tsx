@@ -40,11 +40,18 @@ export class EntityPool {
         if (indexes.length <= 1) return;
         indexes.sort((a, b) => a - b) // indexes are sorted
 
-        let first: Entity = this.entities[indexes.shift()!];
-        let removed: OffsetRange[] = []
+        const first: Entity = this.entities[indexes.shift()!];
+        if (first.type == "X-SEARCH") {
+            first.type = "Marca";
+        }
+
+        const removed: OffsetRange[] = [];
         indexes.reverse().forEach(i => {
-            let cEnt = this.entities.splice(i, 1)[0];
-            removed.push(...cEnt.offsets)
+            const cEnt = this.entities.splice(i, 1)[0];
+
+            if (cEnt) {
+                removed.push(...cEnt.offsets);
+            }
         })
 
         first.addOffset(removed);
@@ -238,6 +245,7 @@ export class EntityPool {
         for (let ent of this.entitiesAt(startOffset, endOffset)) {
             ent.type = label;
             used = true;
+            console.log("not pushed!!!");
         }
 
         if (used) return this.notify("Modificar tipo de entidade");
@@ -257,6 +265,7 @@ export class EntityPool {
             let ent = new Entity(label);
             ent.addOffset([{ start: startOffset, end: endOffset, preview: text }])
             this.entities.push(ent)
+            console.log("pushed!!!");
         }
 
         if (update) {

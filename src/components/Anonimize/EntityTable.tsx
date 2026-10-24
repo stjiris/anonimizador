@@ -1,20 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { MaterialReactTable, MRT_ColumnDef, MRT_ColumnFiltersState, MRT_Row, MRT_TableInstance, } from "material-react-table";
+import {
+    MaterialReactTable,
+    MRT_ColumnDef,
+    MRT_ColumnFiltersState,
+    MRT_TableInstance,
+    useMaterialReactTable,
+} from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 
-import { IconButton, Tooltip, TextField, Badge, ToggleButton, ToggleButtonGroup, Menu, MenuItem, Portal } from "@mui/material";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
-import CallSplitIcon from "@mui/icons-material/CallSplit";
-import VisibilityIcon from "@mui/icons-material/Visibility";
+import {TextField, Badge, ToggleButton, ToggleButtonGroup, Portal, Tooltip, IconButton} from "@mui/material";
 import { UserFile } from "@/core/UserFile";
-import { useEntities, useTypes, useTypesDict } from "@/core/uses";
+import {SpecificOffsetRange, useEntities, useTypes} from "@/core/uses";
 import { Entity, EntityTypeI } from "@/types/EntityType";
 import { EntityPool } from "@/types/EntityPool";
 import { Button } from "@/core/BootstrapIcons";
 import { FULL_ANONIMIZE } from "@/core/anonimizeFunctions";
-import { EntitiesStyle } from "@/core/entitiesStyle";
 import { sortEntityTypesXLast } from "@/components/Anonimize/Tooltip";
 import { TypePickerDropdown } from "@/components/Anonimize/TypePickerDropdown";
+import {DeleteOutlined} from "@mui/icons-material";
 
 const TODAS = Number.MAX_SAFE_INTEGER;
 
@@ -45,7 +48,7 @@ const navigateToEntity = (start: number, end: number) => {
         highlighted = true;
         document.querySelectorAll<HTMLElement>(`[data-offset]`).forEach((span) => {
             const spanOffset = parseInt(span.getAttribute("data-offset") || "0");
-            if (spanOffset >= start && spanOffset <= end && span.hasAttribute("data-anonimize-type")) {
+            if (spanOffset >= start && spanOffset <= end) {
                 span.classList.add("entity-highlight");
                 setTimeout(() => span.classList.remove("entity-highlight"), 1500);
             }
@@ -69,198 +72,180 @@ const navigateToEntity = (start: number, end: number) => {
     }, 1000);
 };
 
-export function EntityTable({ file }: { file: UserFile }) {
+interface EntityTableProps {
+    file: UserFile
+    globalFilter: string | undefined
+    setGlobalFilter: (searchTerm: string | undefined) => void
+    searchResults: SpecificOffsetRange[]
+}
+
+export function EntityTable({
+    file,
+    globalFilter,
+    setGlobalFilter,
+    searchResults,
+}: EntityTableProps) {
     const [showOnlyMarks, setShowOnlyMarks] = useState(false);
     const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
 
-    const ents = useEntities(file.pool);
-    const filteredEnts = useMemo(
-        () => showOnlyMarks ? ents.filter((e) => e.type === "Marca") : ents,
-        [ents, showOnlyMarks]
-    );
-    const entityCount = filteredEnts.length;
-    const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 });
+    const poolEntities = useEntities(file.pool);
+
+    const xEntities = useMemo(() => {
+        return showOnlyMarks ? poolEntities.filter((e) => e.type === "Marca") : poolEntities;
+    }, [poolEntities, showOnlyMarks]);
+
+    const filteredEntities = useMemo(() => {
+        if (globalFilter) {
+            const filter = globalFilter.toLocaleLowerCase();
+            return xEntities.filter(ent => ent.offsets.find((value) => value.preview?.toLocaleLowerCase().includes(filter)))
+        }
+        return xEntities;
+    }, [xEntities, globalFilter]);
+
+    const data = useMemo(() => {
+        const nextIndex = poolEntities.length + 1;
+        const searchEntities = searchResults.map(result => result.ent);
+        searchEntities.forEach((ent, idx) => ent.index = nextIndex + idx);
+        return [...filteredEntities, ...searchEntities];
+    }, [poolEntities.length, filteredEntities, searchResults]);
 
     const typesList = useTypes(file);
 
-    const wasEmpty = useRef(true);
-
-    useEffect(() => {
-        if (entityCount === 0) {
-            wasEmpty.current = true;
-        }
-        if (wasEmpty.current && entityCount > 0) {
-            setPagination(prev => ({ ...prev, pageSize: TODAS }));
-            wasEmpty.current = false;
-        }
-    }, [entityCount]);
-
-    const totalOcc = useMemo(
-        () => filteredEnts.reduce((acc, e) => acc + (e.offsets?.length ?? 0), 0),
-        [filteredEnts]
-    );
+    const totalOcc = useMemo(() => data.reduce((acc, e) => acc + (e.offsets?.length ?? 0), 0), [data]);
 
     const columns = useMemo<MRT_ColumnDef<Entity>[]>(() => {
         return [
             TYPE_COL(typesList, file.pool, file),
             COUNT_COL(totalOcc),
-            ENTITY_COL(file.pool, ents.length),
+            ENTITY_COL(file.pool, poolEntities.length),
             ANONIMIZE_COL(file.pool, typesList),
         ];
-    }, [typesList, totalOcc, file.pool, ents.length]);
+    }, [typesList, totalOcc, file.pool, poolEntities.length]);
 
     const handleToggle = (_: React.MouseEvent<HTMLElement>, v: string | null) => {
         setShowOnlyMarks(v === "marcas");
         setColumnFilters([]);
-        setPagination(prev => ({ ...prev, pageIndex: 0 }));
     };
+    const table = useMaterialReactTable({
+        columns,
+        data,
+        localization: { ...MRT_Localization_PT, noRecordsToDisplay: "Sem entidades" },
 
-    return (
-        <MaterialReactTable
-            key="ent-table"
-            columns={columns}
-            data={filteredEnts}
-            localization={{ ...MRT_Localization_PT, noRecordsToDisplay: "Sem entidades" }}
+        // Row selection and column options.
+        enableRowSelection: true,
+        enableColumnOrdering: false,
+        enableColumnDragging: false,
+        enableColumnActions: false,
 
-            enableRowSelection
-            enableEditing
-            editingMode="cell"
-            positionActionsColumn="last"
-            positionToolbarAlertBanner="bottom"
+        // Other options.
+        enableStickyHeader: true,
+        enableHiding: true,
+        enableDensityToggle: false,
+        enableFullScreenToggle: false,
 
-            enableColumnOrdering={false}
-            enableColumnDragging={false}
-            enableColumnActions={false}
-            enableGlobalFilter
+        // -- Enable column resizing.
+        enableColumnResizing: true,
+        columnResizeMode: "onChange",
 
-            enableRowVirtualization={false}
-            enableColumnResizing
-            columnResizeMode="onChange"
-            muiTableProps={{ sx: { tableLayout: "fixed", width: "100%" } }}
-            muiTablePaperProps={{
-                sx: {
-                    height: '100%',
-                    display: 'flex',
-                    flexDirection: 'column',
+        // -- Enable row virtualization (load rows dynamically).
+        enableRowVirtualization: true,
+        enablePagination: false,
+        rowVirtualizerOptions: { overscan: 50 },
+
+        // -- Allow to overwrite the anonymization value.
+        enableEditing: true,
+        editDisplayMode: "cell",
+
+        // -- Customization options.
+        muiTopToolbarProps: {
+            sx: {
+                display: "flex",
+                minHeight: "unset",
+                height: "auto",
+                overflow: "visible",
+                "& > div": {
+                    flexWrap: "wrap",
                 }
-            }}
+            }
+        },
+        muiTableProps: { sx: { tableLayout: "fixed", width: "100%" } },
+        muiTablePaperProps: {
+            sx: {
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+            }
+        },
+        muiTableBodyRowProps: () => ({
+            sx: { "&:hover": { backgroundColor: "rgba(244,236,206,.35)" } },
+        }),
 
-            displayColumnDefOptions={{
-                "mrt-row-select": { size: 44, minSize: 44, maxSize: 44, enableResizing: false },
-                "mrt-row-expand": { size: 44, minSize: 44, maxSize: 44, enableResizing: false },
-                "mrt-row-actions": {
-                    size: 96,
-                    minSize: 96,
-                    maxSize: 120,
-                    enableResizing: false,
-                    muiTableHeadCellProps: { align: "center" },
-                    muiTableBodyCellProps: { align: "center" },
-                },
-            }}
+        displayColumnDefOptions: {
+            "mrt-row-select": { size: 42, minSize: 42, maxSize: 42 },
+            "mrt-row-expand": { size: 42, minSize: 42, maxSize: 42 },
+        },
 
-            muiTableHeadCellProps={{
-                sx: {
-                    py: 1,
-                    px: 1,
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                },
-            }}
-            muiTableBodyCellProps={{ sx: { py: 0.75, px: 1, lineHeight: 1.25 } }}
-
-            getRowId={(r) => r.index.toString()}
-
-            renderDetailPanel={entityDetails(file.pool)}
-
-            renderRowActions={({ row, table }) => (
-                <div style={{ display: "flex", gap: 6 }}>
-                    <Tooltip title="Ver no documento">
-                        <IconButton
-                            size="small"
-                            onClick={() => {
-                                const off = row.original.offsets[0];
-                                navigateToEntity(off.start, off.end);
-                            }}
+        renderDetailPanel: ({ row }) => row.original.type == "X-SEARCH" ? null : (
+            <div className="d-flex flex-column vw-100">
+                {row.original.offsets.map((off, i) => (
+                    <div key={i} className="d-flex align-items-center border-bottom">
+                <span
+                    role="button"
+                    className="text-center flex-grow-1"
+                    onClick={() => navigateToEntity(off.start, off.end)}
+                >
+                    {off.preview}
+                </span>
+                        <button
+                            className="btn btn-warning m-1 p-1"
+                            disabled={row.original.offsets.length <= 1}
+                            onClick={() => file.pool.splitOffset(off.start, off.end)}
                         >
-                            <VisibilityIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
+                            <i className="bi bi-exclude"/> Separar
+                        </button>
+                        <button className="btn btn-danger m-1 p-1"
+                                onClick={() => file.pool.removeOffset(off.start, off.end)}>
+                            <i className="bi bi-trash"/> Remover
+                        </button>
+                    </div>
+                ))}
+            </div>
+        ),
+        renderTopToolbarCustomActions: toolbar(file.pool, file, showOnlyMarks, handleToggle, typesList),
+        positionToolbarAlertBanner: "bottom",
 
-                    <Tooltip title="Separar offset(s)">
-                        <span>
-                            <IconButton
-                                size="small"
-                                disabled={row.original.offsets.length <= 1}
-                                onClick={() => {
-                                    row.original.offsets.forEach((off) => file.pool.splitOffset(off.start, off.end));
-                                    file.checkCountPES();
-                                }}
-                            >
-                                <CallSplitIcon fontSize="small" />
-                            </IconButton>
-                        </span>
-                    </Tooltip>
+        // -- Enable searching.
+        manualFiltering: true,
+        onGlobalFilterChange: setGlobalFilter,
 
-                    <Tooltip title="Remover entidade">
-                        <IconButton
-                            size="small"
-                            color="error"
-                            onClick={() => {
-                                file.pool.removeEntities([row.index]);
-                                table.setRowSelection({});
-                                file.checkCountPES();
-                            }}
-                        >
-                            <DeleteOutlineIcon fontSize="small" />
-                        </IconButton>
-                    </Tooltip>
-                </div>
-            )}
+        onColumnFiltersChange: setColumnFilters,
 
-            renderTopToolbarCustomActions={toolbar(file.pool, file, showOnlyMarks, handleToggle, typesList)}
+        state: { columnFilters, globalFilter },
+        initialState: {
+            density: "compact",
+            sorting: [{ id: "count", desc: true }],
+        },
 
-            enableStickyHeader
-            enableHiding
-            enablePagination
-            enableDensityToggle={false}
-            enableFullScreenToggle={false}
-            muiTableBodyRowProps={() => ({
-                sx: { "&:hover": { backgroundColor: "rgba(244,236,206,.35)" } },
-            })}
-            muiTablePaginationProps={{
-                rowsPerPageOptions: [
-                    { label: "25", value: 25 },
-                    { label: "50", value: 50 },
-                    { label: "100", value: 100 },
-                    { label: "Todas", value: TODAS },
-                ]
-            }}
-            initialState={{
-                density: "compact",
-                sorting: [{ id: "count", desc: true }],
-            }}
-            state={{
-                columnFilters,
-                pagination,
-            }}
-            onColumnFiltersChange={setColumnFilters}
-            onPaginationChange={setPagination}
-        />
-    );
+        getRowId: (r) => r.index.toString(),
+    });
+
+    return <MaterialReactTable key="ent-table" table={table} />;
 }
 
 const toolbar =
     (pool: EntityPool, file: UserFile, showOnlyMarks: boolean, onToggle: (e: React.MouseEvent<HTMLElement>, v: string | null) => void, typesList: EntityTypeI[]) =>
         ({ table }: { table: MRT_TableInstance<Entity> }) => {
             const selectedCount = Object.keys(table.getState().rowSelection).length;
+            const hasSearchType = Boolean(Object.keys(table.getState().rowSelection).find(value => table.getRow(value).original.type == "X-SEARCH"));
             const isJoinDisabled = showOnlyMarks || selectedCount <= 1;
-            const isSplitDisabled = showOnlyMarks || selectedCount === 0;
+            const isSplitDisabled = showOnlyMarks || selectedCount === 0 || hasSearchType;
+            const isRemoveDisabled = selectedCount === 0 || hasSearchType;
+            const isChangeTypeDisabled = showOnlyMarks || selectedCount === 0 || hasSearchType;
             const [showTypePicker, setShowTypePicker] = useState(false);
             const btnRef = useRef<HTMLSpanElement>(null);
 
             return (
-                <div className="d-flex w-100 align-items-center gap-2">
+                <div className="d-flex w-100 align-items-center gap-2 order-1">
                     <span title="Juntar" className="d-inline-flex flex-shrink-0 align-middle">
                         <Badge badgeContent={selectedCount} color={selectedCount ? "primary" : "default"}>
                             <Button
@@ -292,7 +277,7 @@ const toolbar =
                             i="trash"
                             text="Remover"
                             className="btn btn-danger my-0 mx-1 p-1"
-                            disabled={selectedCount === 0}
+                            disabled={isRemoveDisabled}
                             onClick={() => removeSelectedEntities(table, pool, file)}
 
                         />
@@ -303,7 +288,7 @@ const toolbar =
                             i="pencil"
                             text="Mudar Tipo"
                             className="btn btn-secondary my-0 mx-1 p-1"
-                            disabled={selectedCount === 0 || showOnlyMarks}
+                            disabled={isChangeTypeDisabled}
                             onClick={() => {
                                 setShowTypePicker(v => !v);
                             }}
@@ -345,7 +330,35 @@ const selectedIndexes = (table: MRT_TableInstance<Entity>) =>
 const removeTableSelection = (table: MRT_TableInstance<Entity>) => table.setRowSelection({});
 
 const joinSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
-    pool.joinEntities(selectedIndexes(table));
+    const indexes = [];
+
+    console.log("Initial pool length");
+    console.log(pool.entities.length);
+
+    for (const rowId of Object.keys(table.getState().rowSelection)) {
+        const entity = table.getRow(rowId).original;
+        const index = parseInt(rowId, 10) - 1;
+
+        if (isNaN(index)) {
+            return;
+        }
+
+        if (entity.type == "X-SEARCH") {
+            indexes.push(pool.entities.length);
+            console.log("New x-search with index: " + pool.entities.length);
+
+            const offset = entity.offsets[0];
+            pool.addEntity(offset.start, offset.end, offset.preview, entity.type, false);
+        } else {
+            indexes.push(index);
+        }
+    }
+
+
+    console.log("Final pool length");
+    console.log(pool.entities.length);
+
+    pool.joinEntities(indexes);
     removeTableSelection(table);
     file.checkCountPES();
 };
@@ -368,64 +381,6 @@ const removeSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPo
     removeTableSelection(table);
     file.checkCountPES();
 };
-
-const entityDetails =
-    (pool: EntityPool) =>
-        ({ row }: { row: MRT_Row<Entity> }) =>
-            row.original.offsets.map((off, i) => (
-                <div key={i} className="d-flex align-items-center border-bottom">
-                    <span
-                        role="button"
-                        className="text-end flex-grow-1"
-                        onClick={() => navigateToEntity(off.start, off.end)}
-                    >
-                        {off.preview}
-                    </span>
-                    <span className="flex-grow-1" />
-                    <button
-                        className="btn btn-warning m-1 p-1"
-                        disabled={row.original.offsets.length <= 1}
-                        onClick={() => pool.splitOffset(off.start, off.end)}
-                    >
-                        <i className="bi bi-exclude"></i> Separar
-                    </button>
-                    <button className="btn btn-danger m-1 p-1" onClick={() => pool.removeOffset(off.start, off.end)}>
-                        <i className="bi bi-trash"></i> Remover
-                    </button>
-                </div>
-            ));
-
-const COUNT_COL = (totalOcc: number): MRT_ColumnDef<Entity> => ({
-    id: "count",
-    header: `# (${totalOcc})`,
-    accessorFn: (e) => e.offsets.length,
-    size: 50, minSize: 40, maxSize: 100,
-    sortDescFirst: true,
-    enableColumnActions: false,
-    muiTableHeadCellProps: { align: "right" },
-    muiTableBodyCellProps: { align: "right" },
-    Cell: ({ cell }) => <strong>{cell.getValue<number>() ?? 0}</strong>,
-});
-
-const ENTITY_COL: (pool: EntityPool, count: number) => MRT_ColumnDef<Entity> = (pool, count) => ({
-    id: "entity",
-    header: `Entidade (${count})`,
-    accessorFn: (ent) => ent.offsets[0]?.preview ?? "",
-    size: 160, minSize: 100, maxSize: 280,
-    enableEditing: false,
-    enableColumnFilter: true,
-    enableColumnDragging: false,
-    enableColumnActions: false,
-    muiTableHeadCellProps: { align: "left" },
-    muiTableBodyCellProps: ({ row }) => ({
-        onClick: () => {
-            if (!row.original.offsets.length) return;
-            const off = row.original.offsets[0];
-            navigateToEntity(off.start, off.end);
-        },
-        sx: { cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
-    }),
-});
 
 const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_ColumnDef<Entity> = (types, pool, file) => {
     const sortedTypes = sortEntityTypesXLast(types);
@@ -544,6 +499,39 @@ const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_
     },
     });
 };
+
+const COUNT_COL = (totalOcc: number): MRT_ColumnDef<Entity> => ({
+    id: "count",
+    header: `# (${totalOcc})`,
+    accessorFn: (e) => e.offsets.length,
+    size: 100, minSize: 40, maxSize: 120,
+    sortDescFirst: true,
+    enableColumnActions: false,
+    muiTableHeadCellProps: { align: "right" },
+    muiTableBodyCellProps: { align: "right" },
+    Cell: ({ cell }) => <strong>{cell.getValue<number>() ?? 0}</strong>,
+});
+
+const ENTITY_COL: (pool: EntityPool, count: number) => MRT_ColumnDef<Entity> = (pool, count) => ({
+    id: "entity",
+    header: `Entidade (${count})`,
+    accessorFn: (ent) => ent.offsets[0]?.preview ?? "",
+    grow: true,
+    enableEditing: false,
+    enableColumnFilter: true,
+    enableColumnDragging: false,
+    enableColumnActions: false,
+    muiTableHeadCellProps: { align: "left" },
+    muiTableBodyCellProps: ({ row }) => ({
+        onClick: () => {
+            if (!row.original.offsets.length) return;
+            const off = row.original.offsets[0];
+            navigateToEntity(off.start, off.end);
+        },
+        sx: { cursor: "pointer", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+    }),
+});
+
 const ANONIMIZE_COL: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (
     pool,
     types,
@@ -557,7 +545,7 @@ const ANONIMIZE_COL: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<E
         row.typeIndex,
         row.funcIndex,
     ),
-    size: 160, minSize: 100, maxSize: 280,
+    grow: true,
     enableColumnActions: false,
     muiTableHeadCellProps: { align: "left" },
     muiTableBodyCellProps: {
@@ -585,7 +573,7 @@ const ANONIMIZE_COL: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<E
             </code>
         );
     },
-    muiTableBodyCellEditTextFieldProps: ({ row }) => ({
+    muiEditTextFieldProps: ({ row }) => ({
         placeholder: row.original.anonimizingFunction(getType(types, row.original.type))(
             row.original.offsets[0].preview,
             row.original.type,

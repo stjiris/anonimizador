@@ -1,5 +1,4 @@
 import { useMemo, useRef, useState } from "react";
-import { UserFile } from "@/core/UserFile";
 import { useTypes } from "@/core/uses";
 import { AddEntityDryRun } from "@/types/EntityPool";
 import { UserFileInterface } from "@/types/UserFileInterface";

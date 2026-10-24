@@ -104,13 +104,16 @@ export function renderBlock(
     let elmt = doc;
 
     if (elmt.nodeType === Node.TEXT_NODE) {
-        let elmtStr = elmt.nodeValue || "";
+        const reg = /([0-9]+)|([A-Za-zÀ-ÖØ-öø-ÿ]+)|([^A-Za-zÀ-ÖØ-öø-ÿ0-9])/g;
+        const value = elmt.nodeValue || "";
+
         let tokenFragment = "";
-        var reg = /([0-9]+)|([A-Za-zÀ-ÖØ-öø-ÿ]+)|([^A-Za-zÀ-ÖØ-öø-ÿ0-9])/g;
-        var token: RegExpExecArray | null;
+
+        let token: RegExpExecArray | null;
         let remaining = offsets;
-        while ((token = reg.exec(elmtStr)) !== null) {
-            let current = remaining[0];
+
+        while ((token = reg.exec(value)) !== null) {
+            const current = remaining[0];
             if (!current) {
                 tokenFragment += renderToken(token[0], offset + token.index, anonimizeState);
                 continue;
@@ -275,16 +278,15 @@ export function renderBlock(
     return `<${Tag} ${attrs.join(" ")}>${ht}</${Tag}>`;
 }
 
-
 export function renderToken(value: string, offset: number, anonimizeState: AnonimizeStateState, type?: EntityTypeI, specificOffset?: SpecificOffsetRange): string {
     if (value.length === 0) {
         return ""
     }
 
     if (specificOffset && specificOffset.start >= offset && specificOffset.end < offset + value.length - 1) {
-        let p1 = value.substring(0, specificOffset.start - offset);
-        let token = value.substring(specificOffset.start - offset, specificOffset.end - offset + 1);
-        let p2 = value.substring(specificOffset.end - offset + 1);
+        const p1 = value.substring(0, specificOffset.start - offset);
+        const token = value.substring(specificOffset.start - offset, specificOffset.end - offset + 1);
+        const p2 = value.substring(specificOffset.end - offset + 1);
 
         return renderToken(p1, offset, anonimizeState, type) +
             renderToken(token, offset + p1.length, anonimizeState, type, specificOffset) +
