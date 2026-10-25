@@ -2,14 +2,25 @@ import { AnonimizeImage } from "@/types/AnonimizeImage";
 import { AnonimizeStateState } from "@/types/AnonimizeState";
 import { EntityTypeI, SpecificOffsetRange } from "@/types/EntityType";
 
-const TAGS_TO_IGNORE = "script,style,link,meta,head,html,svg,iframe,canvas,object,embed,applet,frameset,frame,noembed,noscript,param,source,track".split(",");
-const VOID_ELEMENTS = new Set(["area", "base", "br", "col", "embed", "img", "input", "link", "meta", "param", "source", "track", "wbr"]);
+const TAGS_TO_IGNORE = new Set([
+    "script", "style", "link", "meta", "head", "html", "svg", "iframe",
+    "canvas", "object", "embed", "applet", "frameset", "frame", "noembed",
+    "noscript", "param", "source", "track"
+]);
+
+const VOID_ELEMENTS = new Set([
+    "area", "base", "br", "col", "embed", "img", "input", "link", "meta",
+    "param", "source", "track", "wbr"
+]);
 
 const SAFE_SPLIT_TAGS = new Set([
     "p", "h1", "h2", "h3", "h4", "h5", "h6",
     "table", "pre", "blockquote", "figure", "img",
     "ul", "ol"
 ]);
+
+const TOKEN_REGEX = /([0-9]+)|([A-Za-zÀ-ÖØ-öø-ÿ]+)|([^A-Za-zÀ-ÖØ-öø-ÿ0-9])/g;
+const NON_WHITESPACE_REGEX = /\S/;
 
 function consumeBreak(pageBreaks: Set<number> | undefined, pos: number): boolean {
     if (!pageBreaks) return false;
@@ -20,22 +31,17 @@ function consumeBreak(pageBreaks: Set<number> | undefined, pos: number): boolean
     return false;
 }
 
-function visibleTextLen(node: ChildNode): number {
+function hasVisibleContent(node: ChildNode): boolean {
     if (node.nodeType === Node.TEXT_NODE) {
-        const t = (node.nodeValue || "").replace(/\s+/g, "");
-        return t.length;
+        return NON_WHITESPACE_REGEX.test(node.nodeValue || "");
     }
     if (node.nodeType === Node.ELEMENT_NODE) {
-        const el = node as HTMLElement;
-        let sum = 0;
-        for (let i = 0; i < el.childNodes.length; i++) sum += visibleTextLen(el.childNodes[i]);
-        return sum;
+        const children = (node as HTMLElement).childNodes;
+        for (let i = 0; i < children.length; i++) {
+            if (hasVisibleContent(children[i])) return true;
+        }
     }
-    return 0;
-}
-
-function hasVisibleContent(node: ChildNode): boolean {
-    return visibleTextLen(node) > 0;
+    return false;
 }
 
 export function planAutoPageBreaks(root: ChildNode, approxCharsPerPage = 2300): Set<number> {
@@ -46,8 +52,6 @@ export function planAutoPageBreaks(root: ChildNode, approxCharsPerPage = 2300): 
     let lastBreak = -1;
 
     function walk(node: ChildNode, parentTag: string | null) {
-        const tag = (node as HTMLElement).nodeName?.toLowerCase?.() ?? "";
-
         if (node.nodeType === Node.TEXT_NODE) {
             const len = (node.nodeValue || "").length;
             globalOffset += len;
@@ -56,13 +60,14 @@ export function planAutoPageBreaks(root: ChildNode, approxCharsPerPage = 2300): 
             return;
         }
 
-        if (node.nodeType === Node.COMMENT_NODE || TAGS_TO_IGNORE.includes(tag)) return;
+        if (node.nodeType === Node.COMMENT_NODE) return;
 
         const el = node as HTMLElement;
+        const tag = el.nodeName ? el.nodeName.toLowerCase() : "";
+        if (TAGS_TO_IGNORE.has(tag)) return;
 
         const isSafeStart =
             SAFE_SPLIT_TAGS.has(tag) && tag !== "img"
-
             && globalOffset > 0;
 
         if (pending && isSafeStart && globalOffset !== lastBreak) {
@@ -80,8 +85,9 @@ export function planAutoPageBreaks(root: ChildNode, approxCharsPerPage = 2300): 
         }
 
         const isListItem = tag === "li" || parentTag === "li";
-        for (let i = 0; i < el.childNodes.length; i++) {
-            walk(el.childNodes[i], isListItem ? "li" : tag);
+        const childNodes = el.childNodes;
+        for (let i = 0; i < childNodes.length; i++) {
+            walk(childNodes[i], isListItem ? "li" : tag);
         }
     }
 
@@ -99,33 +105,35 @@ export function renderBlock(
     images: Record<number, AnonimizeImage>,
     imageIndex: { current: number },
     pageBreaks?: Set<number>,
-) {
+): string {
     const elmt = doc;
 
     if (elmt.nodeType === Node.TEXT_NODE) {
-        const reg = /([0-9]+)|([A-Za-zÀ-ÖØ-öø-ÿ]+)|([^A-Za-zÀ-ÖØ-öø-ÿ0-9])/g;
         const value = elmt.nodeValue || "";
+        if (value.length === 0) return "";
 
+        TOKEN_REGEX.lastIndex = 0;
         let tokenFragment = "";
-
         let token: RegExpExecArray | null;
         let remaining = offsets;
 
-        while ((token = reg.exec(value)) !== null) {
+        while ((token = TOKEN_REGEX.exec(value)) !== null) {
+            const tokenStr = token[0];
+            const tokenStart = offset + token.index;
             const current = remaining[0];
             if (!current) {
-                tokenFragment += renderToken(token[0], offset + token.index, anonimizeState);
+                tokenFragment += renderToken(tokenStr, tokenStart, anonimizeState);
                 continue;
             }
-            if (current.end < offset + token.index + token[0].length) {
+            if (current.end < tokenStart + tokenStr.length) {
                 remaining = remaining.slice(1);
             }
-            if (current.start > offset + token.index) {
-                tokenFragment += renderToken(token[0], offset + token.index, anonimizeState);
+            if (current.start > tokenStart) {
+                tokenFragment += renderToken(tokenStr, tokenStart, anonimizeState);
             } else {
                 tokenFragment += renderToken(
-                    token[0],
-                    offset + token.index,
+                    tokenStr,
+                    tokenStart,
                     anonimizeState,
                     entityTypes[current.ent.type],
                     current
@@ -135,11 +143,15 @@ export function renderBlock(
         return tokenFragment;
     }
 
-    if (elmt.nodeType === Node.COMMENT_NODE || TAGS_TO_IGNORE.includes(elmt.nodeName.toLowerCase())) {
+    if (elmt.nodeType === Node.COMMENT_NODE) {
         return "";
     }
 
     const Tag = elmt.nodeName.toLowerCase();
+    if (TAGS_TO_IGNORE.has(Tag)) {
+        return "";
+    }
+
     const elmtElmt: HTMLElement = elmt as HTMLElement;
 
     if (
@@ -149,6 +161,9 @@ export function renderBlock(
     ) {
         return "<!--PAGEBREAK-->";
     }
+
+    const childNodes = elmt.childNodes;
+    const childLen = childNodes.length;
 
     if (Tag === "ol" || Tag === "ul") {
         const baseAttrs = elmtElmt
@@ -176,14 +191,14 @@ export function renderBlock(
 
         ht += openList(baseStart + liCount);
 
-        for (let i = 0; i < elmt.childNodes.length; i++) {
-            if (hasVisibleContent(elmt.childNodes[i]) && consumeBreak(pageBreaks, offset + suboffset)) {
+        for (let i = 0; i < childLen; i++) {
+            const child = childNodes[i];
+            if (hasVisibleContent(child) && consumeBreak(pageBreaks, offset + suboffset)) {
                 ht += `</${Tag}><!--PAGEBREAK-->${openList(baseStart + liCount)}`;
             }
 
-            const size = (elmt.childNodes[i].textContent || "").length;
-            const findLastIndex = (o: SpecificOffsetRange, start: number) => o.start > offset + suboffset + start;
-            const lastIndex = remaining.findIndex(o => findLastIndex(o, size));
+            const size = (child.textContent || "").length;
+            const lastIndex = remaining.findIndex(o => o.start > offset + suboffset + size);
             const cents = lastIndex === -1 ? remaining : remaining.slice(0, lastIndex);
 
             if (remaining[cents.length - 1] && remaining[cents.length - 1].end > offset + suboffset + size) {
@@ -193,7 +208,7 @@ export function renderBlock(
             }
 
             ht += renderBlock(
-                elmt.childNodes[i],
+                child,
                 entityTypes,
                 cents,
                 anonimizeState,
@@ -203,8 +218,8 @@ export function renderBlock(
                 pageBreaks
             );
 
-            if (elmt.childNodes[i].nodeType === Node.ELEMENT_NODE &&
-                (elmt.childNodes[i] as HTMLElement).nodeName.toLowerCase() === "li") {
+            if (child.nodeType === Node.ELEMENT_NODE &&
+                (child as HTMLElement).nodeName.toLowerCase() === "li") {
                 liCount++;
             }
 
@@ -218,15 +233,15 @@ export function renderBlock(
     let ht = "";
     let suboffset: number = 0;
     let remaining = offsets;
-    const findLastIndex = (o: SpecificOffsetRange, start: number) => o.start > offset + suboffset + start;
 
-    for (let i = 0; i < elmt.childNodes.length; i++) {
-        if (hasVisibleContent(elmt.childNodes[i]) && consumeBreak(pageBreaks, offset + suboffset)) {
+    for (let i = 0; i < childLen; i++) {
+        const child = childNodes[i];
+        if (hasVisibleContent(child) && consumeBreak(pageBreaks, offset + suboffset)) {
             ht += "<!--PAGEBREAK-->";
         }
 
-        const size = (elmt.childNodes[i].textContent || "").length;
-        const lastIndex = remaining.findIndex(o => findLastIndex(o, size));
+        const size = (child.textContent || "").length;
+        const lastIndex = remaining.findIndex(o => o.start > offset + suboffset + size);
         const cents = lastIndex === -1 ? remaining : remaining.slice(0, lastIndex);
 
         if (remaining[cents.length - 1] && remaining[cents.length - 1].end > offset + suboffset + size) {
@@ -236,7 +251,7 @@ export function renderBlock(
         }
 
         ht += renderBlock(
-            elmt.childNodes[i],
+            child,
             entityTypes,
             cents,
             anonimizeState,
@@ -245,7 +260,7 @@ export function renderBlock(
             imageIndex,
             pageBreaks
         );
-        suboffset += (elmt.childNodes[i].textContent || "").length;
+        suboffset += size;
     }
 
     const attrs: string[] = [];
@@ -278,9 +293,15 @@ export function renderBlock(
     return `<${Tag} ${attrs.join(" ")}>${ht}</${Tag}>`;
 }
 
-export function renderToken(value: string, offset: number, anonimizeState: AnonimizeStateState, type?: EntityTypeI, specificOffset?: SpecificOffsetRange): string {
+export function renderToken(
+    value: string,
+    offset: number,
+    anonimizeState: AnonimizeStateState,
+    type?: EntityTypeI,
+    specificOffset?: SpecificOffsetRange
+): string {
     if (value.length === 0) {
-        return ""
+        return "";
     }
 
     if (specificOffset && specificOffset.start >= offset && specificOffset.end < offset + value.length - 1) {
@@ -290,54 +311,61 @@ export function renderToken(value: string, offset: number, anonimizeState: Anoni
 
         return renderToken(p1, offset, anonimizeState, type) +
             renderToken(token, offset + p1.length, anonimizeState, type, specificOffset) +
-            renderToken(p2, offset + p1.length - 1 + token.length - 1, anonimizeState, type)
+            renderToken(p2, offset + p1.length - 1 + token.length - 1, anonimizeState, type);
     }
 
-    const dataAttrs: { [_: string]: string } = {
-        'data-offset': offset.toString()
-    };
+    if (anonimizeState === AnonimizeStateState.ORIGINAL) {
+        return value;
+    }
+
+    if (anonimizeState === AnonimizeStateState.ANONIMIZED) {
+        if (specificOffset && type) {
+            if (specificOffset.start === offset) {
+                return specificOffset.ent.anonimizingFunction(type)(
+                    specificOffset.preview,
+                    specificOffset.ent.type,
+                    specificOffset.ent.index,
+                    specificOffset.ent.typeIndex,
+                    specificOffset.ent.funcIndex
+                );
+            }
+            return "";
+        }
+        return value;
+    }
+
+    let attrStr = `data-offset="${offset}"`;
 
     if (specificOffset && type) {
-        dataAttrs['data-anonimize-cod'] = specificOffset.ent.anonimizingFunction(type)(specificOffset.preview, specificOffset.ent.type, specificOffset.ent.index, specificOffset.ent.typeIndex, specificOffset.ent.funcIndex);
-        dataAttrs['data-anonimize-type'] = type.name;
-        dataAttrs['data-anonimize-color'] = type.color;
-        dataAttrs['data-anonimize-offset-start'] = specificOffset.start.toString()
-        dataAttrs['data-anonimize-offset-end'] = specificOffset.end.toString()
+        const cod = specificOffset.ent.anonimizingFunction(type)(
+            specificOffset.preview,
+            specificOffset.ent.type,
+            specificOffset.ent.index,
+            specificOffset.ent.typeIndex,
+            specificOffset.ent.funcIndex
+        );
+        attrStr += ` data-anonimize-cod="${cod}" data-anonimize-type="${type.name}" data-anonimize-color="${type.color}" data-anonimize-offset-start="${specificOffset.start}" data-anonimize-offset-end="${specificOffset.end}"`;
         if (specificOffset.start === offset) {
-            dataAttrs['data-anonimize-first'] = "true";
+            attrStr += ' data-anonimize-first="true"';
         }
         if (offset === specificOffset.end - value.length + 1) {
-            dataAttrs['data-anonimize-last'] = "true";
+            attrStr += ' data-anonimize-last="true"';
         }
     }
 
     switch (anonimizeState) {
-        case AnonimizeStateState.ANONIMIZED:
-            if ('data-anonimize-first' in dataAttrs) {
-                return dataAttrs['data-anonimize-cod']
-            }
-            else if ('data-anonimize-cod' in dataAttrs) {
-                return ""
-            }
-            else {
-                return value
-            }
-        case AnonimizeStateState.ORIGINAL:
-            return value;
         case AnonimizeStateState.TAGGED:
-            return `<span ${Object.entries(dataAttrs).map(([k, v]) => `${k}="${v}"`).join("")}>${value}</span>`
+            return `<span ${attrStr}>${value}</span>`;
         case AnonimizeStateState.OTHERS_TAGGED:
             if (type && type.name.startsWith("X")) {
-                return `<span ${Object.entries(dataAttrs).map(([k, v]) => `${k}="${v}"`).join(" ")}>${value}</span>`;
-            } else {
-                return value;
+                return `<span ${attrStr}>${value}</span>`;
             }
+            return value;
         case AnonimizeStateState.NORMAL_TAGGED:
             if (type && !type.name.startsWith("X")) {
-                return `<span ${Object.entries(dataAttrs).map(([k, v]) => `${k}="${v}"`).join(" ")}>${value}</span>`;
-            } else {
-                return value;
+                return `<span ${attrStr}>${value}</span>`;
             }
+            return value;
         default:
             return "";
     }
