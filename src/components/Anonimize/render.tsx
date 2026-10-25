@@ -44,6 +44,70 @@ function hasVisibleContent(node: ChildNode): boolean {
     return false;
 }
 
+function renderEntity(
+    text: string,
+    offset: number,
+    anonimizeState: AnonimizeStateState,
+    type: EntityTypeI,
+    specificOffset: SpecificOffsetRange
+): string {
+    if (anonimizeState === AnonimizeStateState.ORIGINAL) {
+        return text;
+    }
+
+    const cod = specificOffset.ent.anonimizingFunction(type)(
+        specificOffset.preview,
+        specificOffset.ent.type,
+        specificOffset.ent.index,
+        specificOffset.ent.typeIndex,
+        specificOffset.ent.funcIndex
+    );
+
+    if (anonimizeState === AnonimizeStateState.ANONIMIZED) {
+        const  isFirstSlice = specificOffset.start >= offset;
+        return isFirstSlice ? cod : "";
+    }
+
+    const span = `<span
+        data-offset="${offset}"
+        data-anonimize-cod="${cod}"
+        data-anonimize-type="${type.name}"
+        data-anonimize-color="${type.color}"
+    >${text}</span>`;
+
+    switch (anonimizeState) {
+        case AnonimizeStateState.TAGGED:
+            return span;
+        case AnonimizeStateState.OTHERS_TAGGED:
+            return type.name.startsWith("X") ? span : text;
+        case AnonimizeStateState.NORMAL_TAGGED:
+            return !type.name.startsWith("X") ? span : text;
+        default:
+            return "";
+    }
+}
+
+function renderNonEntityTokens(
+    text: string,
+    startOffset: number,
+    anonimizeState: AnonimizeStateState
+): string {
+    if (text.length === 0) return "";
+    if (anonimizeState !== AnonimizeStateState.TAGGED) {
+        return text;
+    }
+
+    TOKEN_REGEX.lastIndex = 0;
+    let result = "";
+    let match: RegExpExecArray | null;
+    while ((match = TOKEN_REGEX.exec(text)) !== null) {
+        const tokenStr = match[0];
+        const tokenOffset = startOffset + match.index;
+        result += `<span data-offset="${tokenOffset}">${tokenStr}</span>`;
+    }
+    return result;
+}
+
 export function planAutoPageBreaks(root: ChildNode, approxCharsPerPage = 2300): Set<number> {
     const breaks = new Set<number>();
     let acc = 0;
@@ -112,35 +176,47 @@ export function renderBlock(
         const value = elmt.nodeValue || "";
         if (value.length === 0) return "";
 
-        TOKEN_REGEX.lastIndex = 0;
-        let tokenFragment = "";
-        let token: RegExpExecArray | null;
-        let remaining = offsets;
+        let ht = "";
+        let curIndex = 0;
+        let remIdx = 0;
 
-        while ((token = TOKEN_REGEX.exec(value)) !== null) {
-            const tokenStr = token[0];
-            const tokenStart = offset + token.index;
-            const current = remaining[0];
-            if (!current) {
-                tokenFragment += renderToken(tokenStr, tokenStart, anonimizeState);
-                continue;
+        while (curIndex < value.length) {
+            while (remIdx < offsets.length && offsets[remIdx].end < offset + curIndex) {
+                remIdx++;
             }
-            if (current.end < tokenStart + tokenStr.length) {
-                remaining = remaining.slice(1);
+
+            const current = remIdx < offsets.length ? offsets[remIdx] : null;
+
+            if (!current || current.start >= offset + value.length) {
+                ht += renderNonEntityTokens(value.substring(curIndex), offset + curIndex, anonimizeState);
+                break;
             }
-            if (current.start > tokenStart) {
-                tokenFragment += renderToken(tokenStr, tokenStart, anonimizeState);
+
+            const entRelStart = current.start - offset;
+            const entRelEnd = current.end - offset;
+
+            if (entRelStart > curIndex) {
+                ht += renderNonEntityTokens(value.substring(curIndex, entRelStart), offset + curIndex, anonimizeState);
+                curIndex = entRelStart;
+            }
+
+            const endInNode = Math.min(value.length - 1, entRelEnd);
+            const entityText = value.substring(curIndex, endInNode + 1);
+            const entityType = entityTypes[current.ent.type];
+
+            if (entityType) {
+                ht += renderEntity(entityText, offset + curIndex, anonimizeState, entityType, current);
             } else {
-                tokenFragment += renderToken(
-                    tokenStr,
-                    tokenStart,
-                    anonimizeState,
-                    entityTypes[current.ent.type],
-                    current
-                );
+                ht += renderNonEntityTokens(entityText, offset + curIndex, anonimizeState);
+            }
+
+            curIndex = endInNode + 1;
+            if (endInNode === entRelEnd) {
+                remIdx++;
             }
         }
-        return tokenFragment;
+
+        return ht;
     }
 
     if (elmt.nodeType === Node.COMMENT_NODE) {
@@ -291,82 +367,4 @@ export function renderBlock(
     }
 
     return `<${Tag} ${attrs.join(" ")}>${ht}</${Tag}>`;
-}
-
-export function renderToken(
-    value: string,
-    offset: number,
-    anonimizeState: AnonimizeStateState,
-    type?: EntityTypeI,
-    specificOffset?: SpecificOffsetRange
-): string {
-    if (value.length === 0) {
-        return "";
-    }
-
-    if (specificOffset && specificOffset.start >= offset && specificOffset.end < offset + value.length - 1) {
-        const p1 = value.substring(0, specificOffset.start - offset);
-        const token = value.substring(specificOffset.start - offset, specificOffset.end - offset + 1);
-        const p2 = value.substring(specificOffset.end - offset + 1);
-
-        return renderToken(p1, offset, anonimizeState, type) +
-            renderToken(token, offset + p1.length, anonimizeState, type, specificOffset) +
-            renderToken(p2, offset + p1.length - 1 + token.length - 1, anonimizeState, type);
-    }
-
-    if (anonimizeState === AnonimizeStateState.ORIGINAL) {
-        return value;
-    }
-
-    if (anonimizeState === AnonimizeStateState.ANONIMIZED) {
-        if (specificOffset && type) {
-            if (specificOffset.start === offset) {
-                return specificOffset.ent.anonimizingFunction(type)(
-                    specificOffset.preview,
-                    specificOffset.ent.type,
-                    specificOffset.ent.index,
-                    specificOffset.ent.typeIndex,
-                    specificOffset.ent.funcIndex
-                );
-            }
-            return "";
-        }
-        return value;
-    }
-
-    let attrStr = `data-offset="${offset}"`;
-
-    if (specificOffset && type) {
-        const cod = specificOffset.ent.anonimizingFunction(type)(
-            specificOffset.preview,
-            specificOffset.ent.type,
-            specificOffset.ent.index,
-            specificOffset.ent.typeIndex,
-            specificOffset.ent.funcIndex
-        );
-        attrStr += ` data-anonimize-cod="${cod}" data-anonimize-type="${type.name}" data-anonimize-color="${type.color}" data-anonimize-offset-start="${specificOffset.start}" data-anonimize-offset-end="${specificOffset.end}"`;
-        if (specificOffset.start === offset) {
-            attrStr += ' data-anonimize-first="true"';
-        }
-        if (offset === specificOffset.end - value.length + 1) {
-            attrStr += ' data-anonimize-last="true"';
-        }
-    }
-
-    switch (anonimizeState) {
-        case AnonimizeStateState.TAGGED:
-            return `<span ${attrStr}>${value}</span>`;
-        case AnonimizeStateState.OTHERS_TAGGED:
-            if (type && type.name.startsWith("X")) {
-                return `<span ${attrStr}>${value}</span>`;
-            }
-            return value;
-        case AnonimizeStateState.NORMAL_TAGGED:
-            if (type && !type.name.startsWith("X")) {
-                return `<span ${attrStr}>${value}</span>`;
-            }
-            return value;
-        default:
-            return "";
-    }
 }
