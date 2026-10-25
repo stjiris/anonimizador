@@ -1,4 +1,4 @@
-import { forwardRef, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { EntityTypeI } from "@/types/EntityType";
 import { sortEntityTypesXLast } from "@/components/Anonimize/Tooltip";
 
@@ -12,19 +12,20 @@ export interface TypePickerProps {
     extraItems?: React.ReactNode;
 }
 
-export const TypePickerDropdown = forwardRef<HTMLDivElement, TypePickerProps>(
-function TypePickerDropdown({ types, anchorRef, onSelect, onClose, onRemove, noAutoPosition, extraItems }, forwardedRef) {
+export function TypePickerDropdown({
+    types,
+    anchorRef,
+    onSelect,
+    onClose,
+    onRemove,
+    noAutoPosition,
+    extraItems,
+}: TypePickerProps) {
     const [showSubtypePicker, setShowSubtypePicker] = useState(false);
     const [selectedParentType, setSelectedParentType] = useState<EntityTypeI | null>(null);
     const [pickerPos, setPickerPos] = useState({ top: 0, left: 0 });
     const [subtypePos, setSubtypePos] = useState({ top: 0, left: 0 });
     const pickerRef = useRef<HTMLDivElement>(null);
-
-    const setRefs = (el: HTMLDivElement | null) => {
-        (pickerRef as React.MutableRefObject<HTMLDivElement | null>).current = el;
-        if (typeof forwardedRef === "function") forwardedRef(el);
-        else if (forwardedRef) forwardedRef.current = el;
-    };
 
     useEffect(() => {
         if (!noAutoPosition && anchorRef.current) {
@@ -50,7 +51,7 @@ function TypePickerDropdown({ types, anchorRef, onSelect, onClose, onRemove, noA
 
     return (
         <div
-            ref={setRefs}
+            ref={pickerRef}
             className="dropdown-menu show shadow overflow-y-auto"
             data-type-picker="true"
             style={noAutoPosition
@@ -119,4 +120,4 @@ function TypePickerDropdown({ types, anchorRef, onSelect, onClose, onRemove, noA
             )}
         </div>
     );
-});
+}

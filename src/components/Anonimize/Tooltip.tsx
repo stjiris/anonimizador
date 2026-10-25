@@ -5,18 +5,18 @@ import { TokenSelection } from "@/types/SelectionType"
 import { useEffect, useRef, useState, useCallback } from "react"
 import { createPopper, Instance } from "@popperjs/core"
 
+interface SelectionState {
+    selection: TokenSelection | undefined,
+    would: AddEntityDryRun | undefined
+    affects: number | undefined
+}
+
 interface AnonimizeTooltipProps {
     entityTypes: EntityTypeI[]
     pool: EntityPool
     contentRef: React.RefObject<HTMLDivElement>
     nodesRef: React.MutableRefObject<HTMLElement[]>
     file: UserFile
-}
-
-interface SelectionState {
-    selection: TokenSelection | undefined,
-    would: AddEntityDryRun | undefined
-    affects: number | undefined
 }
 
 export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
@@ -37,7 +37,7 @@ export default function AnonimizeTooltip(props: AnonimizeTooltipProps) {
     useEffect(() => {
         window.addEventListener("mouseup", onMouseup)
         return () => window.removeEventListener("mouseup", onMouseup)
-    }, [onMouseup])
+    }, [onMouseup]);
 
     // reset subtype panel whenever the selection changes
     useEffect(() => {
@@ -239,15 +239,16 @@ function updateSelection(ev: React.MouseEvent<HTMLDivElement>, contentDiv: HTMLD
             endOffset -= 1;
         }
         if (startOffset >= 0 && endOffset >= 0) {
-            let cnodes = nodes.filter((e: HTMLElement) => parseInt(e.dataset.offset || "-1") >= startOffset && parseInt(e.dataset.offset || "-1") < endOffset)
-            let sNode = cnodes[0]?.firstChild;
-            let eNode = cnodes[cnodes.length - 1]?.lastChild;
+            const cnodes = nodes.filter((e: HTMLElement) => parseInt(e.dataset.offset || "-1") >= startOffset && parseInt(e.dataset.offset || "-1") < endOffset)
+            const sNode = cnodes[0]?.firstChild;
+            const eNode = cnodes[cnodes.length - 1]?.lastChild;
             if (sNode && eNode) {
                 range.setStart(sNode, 0);
                 range.setEnd(eNode, eNode.textContent?.length || 0);
             }
-            let text = cnodes.map(e => e.textContent).join("")
-            let r = pool.addEntityDryRun(startOffset, endOffset - 1, text)
+
+            const text = cnodes.map(e => e.textContent).join("")
+            const r = pool.addEntityDryRun(startOffset, endOffset - 1, text)
             setSelection({
                 selection: {
                     text: text,
@@ -265,15 +266,14 @@ function updateSelection(ev: React.MouseEvent<HTMLDivElement>, contentDiv: HTMLD
     }
     if (selection.selection !== undefined) {
         setSelection({ selection: undefined, affects: undefined, would: undefined })
-    }
-    else {
-        let target = ev.target;
+    } else {
+        const target = ev.target;
         if (target instanceof HTMLElement) {
-            let startOffset = parseInt(target.dataset.offset || "-1");
-            let iresult = pool.entitiesAt(startOffset, startOffset + 1);
-            let ent = iresult[0];
+            const startOffset = parseInt(target.dataset.offset || "-1");
+            const iresult = pool.entitiesAt(startOffset, startOffset + 1);
+            const ent = iresult[0];
             if (ent) {
-                let off = ent.offsets.find(off => startOffset >= off.start && startOffset < off.end);
+                const off = ent.offsets.find(off => startOffset >= off.start && startOffset < off.end);
                 if (off) {
                     setSelection({
                         selection: {
