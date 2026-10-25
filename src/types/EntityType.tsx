@@ -76,6 +76,10 @@ export interface OffsetRange {
     preview: string
 }
 
+export interface SpecificOffsetRange extends OffsetRange {
+    ent: Entity
+}
+
 export interface EntityI {
     type: string
     offsets: OffsetRange[]

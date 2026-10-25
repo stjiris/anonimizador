@@ -1,5 +1,6 @@
 "use client";
-import { useTypes } from "./uses";
+
+import { useTypes } from "@/hooks/use-types";
 import { UserFileInterface } from "@/types/UserFileInterface";
 
 export function EntitiesStyle({ file }: { file: UserFileInterface }) {

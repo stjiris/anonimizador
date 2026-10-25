@@ -1,7 +1,6 @@
-import { SpecificOffsetRange } from "@/core/uses";
 import { AnonimizeImage } from "@/types/AnonimizeImage";
 import { AnonimizeStateState } from "@/types/AnonimizeState";
-import { EntityTypeI } from "@/types/EntityType";
+import { EntityTypeI, SpecificOffsetRange } from "@/types/EntityType";
 
 const TAGS_TO_IGNORE = "script,style,link,meta,head,html,svg,iframe,canvas,object,embed,applet,frameset,frame,noembed,noscript,param,source,track".split(",");
 const VOID_ELEMENTS = new Set(["area", "base", "br", "col", "embed", "img", "input", "link", "meta", "param", "source", "track", "wbr"]);
@@ -101,7 +100,7 @@ export function renderBlock(
     imageIndex: { current: number },
     pageBreaks?: Set<number>,
 ) {
-    let elmt = doc;
+    const elmt = doc;
 
     if (elmt.nodeType === Node.TEXT_NODE) {
         const reg = /([0-9]+)|([A-Za-zÀ-ÖØ-öø-ÿ]+)|([^A-Za-zÀ-ÖØ-öø-ÿ0-9])/g;
@@ -184,8 +183,8 @@ export function renderBlock(
 
             const size = (elmt.childNodes[i].textContent || "").length;
             const findLastIndex = (o: SpecificOffsetRange, start: number) => o.start > offset + suboffset + start;
-            let lastIndex = remaining.findIndex(o => findLastIndex(o, size));
-            let cents = lastIndex === -1 ? remaining : remaining.slice(0, lastIndex);
+            const lastIndex = remaining.findIndex(o => findLastIndex(o, size));
+            const cents = lastIndex === -1 ? remaining : remaining.slice(0, lastIndex);
 
             if (remaining[cents.length - 1] && remaining[cents.length - 1].end > offset + suboffset + size) {
                 remaining = remaining.slice(cents.length - 1);
@@ -226,9 +225,9 @@ export function renderBlock(
             ht += "<!--PAGEBREAK-->";
         }
 
-        let size = (elmt.childNodes[i].textContent || "").length;
-        let lastIndex = remaining.findIndex(o => findLastIndex(o, size));
-        let cents = lastIndex === -1 ? remaining : remaining.slice(0, lastIndex);
+        const size = (elmt.childNodes[i].textContent || "").length;
+        const lastIndex = remaining.findIndex(o => findLastIndex(o, size));
+        const cents = lastIndex === -1 ? remaining : remaining.slice(0, lastIndex);
 
         if (remaining[cents.length - 1] && remaining[cents.length - 1].end > offset + suboffset + size) {
             remaining = remaining.slice(cents.length - 1);
@@ -252,7 +251,8 @@ export function renderBlock(
     const attrs: string[] = [];
     const href = elmtElmt.getAttribute("href");
     const localHref = href?.startsWith("#");
-    for (let attr of elmtElmt.getAttributeNames()) {
+
+    for (const attr of elmtElmt.getAttributeNames()) {
         attrs.push(`${attr}="${elmtElmt.getAttribute(attr)}"`);
     }
     if (Tag === "a" && href && !localHref) attrs.push('target="_blank"');
@@ -292,7 +292,8 @@ export function renderToken(value: string, offset: number, anonimizeState: Anoni
             renderToken(token, offset + p1.length, anonimizeState, type, specificOffset) +
             renderToken(p2, offset + p1.length - 1 + token.length - 1, anonimizeState, type)
     }
-    let dataAttrs: { [_: string]: string } = {
+
+    const dataAttrs: { [_: string]: string } = {
         'data-offset': offset.toString()
     };
 

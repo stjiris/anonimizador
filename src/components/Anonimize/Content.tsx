@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { AnonimizeStateState } from '@/types/AnonimizeState'
 import { UserFile } from '@/core/UserFile';
-import {SpecificOffsetRange, useImages, useSpecificOffsets, useTypes, useTypesDict} from '@/core/uses';
+import { SpecificOffsetRange } from '@/types/EntityType';
+import { useImages, useSpecificOffsets, useTypes, useTypesDict } from '@/hooks';
 import { planAutoPageBreaks, renderBlock } from './render';
 import AnonimizeTooltip from './Tooltip';
 

@@ -1,10 +1,10 @@
-import { Button } from "../core/BootstrapIcons"
-import { UserFile } from "../core/UserFile";
-import { useSave } from "../core/uses";
+import { Button } from "@/core/BootstrapIcons"
+import { UserFile } from "@/core/UserFile";
+import { useSave } from "@/hooks/use-save";
 
 export function SavedBadge({ file }: { file: UserFile }) {
     const saved = useSave(file);
-    //const name = file.name.length > 30 ? file.name.slice(0, 15) + '...' + file.name.slice(-15) : file.name;
+    // const name = file.name.length > 30 ? file.name.slice(0, 15) + '...' + file.name.slice(-15) : file.name;
     const name = file.name;
 
     const title = saved ? "Guardado automaticamente." : "Não guardado"

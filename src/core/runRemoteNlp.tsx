@@ -1,14 +1,14 @@
 import { useEffect, useRef } from "react";
-import { AnonimizeStateState } from "../types/AnonimizeState";
+import { AnonimizeStateState } from "@/types/AnonimizeState";
 import { Button } from "./BootstrapIcons";
-import { useEntities } from "./uses";
+import { useEntities } from "@/hooks/use-entities";
 import { UserFile } from "./UserFile";
 import { useProfile } from "./ProfileTypeLogic";
 import { Entity, normalizeEntityString } from "@/types/EntityType";
 import { EntityPool } from "@/types/EntityPool";
 
 export function SuggestButton({ setRequesting, file, requesting, state }: { setRequesting: (b: boolean) => void, file: UserFile, requesting: boolean, state: AnonimizeStateState }) {
-    let ents = useEntities(file.pool)
+    const ents = useEntities(file.pool)
     const disabled = ents.length > 0 || requesting || state !== AnonimizeStateState.TAGGED;
     const signal = useRef<AbortController>(null)
 
@@ -62,16 +62,17 @@ export function applyNlpEntitiesToPool(pool: EntityPool, resArray: RemoteEntity[
         return true;
     });
 
-    let entities: { [key: string]: Entity } = {};
-    let usedIndexes: { [key: number]: boolean } = {};
+    const entities: { [key: string]: Entity } = {};
+    const usedIndexes: { [key: number]: boolean } = {};
 
-    for (let ent of resArray) {
-        let id = normalizeEntityString(ent.text) + ent.label_;
+    for (const ent of resArray) {
+        const id = normalizeEntityString(ent.text) + ent.label_;
         if (!(id in entities)) {
             entities[id] = new Entity(ent.label_);
         }
 
-        let allMatches = pool.originalText.matchAll(new RegExp(ent.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g"));
+        const allMatches = pool.originalText.matchAll(new RegExp(ent.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), "g"));
+
         let m = allMatches.next();
         let minDist = Infinity;
         let minIndex = Infinity;
@@ -97,14 +98,14 @@ export async function runRemoteNlp(file: UserFile, abort?: AbortSignal) {
     if (runRemoteNlpRequesting) return;
     runRemoteNlpRequesting = true;
 
-    let pool = file.pool;
+    const pool = file.pool;
 
     // Use textContent (same as pool.originalText) so NLP char offsets align with renderBlock's offset tracking.
-    let text = pool.originalText;
-    let fd = new FormData()
+    const text = pool.originalText;
+    const fd = new FormData()
     fd.append("file", new Blob([text]), "input.txt")
 
-    let resArray: RemoteEntity[] = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/nlp`, {
+    const resArray: RemoteEntity[] = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/nlp`, {
         method: "POST",
         body: fd,
         signal: abort

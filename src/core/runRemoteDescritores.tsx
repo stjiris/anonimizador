@@ -1,19 +1,19 @@
 "use client";
+
 import { useState } from "react";
-import { UserFile } from "@/core/UserFile";
 import { Button } from "./BootstrapIcons";
-import { useArea, useDescriptors } from "./uses";
+import { useArea, useDescriptors } from "@/hooks";
 import { UserFileInterface } from "@/types/UserFileInterface";
 
 export function DescritoresModalBody({ file }: { file: UserFileInterface }) {
     const area = useArea(file);
     const descriptors = useDescriptors(file);
-    let [requesting, setRequesting] = useState<boolean>(false);
-    let [top, setTop] = useState<number>(5);
+    const [requesting, setRequesting] = useState<boolean>(false);
+    const [top, setTop] = useState<number>(5);
 
-    let canRequest = !requesting && area && (!descriptors || descriptors.length === 0);
-    let canUpdateArea = !requesting && (!descriptors || descriptors.length === 0);
-    let canReset = !requesting && descriptors && descriptors.length > 0;
+    const canRequest = !requesting && area && (!descriptors || descriptors.length === 0);
+    const canUpdateArea = !requesting && (!descriptors || descriptors.length === 0);
+    const canReset = !requesting && descriptors && descriptors.length > 0;
 
     const updateArea = (area: string) => {
         file.area = area || undefined;
@@ -89,16 +89,16 @@ export async function requestDescriptors(file: UserFileInterface, abort?: AbortS
     if (requestingDescriptors) return;
     requestingDescriptors = true;
 
-    let doc = file.doc;
+    const doc = file.doc;
 
-    let text = textFrom(doc);
-    let fd = new FormData()
+    const text = textFrom(doc);
+    const fd = new FormData()
     fd.append("file", new Blob([text]), "input.txt")
     if (file.area) {
         fd.append("area", file.area)
     }
 
-    let resArray: RemoteEntity[] = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/descritores`, {
+    const resArray: RemoteEntity[] = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/descritores`, {
         method: "POST",
         body: fd,
         signal: abort

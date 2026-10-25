@@ -7,22 +7,22 @@ import {
     getAnonimizedStateCombined
 } from "@/types/AnonimizeState";
 import AnonimizeContent from "./Content";
-import {EntityTable} from "./EntityTable";
-import {HistoryCommands} from "./HistoryCommands";
-import {ImageEditorModal} from "./ImageEditorModal";
-import {ToolsModalBody} from "./Tools";
-import {ExportButton} from "./ExportButton";
-import {UserFile} from "@/core/UserFile";
-import {Bicon, Button} from "@/core/BootstrapIcons";
-import {SpecificOffsetRange, useEntities, useSave} from "@/core/uses";
-import {EntitiesStyle} from "@/core/entitiesStyle";
-import {ExitButton, ForceExitButton} from "./ExitButton";
-import {SavedBadge} from "@/components/SavedBadge";
-import {SuggestButton} from "@/core/runRemoteNlp";
+import { EntityTable } from "./EntityTable";
+import { HistoryCommands } from "./HistoryCommands";
+import { ImageEditorModal } from "./ImageEditorModal";
+import { ToolsModalBody } from "./Tools";
+import { ExportButton } from "./ExportButton";
+import { UserFile } from "@/core/UserFile";
+import { Bicon, Button } from "@/core/BootstrapIcons";
+import { useEntities, useSave } from "@/hooks";
+import { EntitiesStyle } from "@/core/entitiesStyle";
+import { ExitButton, ForceExitButton } from "./ExitButton";
+import { SavedBadge } from "@/components/SavedBadge";
+import { SuggestButton } from "@/core/runRemoteNlp";
 import BootstrapModal from "@/core/BootstrapModal";
-import {InfoModalContent} from "@/core/infoModalContent";
-import {Entity} from "@/types/EntityType";
-import {AddEntityDryRun} from "@/types/EntityPool";
+import { InfoModalContent } from "@/core/infoModalContent";
+import { Entity, SpecificOffsetRange } from "@/types/EntityType";
+import { AddEntityDryRun } from "@/types/EntityPool";
 
 interface AnonimizeProps {
     file: UserFile

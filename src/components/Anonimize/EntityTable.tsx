@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import {
     MaterialReactTable,
     MRT_ColumnDef,
@@ -8,18 +8,15 @@ import {
 } from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
 
-import {TextField, Badge, ToggleButton, ToggleButtonGroup, Portal, Tooltip, IconButton} from "@mui/material";
+import {TextField, Badge, ToggleButton, ToggleButtonGroup, Portal} from "@mui/material";
 import { UserFile } from "@/core/UserFile";
-import {SpecificOffsetRange, useEntities, useTypes} from "@/core/uses";
-import { Entity, EntityTypeI } from "@/types/EntityType";
+import { useEntities, useTypes } from "@/hooks";
+import { Entity, EntityTypeI, SpecificOffsetRange } from "@/types/EntityType";
 import { EntityPool } from "@/types/EntityPool";
 import { Button } from "@/core/BootstrapIcons";
 import { FULL_ANONIMIZE } from "@/core/anonimizeFunctions";
 import { sortEntityTypesXLast } from "@/components/Anonimize/Tooltip";
 import { TypePickerDropdown } from "@/components/Anonimize/TypePickerDropdown";
-import {DeleteOutlined} from "@mui/icons-material";
-
-const TODAS = Number.MAX_SAFE_INTEGER;
 
 const getType = (types: EntityTypeI[], typeName: string): EntityTypeI => {
     
