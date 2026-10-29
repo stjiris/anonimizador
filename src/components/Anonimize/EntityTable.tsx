@@ -11,15 +11,13 @@ import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import {TextField, Badge, ToggleButton, ToggleButtonGroup, Portal} from "@mui/material";
 import { UserFile } from "@/core/UserFile";
 import { useEntities, useTypes } from "@/hooks";
-import { Entity, EntityTypeI, SpecificOffsetRange } from "@/types/EntityType";
+import {Entity, EntityTypeI, SpecificOffsetRange, DUMMY_ENTITY_TYPE} from "@/types/EntityType";
 import { EntityPool } from "@/types/EntityPool";
 import { Button } from "@/core/BootstrapIcons";
-import { FULL_ANONIMIZE } from "@/core/anonimizeFunctions";
 import { sortEntityTypesXLast } from "@/components/Anonimize/Tooltip";
 import { TypePickerDropdown } from "@/components/Anonimize/TypePickerDropdown";
 
 const getType = (types: EntityTypeI[], typeName: string): EntityTypeI => {
-    
     let found = types.find(t => t.name === typeName);
     if (found) return found;
     
@@ -30,7 +28,7 @@ const getType = (types: EntityTypeI[], typeName: string): EntityTypeI => {
         }
     }
 
-    return { name: `${typeName}*`, color: "red", functionIndex: FULL_ANONIMIZE } as EntityTypeI;
+    return DUMMY_ENTITY_TYPE;
 };
 
 const navigateToEntity = (start: number, end: number) => {
@@ -182,7 +180,7 @@ export function EntityTable({
             "mrt-row-expand": { size: 42, minSize: 42, maxSize: 42 },
         },
 
-        renderDetailPanel: ({ row }) => row.original.type == "X-SEARCH" ? null : (
+        renderDetailPanel: ({ row }) => !row.original.type ? null : (
             <div className="d-flex flex-column vw-100">
                 {row.original.offsets.map((off, i) => (
                     <div key={i} className="d-flex align-items-center border-bottom">
@@ -233,11 +231,11 @@ const toolbar =
     (pool: EntityPool, file: UserFile, showOnlyMarks: boolean, onToggle: (e: React.MouseEvent<HTMLElement>, v: string | null) => void, typesList: EntityTypeI[]) =>
         ({ table }: { table: MRT_TableInstance<Entity> }) => {
             const selectedCount = Object.keys(table.getState().rowSelection).length;
-            const hasSearchType = Boolean(Object.keys(table.getState().rowSelection).find(value => table.getRow(value).original.type == "X-SEARCH"));
+            const hasDummyType = Boolean(Object.keys(table.getState().rowSelection).find(value => table.getRow(value).original.type == DUMMY_ENTITY_TYPE.name));
             const isJoinDisabled = showOnlyMarks || selectedCount <= 1;
-            const isSplitDisabled = showOnlyMarks || selectedCount === 0 || hasSearchType;
-            const isRemoveDisabled = selectedCount === 0 || hasSearchType;
-            const isChangeTypeDisabled = showOnlyMarks || selectedCount === 0 || hasSearchType;
+            const isSplitDisabled = showOnlyMarks || selectedCount === 0 || hasDummyType;
+            const isRemoveDisabled = selectedCount === 0 || hasDummyType;
+            const isChangeTypeDisabled = showOnlyMarks || selectedCount === 0 || hasDummyType;
             const [showTypePicker, setShowTypePicker] = useState(false);
             const btnRef = useRef<HTMLSpanElement>(null);
 
@@ -329,9 +327,6 @@ const removeTableSelection = (table: MRT_TableInstance<Entity>) => table.setRowS
 const joinSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
     const indexes = [];
 
-    console.log("Initial pool length");
-    console.log(pool.entities.length);
-
     for (const rowId of Object.keys(table.getState().rowSelection)) {
         const entity = table.getRow(rowId).original;
         const index = parseInt(rowId, 10) - 1;
@@ -340,20 +335,14 @@ const joinSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool
             return;
         }
 
-        if (entity.type == "X-SEARCH") {
-            indexes.push(pool.entities.length);
-            console.log("New x-search with index: " + pool.entities.length);
-
+        if (!entity.type) {
             const offset = entity.offsets[0];
-            pool.addEntity(offset.start, offset.end, offset.preview, entity.type, false);
+            indexes.push(pool.entities.length);
+            pool.addEntity(offset.start, offset.end, offset.preview, "Marca", false);
         } else {
             indexes.push(index);
         }
     }
-
-
-    console.log("Final pool length");
-    console.log(pool.entities.length);
 
     pool.joinEntities(indexes);
     removeTableSelection(table);
@@ -383,7 +372,6 @@ const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_
     const sortedTypes = sortEntityTypesXLast(types);
     return ({
     id: "type",
-
     header: "Tipo",
     accessorKey: "type",
     size: 60, minSize: 40, maxSize: 100,

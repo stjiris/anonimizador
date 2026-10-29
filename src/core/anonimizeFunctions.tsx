@@ -39,43 +39,45 @@ export const firstWord: AnonimizeFunction = (str) => str.replace(/([A-Za-zÀ-Ö�
 export const matriculaLeter: AnonimizeFunction = (str) => str.replace(/[0-9]/g, '.');
 export const matriculaNumber: AnonimizeFunction = (str) => str.replace(/[A-Za-z]/g, '.');
 
-let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 export const leter: AnonimizeFunction = (_str, _type, _idx, _tidx, fidx) => {
-    let leter = alphabet[fidx % alphabet.length];
-    let s = leter;
+    const letter = alphabet[fidx % alphabet.length];
+
+    let s = letter;
     for (let i = -1; i < Math.floor(fidx / alphabet.length); i++) {
-        s += leter;
+        s += letter;
     }
 
     return s
 }
 
 export const year: AnonimizeFunction = (str: string, ...args) => {
-    let yyyymmdd = str.match(/(\d{4})(.)\d{1,2}\2\d{1,2}/);
+    const yyyymmdd = str.match(/(\d{4})(.)\d{1,2}\2\d{1,2}/);
     if (yyyymmdd) {
         return yyyymmdd[1] + yyyymmdd[2] + "..." + yyyymmdd[2] + "...";
     }
 
-    let ddmmyyyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{4})/);
+    const ddmmyyyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{4})/);
     if (ddmmyyyy) {
         return "..." + ddmmyyyy[1] + "..." + ddmmyyyy[2] + ddmmyyyy[3];
     }
-    let ddmmyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{1,2})/);
+
+    const ddmmyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{1,2})/);
     if (ddmmyy) {
         return "..." + ddmmyy[1] + "..." + ddmmyy[2] + ddmmyy[3];
     }
 
-    let diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/);
+    const diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/);
     if (diaDeMesDeyyyy) {
         return "... de ... de " + diaDeMesDeyyyy[1];
     }
 
-    let mesDeAnoDeyyyy = str.match(/.* de (\d{4})/);
+    const mesDeAnoDeyyyy = str.match(/.* de (\d{4})/);
     if (mesDeAnoDeyyyy) {
         return "... de " + mesDeAnoDeyyyy[1];
     }
 
-    let diaDeMes = str.match(/^\d{1,2} de .+/);
+    const diaDeMes = str.match(/^\d{1,2} de .+/);
     if (diaDeMes) {
         return "... de ...";
     }
@@ -86,31 +88,32 @@ export const year: AnonimizeFunction = (str: string, ...args) => {
 //Anonymization technique for dates that uses "D" and "M" as placeholders for "Dia" and "Mês" respectively,
 //instead of "...", leading dates to be returned in the following formats: "D/M/0000", "D-M-0000" or "D de M de 0000";
 export const year2: AnonimizeFunction = (str: string, ...args) => {
-    let yyyymmdd = str.match(/(\d{4})(.)\d{1,2}\2\d{1,2}/);
+    const yyyymmdd = str.match(/(\d{4})(.)\d{1,2}\2\d{1,2}/);
     if (yyyymmdd) {
         return yyyymmdd[1] + yyyymmdd[2] + "M" + yyyymmdd[2] + "D";
     }
 
-    let ddmmyyyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{4})/);
+    const ddmmyyyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{4})/);
     if (ddmmyyyy) {
         return "D" + ddmmyyyy[1] + "M" + ddmmyyyy[2] + ddmmyyyy[3];
     }
-    let ddmmyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{1,2})/);
+
+    const ddmmyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{1,2})/);
     if (ddmmyy) {
         return "D" + ddmmyy[1] + "M" + ddmmyy[2] + ddmmyy[3];
     }
 
-    let diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/);
+    const diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/);
     if (diaDeMesDeyyyy) {
         return "D de M de " + diaDeMesDeyyyy[1];
     }
 
-    let mesDeAnoDeyyyy = str.match(/.* de (\d{4})/);
+    const mesDeAnoDeyyyy = str.match(/.* de (\d{4})/);
     if (mesDeAnoDeyyyy) {
         return "M de " + mesDeAnoDeyyyy[1];
     }
 
-    let diaDeMes = str.match(/^\d{1,2} de .+/);
+    const diaDeMes = str.match(/^\d{1,2} de .+/);
     if (diaDeMes) {
         return "D de M";
     }
@@ -142,8 +145,8 @@ export const redes_inc: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) =>
         return "nome" + typeIdx.toString() + "@" + emailMatch[1];
     }
 
-    let strLow = str.toLowerCase()
-    for (let rede of redesSociais) {
+    const strLow = str.toLowerCase()
+    for (const rede of redesSociais) {
         if(strLow.includes(rede.toLowerCase())) {
             return "nome" + typeIdx.toString() + "@" + rede.toLowerCase() + ".com";
         }

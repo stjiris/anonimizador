@@ -1,6 +1,6 @@
 import { AnonimizeImage } from "@/types/AnonimizeImage";
 import { AnonimizeStateState } from "@/types/AnonimizeState";
-import { EntityTypeI, SpecificOffsetRange } from "@/types/EntityType";
+import {EntityTypeI, SpecificOffsetRange, DUMMY_ENTITY_TYPE} from "@/types/EntityType";
 
 /** Set of non-visual and script tag names that should not be rendered. */
 const TAGS_TO_IGNORE = new Set([
@@ -80,6 +80,16 @@ function renderEntity(
     type: EntityTypeI,
     specificOffset: SpecificOffsetRange
 ): string {
+    const style = "border-radius: 0.5em; padding: 0 0.4em;"
+
+    if (!type) {
+        // Not an entity, but still needs to be highlighted (e.g. when searching for text).
+        return `<span
+            style="color: white; background-color: black; ${style}"
+            data-offset="${offset}"
+        >${text}</span>`;
+    }
+
     if (anonimizeState === AnonimizeStateState.ORIGINAL) {
         return text;
     }
@@ -98,10 +108,10 @@ function renderEntity(
     }
 
     const span = `<span
+        style="cursor: pointer; background-color: ${type.color}; ${style}"
         data-offset="${offset}"
         data-anonimize-cod="${anonymizedCode}"
         data-anonimize-type="${type.name}"
-        data-anonimize-color="${type.color}"
     >${text}</span>`;
 
     switch (anonimizeState) {
@@ -201,11 +211,7 @@ function renderTextNode(
         const entityText = value.substring(curIndex, endInNode + 1);
         const entityType = entityTypes[current.ent.type];
 
-        if (entityType) {
-            renderedHtml += renderEntity(entityText, offset + curIndex, anonimizeState, entityType, current);
-        } else {
-            renderedHtml += renderNonEntityTokens(entityText, offset + curIndex, anonimizeState);
-        }
+        renderedHtml += renderEntity(entityText, offset + curIndex, anonimizeState, entityType, current);
 
         curIndex = endInNode + 1;
         if (endInNode === entRelEnd) {

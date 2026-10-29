@@ -44,26 +44,21 @@ export default function AnonimizeContent(props: AnonimizeContentProps) {
         );
     }, [props.file.doc, images, props.anonimizeState, entityTypes, renderOffsets, pageBreaks, props.paginated]);
 
-    const normalizedHtml = useMemo(() => {
+    const pages = useMemo(() => {
         return rawHtml
             .replace(/(?:<!--PAGEBREAK-->[\s]*){2,}/g, '<!--PAGEBREAK-->')
             .replace(/^\s*<!--PAGEBREAK-->\s*/, '')
-            .replace(/\s*<!--PAGEBREAK-->\s*$/, '');
-    }, [rawHtml]);
-
-    const pages = useMemo(() => {
-        return normalizedHtml
+            .replace(/\s*<!--PAGEBREAK-->\s*$/, '')
             .split(/<!--PAGEBREAK-->/g)
             .map(chunk => chunk.trim())
             .filter(chunk => chunk.length > 0);
-    }, [normalizedHtml]);
+    }, [rawHtml]);
 
     useEffect(() => {
         nodesRef.current = Array.from(
             (contentWrapperRef.current?.querySelectorAll(`[data-offset]`) as NodeListOf<HTMLElement>) ?? []
         );
-        const exportHtml = normalizedHtml.replace(/<!--PAGEBREAK-->/g, '<hr class="page-break" />');
-    }, [normalizedHtml]);
+    }, [rawHtml]);
 
     return (
         <>

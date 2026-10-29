@@ -15,13 +15,12 @@ import { ExportButton } from "./ExportButton";
 import { UserFile } from "@/core/UserFile";
 import { Bicon, Button } from "@/core/BootstrapIcons";
 import { useEntities, useSave } from "@/hooks";
-import { EntitiesStyle } from "@/core/entitiesStyle";
 import { ExitButton, ForceExitButton } from "./ExitButton";
 import { SavedBadge } from "@/components/SavedBadge";
 import { SuggestButton } from "@/core/runRemoteNlp";
 import BootstrapModal from "@/core/BootstrapModal";
 import { InfoModalContent } from "@/core/infoModalContent";
-import { Entity, SpecificOffsetRange } from "@/types/EntityType";
+import {DUMMY_ENTITY_TYPE, Entity, SpecificOffsetRange} from "@/types/EntityType";
 import { AddEntityDryRun } from "@/types/EntityPool";
 
 interface AnonimizeProps {
@@ -111,7 +110,6 @@ export default function Main({ file, ...props }: AnonimizeProps) {
 
     return <>
         <div id="doc" ref={containerRef} className="vh-100 vw-100 d-flex flex-column overflow-hidden">
-            <EntitiesStyle file={file} />
             <header className="anon-toolbar d-flex border-bottom border-black">
                 {requesting ? <ForceExitButton setUserFile={props.setUserFile} /> : <ExitButton file={file} setUserFile={props.setUserFile} />}
                 <SavedBadge file={file} />
@@ -130,7 +128,6 @@ export default function Main({ file, ...props }: AnonimizeProps) {
                 </select>
                 <ExportButton file={file} />
                 <Sep />
-                <Button title="Pesquisar" i="search" text="Pesquisar" className="btn btn-sm text-body  alert alert-primary m-1 p-1" data-bs-toggle="modal" data-bs-target="#modal-search" />
                 <SuggestButton file={file} state={anonimizeState.state} setRequesting={setRequesting} requesting={requesting} />
                 <HistoryCommands pool={file.pool} />
                 <a className="red-link m-1 p-1 btn" href="https://docs.google.com/document/d/e/2PACX-1vTaR6kTasw0iGYSSMbJpq2wMgrBN5K37jg5ab_qMih_VpXRO5ZAAeeeDiRYzvyrD_VDxBM2ccW-VuBQ/pub" target="_blank" title="Abrir ajuda" rel="noreferrer"><Bicon n="question-circle" /></a>
@@ -204,9 +201,8 @@ function search(text: string, filter: string): SpecificOffsetRange[] {
             const end = sourceEnds[index + needle.length - 1];
             const preview = text.slice(start, end + 1);
 
-            const ent = new Entity("X-SEARCH");
+            const ent = new Entity("");
             ent.addOffset([{ start, end, preview }]);
-
             results.push({ start, end, preview, ent });
         }
 

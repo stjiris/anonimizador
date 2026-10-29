@@ -35,12 +35,6 @@ img {
   max-width: 100%;
 }
 
-[data-anonimize-type] {
-  border-radius: 0.5em;
-  padding-left: 0.4em;
-  padding-right: 0.4em;
-}
-
 .show-cod [data-anonimize-type] {
   text-decoration: line-through;
 }
@@ -75,9 +69,9 @@ img {
 }
 
 @keyframes highlight-flash {
-  0%   { background-color: #ffe066; }
-  60%  { background-color: #ffe066; }
-  100% { background-color: transparent; }
+  0%   { color: black; background-color: #ffe066; }
+  60%  { color: black; background-color: #ffe066; }
+  100% { color: black; background-color: transparent; }
 }
 
 .canvas {

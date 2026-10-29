@@ -1,4 +1,7 @@
-import { AnonimizeFunction, AnonimizeFunctionDescription, AUTO_ANONIMIZE, DONT_ANONIMIZE, functionsWithDescriptionArray } from "@/core/anonimizeFunctions"
+import {
+    AnonimizeFunction, AnonimizeFunctionDescription, AUTO_ANONIMIZE, DONT_ANONIMIZE,
+    FULL_ANONIMIZE, functionsWithDescriptionArray
+} from "@/core/anonimizeFunctions"
 
 export interface EntityTypeI extends EntityTypeColor, EntityTypeFunction { 
     subtypes?: EntityTypeI[]
@@ -63,10 +66,10 @@ export const EntityTypeIDefaults: { [key: string]: EntityTypeI } = {
     "X-INST": { name: "X-INST", color: "#DCDCDC", functionIndex: DONT_ANONIMIZE },
     PROF: { name: "PROF", color: "#F7C4D8", functionIndex: AUTO_ANONIMIZE },
     "X-PROF": { name: "X-PROF", color: "#DCDCDC", functionIndex: DONT_ANONIMIZE },
-    "Marca": { name: "Marca", color: "#2f4f4f", functionIndex: DONT_ANONIMIZE },
-    "X-SEARCH": { name: "X-SEARCH", color: "#2f4f4f", functionIndex: DONT_ANONIMIZE },
+    "Marca": { name: "Marca", color: "lightblue", functionIndex: DONT_ANONIMIZE },
 }
 
+export const DUMMY_ENTITY_TYPE = { name: "—", color: "", functionIndex: DONT_ANONIMIZE } as EntityTypeI
 
 export const normalizeEntityString = (str: string): string => str.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Za-z0-9]/g, "");
 
@@ -132,7 +135,7 @@ export class Entity implements EntityI {
     }
 
     static makeEntity(obj: EntityI, index: number): Entity {
-        let e = new Entity(obj.type);
+        const e = new Entity(obj.type);
         e.offsets = obj.offsets
         e.offsetsLength = obj.offsets.length;
         e.overwriteAnonimization = obj.overwriteAnonimization

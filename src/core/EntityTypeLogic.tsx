@@ -1,4 +1,5 @@
 "use client";
+
 import { EntityTypeI, EntityTypeIDefaults, EntityTypeIVersion } from "@/types/EntityType";
 import { AUTO_ANONIMIZE, isAnonimizeFunctionIndex } from "./anonimizeFunctions";
 import { isProfileI } from "./ProfileTypeLogic";
@@ -10,9 +11,9 @@ export function getEntityTypeI(label: string): EntityTypeI {
     if (_type_color_cache[label]) {
         return _type_color_cache[label]!;
     }
-    let types = getEntityTypeIs();
+    const types = getEntityTypeIs();
     
-    for (let t of types) {
+    for (const t of types) {
         _type_color_cache[t.name] = t;
     }
 
@@ -50,7 +51,7 @@ export function getEntityTypeIs(): EntityTypeI[] {
         return Object.values(EntityTypeIDefaults);
     }
 
-    for (let key in EntityTypeIDefaults) {
+    for (const key in EntityTypeIDefaults) {
         if (!(key in EntityTypesStored)) {
             EntityTypesStored[key] = {
                 name: key,
@@ -127,7 +128,7 @@ export function deleteEntityTypeI(key: string): EntityTypeI[] {
 
 export function restoreEntityTypesColors(): EntityTypeI[] {
     localStorage.removeItem(EntityTypeIVersion);
-    for (let key in _type_color_cache) {
+    for (const key in _type_color_cache) {
         delete _type_color_cache[key]
     }
     return getEntityTypeIs();
