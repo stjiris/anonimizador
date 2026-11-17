@@ -20,8 +20,8 @@ import { SavedBadge } from "@/components/SavedBadge";
 import { SuggestButton } from "@/core/runRemoteNlp";
 import BootstrapModal from "@/core/BootstrapModal";
 import { InfoModalContent } from "@/core/infoModalContent";
-import {DUMMY_ENTITY_TYPE, Entity, SpecificOffsetRange} from "@/types/EntityType";
-import { AddEntityDryRun } from "@/types/EntityPool";
+import { filterEntities, searchText } from "@/core/documentSearch";
+import { Entity, SpecificOffsetRange } from "@/types/EntityType";
 
 interface AnonimizeProps {
     file: UserFile
@@ -41,26 +41,15 @@ export default function Main({ file, ...props }: AnonimizeProps) {
     const [paginated, setPaginated] = useState<boolean>(false);
 
     const saved = useSave(file);
+    const entities = useEntities(file.pool);
 
-    const [searchText, setSearchText] = useState<string | undefined>(undefined);
+    const [filteredEntities, setFilteredEntities] = useState<Entity[]>(entities);
     const [searchResults, setSearchResults] = useState<SpecificOffsetRange[]>([]);
 
-    const ents = useEntities(file.pool);
-
-    useEffect(() => {
-        const text = file.doc.textContent || "";
-        const timer = setTimeout(() => {
-            if (searchText) {
-                setSearchResults(search(text, searchText).filter(result =>
-                    file.pool.addEntityDryRun(result.start, result.end, result.preview)[0] !== AddEntityDryRun.CHANGE_TYPE
-                ));
-            } else {
-                setSearchResults([]);
-            }
-        }, 500);
-
-        return () => clearTimeout(timer);
-    }, [file.doc, file.pool, ents, searchText]);
+    const applyGlobalFilter = useCallback((query: string) => {
+        setFilteredEntities(filterEntities(entities, query));
+        setSearchResults(searchText(file.pool.originalText, entities, query));
+    }, [file.pool.originalText, entities]);
 
     useEffect(() => {
         const onExit = (evt: BeforeUnloadEvent) => {
@@ -142,7 +131,12 @@ export default function Main({ file, ...props }: AnonimizeProps) {
                 </div>
                 <div role="separator" className="resize-handle" onMouseDown={onMouseDown} />
                 <div id="entityTable" style={{ width: `${tableWidthPercent}%`, minWidth: 0 }}>
-                    <EntityTable file={file} globalFilter={searchText} setGlobalFilter={setSearchText} searchResults={searchResults} />
+                    <EntityTable
+                        file={file}
+                        entities={filteredEntities}
+                        searchResults={searchResults}
+                        applyGlobalFilter={applyGlobalFilter}
+                    />
                 </div>
             </div>
         </div>
@@ -154,64 +148,4 @@ export default function Main({ file, ...props }: AnonimizeProps) {
             <ToolsModalBody file={file} />
         </BootstrapModal>
     </>
-}
-
-function isWordChar(char: string | undefined): boolean {
-    if (!char) return false;
-    // Matches letters, numbers, and underscores across Unicode scripts
-    return /[\p{L}\p{N}_]/u.test(char);
-}
-
-// Search for query in the given text.
-function search(text: string, filter: string): SpecificOffsetRange[] {
-    const needle = normalize(filter);
-    if (needle.length < 2) return [];
-
-    let normalizedText = "";
-    const sourceStarts: number[] = [];
-    const sourceEnds: number[] = [];
-    for (let i = 0; i < text.length;) {
-        const codePoint = text.codePointAt(i)!;
-        const original = String.fromCodePoint(codePoint);
-        const start = i;
-        i += original.length;
-        const normalized = normalize(original);
-        for (let j = 0; j < normalized.length; j++) {
-            normalizedText += normalized[j];
-            sourceStarts.push(start);
-            sourceEnds.push(i - 1);
-        }
-    }
-
-    const results: SpecificOffsetRange[] = [];
-    let from = 0;
-    while (from <= normalizedText.length - needle.length) {
-        const index = normalizedText.indexOf(needle, from);
-        if (index < 0) break;
-
-        // Reject matches that start in the middle of a word (e.g. "tc" in "etc")
-        const isPrecededByWordChar = index > 0 && isWordChar(normalizedText[index - 1]);
-
-        // (Optional) Uncomment to also reject matches with suffixes (e.g. "search" in "searching"):
-        // const nextIndex = index + needle.length;
-        // const isFollowedByWordChar = nextIndex < normalizedText.length && isWordChar(normalizedText[nextIndex]);
-
-        if (!isPrecededByWordChar /* && !isFollowedByWordChar */) {
-            const start = sourceStarts[index];
-            const end = sourceEnds[index + needle.length - 1];
-            const preview = text.slice(start, end + 1);
-
-            const ent = new Entity("");
-            ent.addOffset([{ start, end, preview }]);
-            results.push({ start, end, preview, ent });
-        }
-
-        from = index + 1; // Step by 1 to avoid skipping potential overlapping matches
-    }
-
-    return results;
-}
-
-function normalize(value: string): string {
-    return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase();
 }

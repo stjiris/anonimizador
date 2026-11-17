@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import {useEffect, useMemo, useRef, useState} from "react";
 import {
     MaterialReactTable,
     MRT_ColumnDef,
@@ -10,7 +10,7 @@ import { MRT_Localization_PT } from "material-react-table/locales/pt";
 
 import {TextField, Badge, ToggleButton, ToggleButtonGroup, Portal} from "@mui/material";
 import { UserFile } from "@/core/UserFile";
-import { useEntities, useTypes } from "@/hooks";
+import { useTypes } from "@/hooks";
 import {Entity, EntityTypeI, OffsetRange, SpecificOffsetRange, DUMMY_ENTITY_TYPE} from "@/types/EntityType";
 import { EntityPool } from "@/types/EntityPool";
 import { Button } from "@/core/BootstrapIcons";
@@ -69,40 +69,49 @@ const navigateToEntity = (start: number, end: number) => {
 
 interface EntityTableProps {
     file: UserFile
-    globalFilter: string | undefined
-    setGlobalFilter: (searchTerm: string | undefined) => void
+    entities: Entity[]
     searchResults: SpecificOffsetRange[]
+    applyGlobalFilter: (query: string) => void
 }
 
 export function EntityTable({
     file,
-    globalFilter,
-    setGlobalFilter,
+    entities,
     searchResults,
+    applyGlobalFilter
 }: EntityTableProps) {
     const [showOnlyMarks, setShowOnlyMarks] = useState(false);
+    const [globalFilter,  setGlobalFilter]  = useState<string | undefined>("");
     const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
 
-    const poolEntities = useEntities(file.pool);
+    const lastGlobalFilter = useRef<string | undefined>("");
+    useEffect(() => {
+        if (lastGlobalFilter.current !== globalFilter) {
+            lastGlobalFilter.current = globalFilter
+
+            if (globalFilter && globalFilter.length >= 2) {
+                const timer = setTimeout(() => {
+                    applyGlobalFilter(globalFilter);
+                }, 500);
+
+                return () => clearTimeout(timer)
+            }
+        }
+
+        applyGlobalFilter(globalFilter ?? "");
+    }, [applyGlobalFilter, globalFilter]);
 
     const xEntities = useMemo(() => {
-        return showOnlyMarks ? poolEntities.filter((e) => e.type === "Marca") : poolEntities;
-    }, [poolEntities, showOnlyMarks]);
-
-    const filteredEntities = useMemo(() => {
-        if (globalFilter) {
-            const filter = globalFilter.toLocaleLowerCase();
-            return xEntities.filter(ent => ent.offsets.find((value) => value.preview?.toLocaleLowerCase().includes(filter)))
-        }
-        return xEntities;
-    }, [xEntities, globalFilter]);
+        return showOnlyMarks ? entities.filter((e) => e.type === "Marca") : entities;
+    }, [entities, showOnlyMarks]);
 
     const data = useMemo(() => {
-        const nextIndex = poolEntities.length + 1;
+        // Make sure each entity has a different row id.
+        const nextIndex = file.pool.entities.length + 1;
         const searchEntities = searchResults.map(result => result.ent);
         searchEntities.forEach((ent, idx) => ent.index = nextIndex + idx);
-        return [...filteredEntities, ...searchEntities];
-    }, [poolEntities.length, filteredEntities, searchResults]);
+        return [...xEntities, ...searchEntities];
+    }, [file.pool.entities.length, xEntities, searchResults]);
 
     const typesList = useTypes(file);
 
@@ -112,15 +121,16 @@ export function EntityTable({
         return [
             TYPE_COL(typesList, file.pool, file),
             COUNT_COL(totalOcc),
-            ENTITY_COL(file.pool, poolEntities.length),
+            ENTITY_COL(file.pool, data.length),
             ANONIMIZE_COL(file.pool, typesList),
         ];
-    }, [typesList, totalOcc, file.pool, poolEntities.length]);
+    }, [typesList, totalOcc, file.pool, data.length]);
 
     const handleToggle = (_: React.MouseEvent<HTMLElement>, v: string | null) => {
         setShowOnlyMarks(v === "marcas");
         setColumnFilters([]);
     };
+
     const table = useMaterialReactTable({
         columns,
         data,
@@ -212,7 +222,6 @@ export function EntityTable({
         // -- Enable searching.
         manualFiltering: true,
         onGlobalFilterChange: setGlobalFilter,
-
         onColumnFiltersChange: setColumnFilters,
 
         state: { columnFilters, globalFilter },
