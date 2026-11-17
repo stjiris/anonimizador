@@ -16,7 +16,7 @@ export default function AnonimizeToken(props: AnonimizeTokenProps){
     
     if( props.specificOffset && props.type ){
         const type: EntityTypeI = props.type;
-        dataAttrs['data-anonimize-cod'] = props.specificOffset.ent.anonimizingFunction(type)(props.specificOffset.preview, props.specificOffset.ent.type, props.specificOffset.ent.index, props.specificOffset.ent.typeIndex, props.specificOffset.ent.funcIndex);
+        dataAttrs['data-anonimize-cod'] = props.specificOffset.ent.anonimizingFunction(type)(props.specificOffset.preview, props.specificOffset.ent.type, props.specificOffset.ent.index, props.specificOffset.ent.typeIndex);
         dataAttrs['data-anonimize-type'] = type.name;
         dataAttrs['data-anonimize-color'] = type.color;
         dataAttrs['data-anonimize-offset-start'] = props.specificOffset.start.toString()

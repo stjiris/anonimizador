@@ -6,6 +6,19 @@ export enum AddEntityDryRun {
     CHANGE_ARRAY
 }
 
+function deduplicateOffsets(offsets: OffsetRange[]): OffsetRange[] {
+    const seen = new Set<string>();
+    const result: OffsetRange[] = [];
+    for (const off of offsets) {
+        const key = `${off.start}:${off.end}`;
+        if (!seen.has(key)) {
+            seen.add(key);
+            result.push(off);
+        }
+    }
+    return result;
+}
+
 export class EntityPool {
     entities: Entity[]
     countPES: number //Counts the number of entities of type "PES"
@@ -36,19 +49,49 @@ export class EntityPool {
         }
     }
 
-    joinEntities(indexes: number[]) {
-        if (indexes.length <= 1) return;
-        indexes.sort((a, b) => a - b) // indexes are sorted
+    /**
+     * Joins pool entities at `indexes` with optional `extraOffsets` outside the pool.
+     * Keeps the first pool entity's type (or creates a `"Marca"` entity when `indexes` is empty),
+     * purges any colliding pool occurrences so `extraOffsets` prevail, and deduplicates identical spans.
+     */
+    joinEntities(indexes: number[], extraOffsets: OffsetRange[] = []) {
+        extraOffsets = deduplicateOffsets(extraOffsets);
+        indexes = Array.from(new Set(indexes))
+            .filter(i => i >= 0 && i < this.entities.length)
+            .sort((a, b) => b - a);
 
-        const first: Entity = this.entities[indexes.shift()!];
+        if (extraOffsets.length === 0 && indexes.length <= 1) return;
 
-        const removed: OffsetRange[] = [];
-        indexes.reverse().forEach(i => {
-            this.entities.splice(i, 1).forEach(ent => removed.push(...ent.offsets));
-        });
+        // Choose the entity type.
+        const target = this.entities[indexes.pop() ?? -1] ?? new Entity("Marca")
 
-        first.addOffset(removed);
-        first.offsetsLength = first.offsets.length;
+        const mergedOffsets: OffsetRange[] = [];
+        for (const i of indexes) {
+            const removed = this.entities.splice(i, 1);
+            if (removed.length === 1) {
+                mergedOffsets.push(...removed[0].offsets);
+            }
+        }
+
+        if (mergedOffsets.length > 0) {
+            target.addOffset(mergedOffsets);
+        }
+
+        if (extraOffsets.length > 0) {
+            for (const off of extraOffsets) {
+                this.removeOffset(off.start, off.end, false);
+            }
+
+            target.addOffset(extraOffsets);
+        }
+
+        target.offsets = deduplicateOffsets(target.offsets);
+        target.offsetsLength = target.offsets.length;
+
+        if (target.offsets.length > 0 && !this.entities.includes(target)) {
+            this.entities.push(target);
+        }
+
         this.updateOrder("Juntar entidades");
     }
 
@@ -99,7 +142,6 @@ export class EntityPool {
 
     updateOrder(action: string) {
         const typeCounts: { [key: string]: number } = {}
-        const funcCounts: { [key: number]: number } = {}
 
         this.entities.sort((a, b) => a.offsets[0].start - b.offsets[0].start).forEach((e, i) => {
             e.index = i + 1;
@@ -107,10 +149,6 @@ export class EntityPool {
                 typeCounts[e.type] = 0;
             }
             e.typeIndex = ++typeCounts[e.type]!;
-            if (!funcCounts[e.funcIndex]) {
-                funcCounts[e.funcIndex] = 0;
-            }
-            e.funcIndex = funcCounts[e.funcIndex]!++;
         });
         this.notify(action)
 

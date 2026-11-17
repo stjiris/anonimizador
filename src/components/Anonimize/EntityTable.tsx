@@ -11,7 +11,7 @@ import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import {TextField, Badge, ToggleButton, ToggleButtonGroup, Portal} from "@mui/material";
 import { UserFile } from "@/core/UserFile";
 import { useEntities, useTypes } from "@/hooks";
-import {Entity, EntityTypeI, SpecificOffsetRange, DUMMY_ENTITY_TYPE} from "@/types/EntityType";
+import {Entity, EntityTypeI, OffsetRange, SpecificOffsetRange, DUMMY_ENTITY_TYPE} from "@/types/EntityType";
 import { EntityPool } from "@/types/EntityPool";
 import { Button } from "@/core/BootstrapIcons";
 import { sortEntityTypesXLast } from "@/components/Anonimize/Tooltip";
@@ -231,7 +231,7 @@ const toolbar =
     (pool: EntityPool, file: UserFile, showOnlyMarks: boolean, onToggle: (e: React.MouseEvent<HTMLElement>, v: string | null) => void, typesList: EntityTypeI[]) =>
         ({ table }: { table: MRT_TableInstance<Entity> }) => {
             const selectedCount = Object.keys(table.getState().rowSelection).length;
-            const hasDummyType = Boolean(Object.keys(table.getState().rowSelection).find(value => table.getRow(value).original.type == DUMMY_ENTITY_TYPE.name));
+            const hasDummyType = Boolean(Object.keys(table.getState().rowSelection).find(value => !table.getRow(value).original.type));
             const isJoinDisabled = showOnlyMarks || selectedCount <= 1;
             const isSplitDisabled = showOnlyMarks || selectedCount === 0 || hasDummyType;
             const isRemoveDisabled = selectedCount === 0 || hasDummyType;
@@ -325,26 +325,25 @@ const selectedIndexes = (table: MRT_TableInstance<Entity>) =>
 const removeTableSelection = (table: MRT_TableInstance<Entity>) => table.setRowSelection({});
 
 const joinSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile) => {
-    const indexes = [];
+    const indexes: number[] = [];
+    const extraOffsets: OffsetRange[] = [];
 
     for (const rowId of Object.keys(table.getState().rowSelection)) {
         const entity = table.getRow(rowId).original;
-        const index = parseInt(rowId, 10) - 1;
-
-        if (isNaN(index)) {
-            return;
-        }
 
         if (!entity.type) {
-            const offset = entity.offsets[0];
-            indexes.push(pool.entities.length);
-            pool.addEntity(offset.start, offset.end, offset.preview, "Marca", false);
-        } else {
+            extraOffsets.push(...entity.offsets);
+            continue;
+        }
+
+        const index = parseInt(rowId, 10) - 1;
+
+        if (!isNaN(index)) {
             indexes.push(index);
         }
     }
 
-    pool.joinEntities(indexes);
+    pool.joinEntities(indexes, extraOffsets);
     removeTableSelection(table);
     file.checkCountPES();
 };
@@ -442,7 +441,7 @@ const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_
     },
     muiTableHeadCellProps: { align: "left" },
     muiTableBodyCellProps: { align: "left", sx: { px: 1 } },
-    Cell: ({ row}) => {
+    Cell: ({ row }) => {
         const [showTypePicker, setShowTypePicker] = useState(false);
         const badgeRef = useRef<HTMLSpanElement>(null);
 
@@ -465,7 +464,7 @@ const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_
                     className="badge text-body"
                     title="Alterar tipo de todas as ocorrências"
                     style={{ background: t.color, cursor: "pointer" }}
-                    onClick={handleClick}
+                    onClick={t === DUMMY_ENTITY_TYPE ? undefined : handleClick}
                 >
                     {t.name}
                 </span>
@@ -528,7 +527,6 @@ const ANONIMIZE_COL: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<E
         row.type,
         row.index,
         row.typeIndex,
-        row.funcIndex,
     ),
     grow: true,
     enableColumnActions: false,
@@ -543,7 +541,6 @@ const ANONIMIZE_COL: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<E
             row.original.type,
             row.original.index,
             row.original.typeIndex,
-            row.original.funcIndex,
         );
         const value = row.original.overwriteAnonimization || generated;
         const isDefault = !row.original.overwriteAnonimization;
@@ -564,12 +561,13 @@ const ANONIMIZE_COL: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<E
             row.original.type,
             row.original.index,
             row.original.typeIndex,
-            row.original.funcIndex,
         ),
         onBlur: (event) => {
-            const old = row.original.overwriteAnonimization;
-            row.original.overwriteAnonimization = event.target.value;
-            if (old !== row.original.overwriteAnonimization) pool.updateOrder("Modificar anonimização de entidade");
+            if (row.original.type) {
+                const old = row.original.overwriteAnonimization;
+                row.original.overwriteAnonimization = event.target.value;
+                if (old !== row.original.overwriteAnonimization) pool.updateOrder("Modificar anonimização de entidade");
+            }
         },
     }),
 });

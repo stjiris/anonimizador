@@ -97,7 +97,6 @@ export class Entity implements EntityI {
     overwriteAnonimization?: string;
     index: number;
     typeIndex: number;
-    funcIndex: number;
 
     constructor(label: string) {
         this.type = label
@@ -105,7 +104,6 @@ export class Entity implements EntityI {
         this.offsetsLength = 0;
         this.index = -1
         this.typeIndex = -1
-        this.funcIndex = -1
     }
 
     addOffset(offset: OffsetRange[]) {

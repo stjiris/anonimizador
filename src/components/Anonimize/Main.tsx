@@ -57,7 +57,7 @@ export default function Main({ file, ...props }: AnonimizeProps) {
             } else {
                 setSearchResults([]);
             }
-        }, 750);
+        }, 500);
 
         return () => clearTimeout(timer);
     }, [file.doc, file.pool, ents, searchText]);

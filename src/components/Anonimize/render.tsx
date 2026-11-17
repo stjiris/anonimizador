@@ -98,8 +98,7 @@ function renderEntity(
         specificOffset.preview,
         specificOffset.ent.type,
         specificOffset.ent.index,
-        specificOffset.ent.typeIndex,
-        specificOffset.ent.funcIndex
+        specificOffset.ent.typeIndex
     );
 
     if (anonimizeState === AnonimizeStateState.ANONIMIZED) {
