@@ -158,7 +158,6 @@ export function EntityTable({
         rowVirtualizerOptions: { overscan: 50 },
 
         // -- Allow to overwrite the anonymization value.
-        enableEditing: true,
         editDisplayMode: "cell",
 
         // -- Customization options.
@@ -219,8 +218,8 @@ export function EntityTable({
         renderTopToolbarCustomActions: toolbar(file.pool, file, showOnlyMarks, handleToggle, typesList),
         positionToolbarAlertBanner: "bottom",
 
-        // -- Enable searching.
-        manualFiltering: true,
+        // -- Disable client-side global filtering.
+        globalFilterFn: undefined,
         onGlobalFilterChange: setGlobalFilter,
         onColumnFiltersChange: setColumnFilters,
 
@@ -240,11 +239,11 @@ const toolbar =
     (pool: EntityPool, file: UserFile, showOnlyMarks: boolean, onToggle: (e: React.MouseEvent<HTMLElement>, v: string | null) => void, typesList: EntityTypeI[]) =>
         ({ table }: { table: MRT_TableInstance<Entity> }) => {
             const selectedCount = Object.keys(table.getState().rowSelection).length;
-            const hasDummyType = Boolean(Object.keys(table.getState().rowSelection).find(value => !table.getRow(value).original.type));
-            const isJoinDisabled = showOnlyMarks || selectedCount <= 1;
-            const isSplitDisabled = showOnlyMarks || selectedCount === 0 || hasDummyType;
-            const isRemoveDisabled = selectedCount === 0 || hasDummyType;
-            const isChangeTypeDisabled = showOnlyMarks || selectedCount === 0 || hasDummyType;
+            const hasDummyEntities = Boolean(Object.keys(table.getState().rowSelection).find(value => !table.getRow(value).original.type));
+            const isJoinDisabled = showOnlyMarks || (selectedCount <= 1 && !hasDummyEntities);
+            const isSplitDisabled = showOnlyMarks || selectedCount === 0 || hasDummyEntities;
+            const isRemoveDisabled = selectedCount === 0 || hasDummyEntities;
+            const isChangeTypeDisabled = showOnlyMarks || selectedCount === 0 || hasDummyEntities;
             const [showTypePicker, setShowTypePicker] = useState(false);
             const btnRef = useRef<HTMLSpanElement>(null);
 
@@ -379,129 +378,134 @@ const removeSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPo
 const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_ColumnDef<Entity> = (types, pool, file) => {
     const sortedTypes = sortEntityTypesXLast(types);
     return ({
-    id: "type",
-    header: "Tipo",
-    accessorKey: "type",
-    size: 60, minSize: 40, maxSize: 100,
-    enableEditing: false,
-    enableColumnActions: false,
-    filterFn: (row, _columnId, filterValue) => {
-        if (filterValue === "__ONLY_X__") return row.original.type.startsWith("X-");
-        if (filterValue === "__NO_X__") return !row.original.type.startsWith("X-");
-        const parentType = sortedTypes.find(t => t.name === filterValue);
-        if (parentType?.subtypes?.length) {
-            return row.original.type === filterValue ||
-                   parentType.subtypes.some(s => s.name === row.original.type);
-        }
-        return row.original.type === filterValue;
-    },
-    Filter: ({ column }) => {
-        const [open, setOpen] = useState(false);
-        const btnRef = useRef<HTMLDivElement>(null);
-        const filterValue = column.getFilterValue() as string ?? "";
+        id: "type",
+        header: "Tipo",
+        accessorKey: "type",
+        size: 60, minSize: 40, maxSize: 100,
+        enableEditing: false,
+        enableColumnActions: false,
+        filterFn: (row, _columnId, filterValue) => {
+            if (filterValue === "__ONLY_X__") return row.original.type.startsWith("X-");
+            if (filterValue === "__NO_X__") return !row.original.type.startsWith("X-");
+            const parentType = sortedTypes.find(t => t.name === filterValue);
+            if (parentType?.subtypes?.length) {
+                return row.original.type === filterValue ||
+                       parentType.subtypes.some(s => s.name === row.original.type);
+            }
+            return row.original.type === filterValue;
+        },
+        Filter: ({ column }) => {
+            const [open, setOpen] = useState(false);
+            const btnRef = useRef<HTMLDivElement>(null);
+            const filterValue = column.getFilterValue() as string ?? "";
 
-        const displayLabel = filterValue === "__NO_X__" ? "Entidades Normais"
-            : filterValue === "__ONLY_X__" ? "Entidades X"
-            : filterValue || "";
+            const displayLabel = filterValue === "__NO_X__" ? "Entidades Normais"
+                : filterValue === "__ONLY_X__" ? "Entidades X"
+                : filterValue || "";
 
-        const handleFilterSelect = (value: string) => {
-            column.setFilterValue(value || undefined);
-            setOpen(false);
-        };
+            const handleFilterSelect = (value: string) => {
+                column.setFilterValue(value || undefined);
+                setOpen(false);
+            };
 
-        return (
-            <>
-                <div ref={btnRef} onClick={() => setOpen(v => !v)}>
-                    <TextField
-                        size="small"
-                        variant="standard"
-                        value={displayLabel}
-                        placeholder="Filtrar"
-                        InputProps={{ readOnly: true, style: { cursor: "pointer", fontSize: "0.85rem" } }}
-                        fullWidth
-                    />
-                </div>
-                {open && (
-                    <Portal>
-                        <TypePickerDropdown
-                            types={sortedTypes}
-                            anchorRef={btnRef}
-                            onSelect={handleFilterSelect}
-                            onClose={() => setOpen(false)}
-                            extraItems={
-                                <>
-                                    <button className="dropdown-item" onClick={() => handleFilterSelect("")}>
-                                        <em>Todos</em>
-                                    </button>
-                                    <button className="dropdown-item" onClick={() => handleFilterSelect("__NO_X__")}>
-                                        Entidades Normais
-                                    </button>
-                                    <button className="dropdown-item" onClick={() => handleFilterSelect("__ONLY_X__")}>
-                                        Entidades X
-                                    </button>
-                                    <div className="dropdown-divider" />
-                                </>
-                            }
+            return (
+                <>
+                    <div ref={btnRef} onClick={() => setOpen(v => !v)}>
+                        <TextField
+                            size="small"
+                            variant="standard"
+                            value={displayLabel}
+                            placeholder="Filtrar"
+                            InputProps={{ readOnly: true, style: { cursor: "pointer", fontSize: "0.85rem" } }}
+                            fullWidth
                         />
-                    </Portal>
-                )}
-            </>
-        );
-    },
-    muiTableHeadCellProps: { align: "left" },
-    muiTableBodyCellProps: { align: "left", sx: { px: 1 } },
-    Cell: ({ row }) => {
-        const [showTypePicker, setShowTypePicker] = useState(false);
-        const badgeRef = useRef<HTMLSpanElement>(null);
+                    </div>
+                    {open && (
+                        <Portal>
+                            <TypePickerDropdown
+                                types={sortedTypes}
+                                anchorRef={btnRef}
+                                onSelect={handleFilterSelect}
+                                onClose={() => setOpen(false)}
+                                extraItems={
+                                    <>
+                                        <button className="dropdown-item" onClick={() => handleFilterSelect("")}>
+                                            <em>Todos</em>
+                                        </button>
+                                        <button className="dropdown-item" onClick={() => handleFilterSelect("__NO_X__")}>
+                                            Entidades Normais
+                                        </button>
+                                        <button className="dropdown-item" onClick={() => handleFilterSelect("__ONLY_X__")}>
+                                            Entidades X
+                                        </button>
+                                        <div className="dropdown-divider" />
+                                    </>
+                                }
+                            />
+                        </Portal>
+                    )}
+                </>
+            );
+        },
+        muiTableHeadCellProps: { align: "left" },
+        muiTableBodyCellProps: { align: "left", sx: { px: 1 } },
+        Cell: ({ row }) => {
+            const [showTypePicker, setShowTypePicker] = useState(false);
+            const badgeRef = useRef<HTMLSpanElement>(null);
 
-        const t = getType(types, row.original.type);
+            const t = getType(types, row.original.type);
 
-        const handleClick = (evt: React.MouseEvent<HTMLSpanElement>) => {
-            evt.stopPropagation();
-            setShowTypePicker(v => !v);
-        };
+            if (t === DUMMY_ENTITY_TYPE) {
+                return <span>{t.name}</span>;
+            }
 
-        const handleSelectType = (newType: string) => {
-            pool.changeEntitiesType([row.original.index - 1], newType);
-            file.checkCountPES();
-        };
+            const handleClick = (evt: React.MouseEvent<HTMLSpanElement>) => {
+                evt.stopPropagation();
+                setShowTypePicker(v => !v);
+            };
 
-        return (
-            <>
-                <span
-                    ref={badgeRef}
-                    className="badge text-body"
-                    title="Alterar tipo de todas as ocorrências"
-                    style={{ background: t.color, cursor: "pointer" }}
-                    onClick={t === DUMMY_ENTITY_TYPE ? undefined : handleClick}
-                >
-                    {t.name}
-                </span>
-                {showTypePicker && (
-                    <Portal>
-                        <TypePickerDropdown
-                            types={types}
-                            anchorRef={badgeRef}
-                            onSelect={handleSelectType}
-                            onClose={() => setShowTypePicker(false)}
-                        />
-                    </Portal>
-                )}
-            </>
-        );
-    },
+            const handleSelectType = (newType: string) => {
+                pool.changeEntitiesType([row.original.index - 1], newType);
+                file.checkCountPES();
+            };
+
+            return (
+                <>
+                    <span
+                        ref={badgeRef}
+                        className="badge text-body"
+                        title="Alterar tipo de todas as ocorrências"
+                        style={{ background: t.color, cursor: "pointer" }}
+                        onClick={handleClick}
+                    >
+                        {t.name}
+                    </span>
+                    {showTypePicker && (
+                        <Portal>
+                            <TypePickerDropdown
+                                types={types}
+                                anchorRef={badgeRef}
+                                onSelect={handleSelectType}
+                                onClose={() => setShowTypePicker(false)}
+                            />
+                        </Portal>
+                    )}
+                </>
+            );
+        },
     });
 };
 
 const COUNT_COL = (totalOcc: number): MRT_ColumnDef<Entity> => ({
     id: "count",
     header: `# (${totalOcc})`,
-    accessorFn: (e) => e.offsets.length,
     size: 100, minSize: 40, maxSize: 120,
     sortDescFirst: true,
     enableColumnActions: false,
+    enableEditing: false,
     muiTableHeadCellProps: { align: "right" },
     muiTableBodyCellProps: { align: "right" },
+    accessorFn: (e) => e.offsets.length,
     Cell: ({ cell }) => <strong>{cell.getValue<number>() ?? 0}</strong>,
 });
 
