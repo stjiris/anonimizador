@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useRef, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {
     MaterialReactTable,
     MRT_ColumnDef,
@@ -11,7 +11,7 @@ import { MRT_Localization_PT } from "material-react-table/locales/pt";
 import {TextField, Badge, ToggleButton, ToggleButtonGroup, Portal} from "@mui/material";
 import { UserFile } from "@/core/UserFile";
 import { useTypes } from "@/hooks";
-import {Entity, EntityTypeI, OffsetRange, SpecificOffsetRange, DUMMY_ENTITY_TYPE} from "@/types/EntityType";
+import { Entity, EntityTypeI, OffsetRange, SpecificOffsetRange, DUMMY_ENTITY_TYPE } from "@/types/EntityType";
 import { EntityPool } from "@/types/EntityPool";
 import { Button } from "@/core/BootstrapIcons";
 import { sortEntityTypesXLast } from "@/components/Anonimize/Tooltip";
@@ -20,7 +20,7 @@ import { TypePickerDropdown } from "@/components/Anonimize/TypePickerDropdown";
 const getType = (types: EntityTypeI[], typeName: string): EntityTypeI => {
     let found = types.find(t => t.name === typeName);
     if (found) return found;
-    
+
     for (const type of types) {
         if (type.subtypes) {
             found = type.subtypes.find(s => s.name === typeName);
@@ -67,6 +67,15 @@ const navigateToEntity = (start: number, end: number) => {
     }, 1000);
 };
 
+interface EntityTableMeta {
+    totalOccurrences: number;
+    totalEntities: number;
+}
+
+function getTableMeta(table: MRT_TableInstance<Entity>): EntityTableMeta {
+    return table.options.meta as EntityTableMeta;
+}
+
 interface EntityTableProps {
     file: UserFile
     entities: Entity[]
@@ -81,24 +90,13 @@ export function EntityTable({
     applyGlobalFilter
 }: EntityTableProps) {
     const [showOnlyMarks, setShowOnlyMarks] = useState(false);
-    const [globalFilter,  setGlobalFilter]  = useState<string | undefined>("");
+    const [globalFilter,  setGlobalFilter]  = useState<string | undefined>(undefined);
     const [columnFilters, setColumnFilters] = useState<MRT_ColumnFiltersState>([]);
 
-    const lastGlobalFilter = useRef<string | undefined>("");
     useEffect(() => {
-        if (lastGlobalFilter.current !== globalFilter) {
-            lastGlobalFilter.current = globalFilter
-
-            if (globalFilter && globalFilter.length >= 2) {
-                const timer = setTimeout(() => {
-                    applyGlobalFilter(globalFilter);
-                }, 500);
-
-                return () => clearTimeout(timer)
-            }
-        }
-
-        applyGlobalFilter(globalFilter ?? "");
+        // Debounce search queries by 350ms.
+        const timer = setTimeout(() => applyGlobalFilter(globalFilter ?? ""), 350);
+        return () => clearTimeout(timer);
     }, [applyGlobalFilter, globalFilter]);
 
     const xEntities = useMemo(() => {
@@ -115,21 +113,21 @@ export function EntityTable({
 
     const typesList = useTypes(file);
 
-    const totalOcc = useMemo(() => data.reduce((acc, e) => acc + (e.offsets?.length ?? 0), 0), [data]);
+    const totalOccurrences = useMemo(() => data.reduce((acc, e) => acc + (e.offsets?.length ?? 0), 0), [data]);
 
     const columns = useMemo<MRT_ColumnDef<Entity>[]>(() => {
         return [
             TYPE_COL(typesList, file.pool, file),
-            COUNT_COL(totalOcc),
-            ENTITY_COL(file.pool, data.length),
+            COUNT_COL(),
+            ENTITY_COL(),
             ANONIMIZE_COL(file.pool, typesList),
         ];
-    }, [typesList, totalOcc, file.pool, data.length]);
+    }, [typesList, file.pool]);
 
-    const handleToggle = (_: React.MouseEvent<HTMLElement>, v: string | null) => {
+    const handleToggle = useCallback((_: React.MouseEvent<HTMLElement>, v: string | null) => {
         setShowOnlyMarks(v === "marcas");
         setColumnFilters([]);
-    };
+    }, []);
 
     const table = useMaterialReactTable({
         columns,
@@ -155,10 +153,11 @@ export function EntityTable({
         // -- Enable row virtualization (load rows dynamically).
         enableRowVirtualization: true,
         enablePagination: false,
-        rowVirtualizerOptions: { overscan: 50 },
+        rowVirtualizerOptions: { overscan: 25 },
 
         // -- Allow to overwrite the anonymization value.
         editDisplayMode: "cell",
+        enableEditing: true,
 
         // -- Customization options.
         muiTopToolbarProps: {
@@ -219,18 +218,25 @@ export function EntityTable({
         positionToolbarAlertBanner: "bottom",
 
         // -- Disable client-side global filtering.
-        globalFilterFn: undefined,
+        filterFns: { "noOp": () => true },
+        globalFilterFn: "noOp",
+        enableGlobalFilterRankedResults: false,
         onGlobalFilterChange: setGlobalFilter,
         onColumnFiltersChange: setColumnFilters,
 
         state: { columnFilters, globalFilter },
-        initialState: {
-            density: "compact",
-            sorting: [{ id: "count", desc: true }],
-        },
+        initialState: { density: "compact", sorting: [{ id: "count", desc: true }] },
+
+        // -- Metadata can be accessed by columns without recreating them.
+        meta: { totalOccurrences, totalEntities: data.length } as EntityTableMeta,
 
         getRowId: (r) => r.index.toString(),
     });
+
+    useEffect(() => {
+        table.resetRowSelection()
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [data]);
 
     return <MaterialReactTable key="ent-table" table={table} />;
 }
@@ -300,7 +306,7 @@ const toolbar =
                             <Portal>
                                 <TypePickerDropdown
                                     types={typesList}
-                                    anchorRef={btnRef}  
+                                    anchorRef={btnRef}
                                     onSelect={(newType) => {
                                         changeSelectedEntitiesType(table, pool, file, newType);
                                     }}
@@ -361,7 +367,7 @@ const splitSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPoo
     removeTableSelection(table);
     file.checkCountPES();
 };
-    
+
 const changeSelectedEntitiesType = (table: MRT_TableInstance<Entity>, pool: EntityPool, file: UserFile, newType: string) => {
     pool.changeEntitiesType(selectedIndexes(table), newType);
     removeTableSelection(table);
@@ -375,7 +381,7 @@ const removeSelectedEntities = (table: MRT_TableInstance<Entity>, pool: EntityPo
     file.checkCountPES();
 };
 
-const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_ColumnDef<Entity> = (types, pool, file) => {
+const TYPE_COL = (types: EntityTypeI[], pool: EntityPool, file: UserFile): MRT_ColumnDef<Entity> => {
     const sortedTypes = sortEntityTypesXLast(types);
     return ({
         id: "type",
@@ -383,14 +389,13 @@ const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_
         accessorKey: "type",
         size: 60, minSize: 40, maxSize: 100,
         enableEditing: false,
-        enableColumnActions: false,
         filterFn: (row, _columnId, filterValue) => {
             if (filterValue === "__ONLY_X__") return row.original.type.startsWith("X-");
             if (filterValue === "__NO_X__") return !row.original.type.startsWith("X-");
             const parentType = sortedTypes.find(t => t.name === filterValue);
             if (parentType?.subtypes?.length) {
                 return row.original.type === filterValue ||
-                       parentType.subtypes.some(s => s.name === row.original.type);
+                    parentType.subtypes.some(s => s.name === row.original.type);
             }
             return row.original.type === filterValue;
         },
@@ -401,7 +406,7 @@ const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_
 
             const displayLabel = filterValue === "__NO_X__" ? "Entidades Normais"
                 : filterValue === "__ONLY_X__" ? "Entidades X"
-                : filterValue || "";
+                    : filterValue || "";
 
             const handleFilterSelect = (value: string) => {
                 column.setFilterValue(value || undefined);
@@ -447,8 +452,6 @@ const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_
                 </>
             );
         },
-        muiTableHeadCellProps: { align: "left" },
-        muiTableBodyCellProps: { align: "left", sx: { px: 1 } },
         Cell: ({ row }) => {
             const [showTypePicker, setShowTypePicker] = useState(false);
             const badgeRef = useRef<HTMLSpanElement>(null);
@@ -496,29 +499,26 @@ const TYPE_COL: (types: EntityTypeI[], pool: EntityPool, file: UserFile) => MRT_
     });
 };
 
-const COUNT_COL = (totalOcc: number): MRT_ColumnDef<Entity> => ({
+const COUNT_COL = (): MRT_ColumnDef<Entity> => ({
     id: "count",
-    header: `# (${totalOcc})`,
+    header: "Ocorrências",
     size: 100, minSize: 40, maxSize: 120,
     sortDescFirst: true,
-    enableColumnActions: false,
     enableEditing: false,
     muiTableHeadCellProps: { align: "right" },
     muiTableBodyCellProps: { align: "right" },
     accessorFn: (e) => e.offsets.length,
+    Header: ({ table }) => `# (${getTableMeta(table).totalOccurrences})`,
     Cell: ({ cell }) => <strong>{cell.getValue<number>() ?? 0}</strong>,
 });
 
-const ENTITY_COL: (pool: EntityPool, count: number) => MRT_ColumnDef<Entity> = (pool, count) => ({
+const ENTITY_COL = (): MRT_ColumnDef<Entity> => ({
     id: "entity",
-    header: `Entidade (${count})`,
-    accessorFn: (ent) => ent.offsets[0]?.preview ?? "",
+    header: `Entidades`,
     grow: true,
     enableEditing: false,
-    enableColumnFilter: true,
-    enableColumnDragging: false,
-    enableColumnActions: false,
-    muiTableHeadCellProps: { align: "left" },
+    accessorFn: (ent) => ent.offsets[0]?.preview,
+    Header: ({ table }) => `Entidade (${getTableMeta(table).totalEntities})`,
     muiTableBodyCellProps: ({ row }) => ({
         onClick: () => {
             if (!row.original.offsets.length) return;
@@ -529,58 +529,34 @@ const ENTITY_COL: (pool: EntityPool, count: number) => MRT_ColumnDef<Entity> = (
     }),
 });
 
-const ANONIMIZE_COL: (pool: EntityPool, types: EntityTypeI[]) => MRT_ColumnDef<Entity> = (
-    pool,
-    types,
-) => ({
+const ANONIMIZE_COL = (pool: EntityPool, types: EntityTypeI[]): MRT_ColumnDef<Entity> => ({
     id: "anon",
     header: "Anonimização",
-    accessorFn: (row) => row.overwriteAnonimization || row.anonimizingFunction(getType(types, row.type))(
-        row.offsets[0]?.preview,
-        row.type,
-        row.index,
-        row.typeIndex,
-    ),
     grow: true,
-    enableColumnActions: false,
-    muiTableHeadCellProps: { align: "left" },
-    muiTableBodyCellProps: {
-        align: "left",
-        sx: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
+    muiTableBodyCellProps: { sx: { overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" } },
+    enableEditing: (row) => !!row.original.type,
+    accessorFn: (entity) => {
+        if (entity.type) {
+            return entity.overwriteAnonimization || entity.anonimizingFunction(getType(types, entity.type))(
+                entity.offsets[0]?.preview,
+                entity.type,
+                entity.index,
+                entity.typeIndex,
+            );
+        }
     },
-    Cell: ({ row }) => {
-        const generated = row.original.anonimizingFunction(getType(types, row.original.type))(
-            row.original.offsets[0].preview,
-            row.original.type,
-            row.original.index,
-            row.original.typeIndex,
-        );
-        const value = row.original.overwriteAnonimization || generated;
-        const isDefault = !row.original.overwriteAnonimization;
+    Cell: ({ cell, row }) => {
+        const isCustom = row.original.overwriteAnonimization;
 
-        return (
-            <code
-                style={{ color: isDefault ? "#6c757d" : "inherit", cursor: "copy" }}
-                title="Copiar"
-                onClick={() => navigator.clipboard.writeText(value)}
-            >
-                {value}
-            </code>
-        );
+        return <code style={{ color: isCustom ? "inherit" : "#6c757d" }}>{cell.getValue<string>()}</code>;
     },
     muiEditTextFieldProps: ({ row }) => ({
-        placeholder: row.original.anonimizingFunction(getType(types, row.original.type))(
-            row.original.offsets[0].preview,
-            row.original.type,
-            row.original.index,
-            row.original.typeIndex,
-        ),
         onBlur: (event) => {
-            if (row.original.type) {
-                const old = row.original.overwriteAnonimization;
-                row.original.overwriteAnonimization = event.target.value;
-                if (old !== row.original.overwriteAnonimization) pool.updateOrder("Modificar anonimização de entidade");
+            const value = event.target.value;
+            if (row.original.overwriteAnonimization !== value) {
+                row.original.overwriteAnonimization = value;
+                pool.updateOrder("Modificar anonimização de entidade");
             }
-        },
+        }
     }),
 });

@@ -46,9 +46,14 @@ export default function Main({ file, ...props }: AnonimizeProps) {
     const [filteredEntities, setFilteredEntities] = useState<Entity[]>(entities);
     const [searchResults, setSearchResults] = useState<SpecificOffsetRange[]>([]);
 
+    const lastQuery = useRef<string | undefined>(undefined);
     const applyGlobalFilter = useCallback((query: string) => {
+        if (lastQuery.current !== query) {
+            lastQuery.current = query;
+            setSearchResults(searchText(file.pool.originalText, entities, query));
+        }
+
         setFilteredEntities(filterEntities(entities, query));
-        setSearchResults(searchText(file.pool.originalText, entities, query));
     }, [file.pool.originalText, entities]);
 
     useEffect(() => {
