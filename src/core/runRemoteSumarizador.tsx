@@ -1,17 +1,18 @@
 "use client";
+
 import { useState } from "react";
 import { UserFile } from "@/core/UserFile";
 import { Button } from "./BootstrapIcons";
-import { useSummary } from "./uses";
+import { useSummary } from "@/hooks/use-summary";
 
 export function SumarizadorModalBody({ file }: { file: UserFile }) {
     const summary = useSummary(file);
-    let [requesting, setRequesting] = useState<boolean>(false);
-    let [top, setTop] = useState<number>(5);
+    const [requesting, setRequesting] = useState<boolean>(false);
+    const [top, setTop] = useState<number>(5);
 
-    let canRequest = !requesting && (!summary || summary.length === 0);
-    let canUpdateArea = !requesting && (!summary || summary.length === 0);
-    let canReset = !requesting && summary && summary.length > 0;
+    const canRequest = !requesting && (!summary || summary.length === 0);
+    const canUpdateArea = !requesting && (!summary || summary.length === 0);
+    const canReset = !requesting && summary && summary.length > 0;
 
     const resetDescritores = () => {
         file.summary = undefined;
@@ -71,13 +72,13 @@ export async function requestSummary(file: UserFile, abort?: AbortSignal) {
     if (requestingSumary) return;
     requestingSumary = true;
 
-    let doc = file.doc;
+    const doc = file.doc;
 
-    let text = textFrom(doc);
-    let fd = new FormData()
+    const text = textFrom(doc);
+    const fd = new FormData()
     fd.append("file", new Blob([text]), "input.txt")
 
-    let resArray: RemoteEntity[] = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/sumarizador`, {
+    const resArray: RemoteEntity[] = await fetch(`${process.env.NEXT_PUBLIC_BASE_PATH}/api/sumarizador`, {
         method: "POST",
         body: fd,
         signal: abort
@@ -98,6 +99,6 @@ export async function requestSummary(file: UserFile, abort?: AbortSignal) {
     }
     file.summary = resArray.map(e => ({ text: e.text, value: e.score }))
     file.notifySummary();
-    file.save()
+    file.save();
     requestingSumary = false;
 }

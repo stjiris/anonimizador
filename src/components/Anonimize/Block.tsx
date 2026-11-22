@@ -1,8 +1,7 @@
-import React, { useId, useMemo } from "react"
-import { AnonimizeStateState } from "../../types/AnonimizeState"
+import React from "react"
+import { AnonimizeStateState } from "@/types/AnonimizeState"
 import AnonimizeToken from "./Token"
-import { SpecificOffsetRange } from "@/core/uses"
-import { EntityTypeI } from "@/types/EntityType"
+import { EntityTypeI, SpecificOffsetRange } from "@/types/EntityType"
 
 
 interface AnonimizeBlockProps {

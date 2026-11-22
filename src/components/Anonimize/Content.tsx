@@ -1,16 +1,17 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { AnonimizeStateState } from '../../types/AnonimizeState'
+import { AnonimizeStateState } from '@/types/AnonimizeState'
 import { UserFile } from '@/core/UserFile';
-import { useImages, useSpecificOffsets, useTypes, useTypesDict } from '@/core/uses';
+import { SpecificOffsetRange } from '@/types/EntityType';
+import { useImages, useSpecificOffsets, useTypes, useTypesDict } from '@/hooks';
 import { planAutoPageBreaks, renderBlock } from './render';
 import AnonimizeTooltip from './Tooltip';
 
 interface AnonimizeContentProps {
     file: UserFile
     anonimizeState: AnonimizeStateState
+    searchResults: SpecificOffsetRange[]
     showTypes: boolean
     paginated?: boolean
-    accessHtml: (html: string) => void
 }
 
 export default function AnonimizeContent(props: AnonimizeContentProps) {
@@ -20,8 +21,11 @@ export default function AnonimizeContent(props: AnonimizeContentProps) {
     const offsets = useSpecificOffsets(props.file.pool)
     const entityTypes = useTypesDict(props.file);
     const typesList = useTypes(props.file);
-    const images = useImages(props.file)
-    const accessHtml = props.accessHtml;
+    const images = useImages(props.file);
+
+    const renderOffsets = useMemo(() => {
+        return [...offsets, ...props.searchResults].sort((a, b) => a.start - b.start);
+    }, [props.searchResults, offsets]);
 
     const pageBreaks = useMemo(() => {
         return planAutoPageBreaks(props.file.doc, 2300);
@@ -31,36 +35,30 @@ export default function AnonimizeContent(props: AnonimizeContentProps) {
         return renderBlock(
             props.file.doc,
             entityTypes,
-            offsets,
+            renderOffsets,
             props.anonimizeState,
             0,
             images,
             { current: 0 },
             props.paginated ? new Set(pageBreaks) : undefined
         );
-    }, [props.file.doc, images, props.anonimizeState, entityTypes, offsets, pageBreaks, props.paginated]);
+    }, [props.file.doc, images, props.anonimizeState, entityTypes, renderOffsets, pageBreaks, props.paginated]);
 
-    const normalizedHtml = useMemo(() => {
+    const pages = useMemo(() => {
         return rawHtml
             .replace(/(?:<!--PAGEBREAK-->[\s]*){2,}/g, '<!--PAGEBREAK-->')
             .replace(/^\s*<!--PAGEBREAK-->\s*/, '')
-            .replace(/\s*<!--PAGEBREAK-->\s*$/, '');
-    }, [rawHtml]);
-
-    const pages = useMemo(() => {
-        return normalizedHtml
+            .replace(/\s*<!--PAGEBREAK-->\s*$/, '')
             .split(/<!--PAGEBREAK-->/g)
             .map(chunk => chunk.trim())
             .filter(chunk => chunk.length > 0);
-    }, [normalizedHtml]);
+    }, [rawHtml]);
 
     useEffect(() => {
         nodesRef.current = Array.from(
             (contentWrapperRef.current?.querySelectorAll(`[data-offset]`) as NodeListOf<HTMLElement>) ?? []
         );
-        const exportHtml = normalizedHtml.replace(/<!--PAGEBREAK-->/g, '<hr class="page-break" />');
-        accessHtml(exportHtml);
-    }, [normalizedHtml, accessHtml]);
+    }, [rawHtml]);
 
     return (
         <>

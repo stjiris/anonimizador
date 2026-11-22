@@ -1,8 +1,7 @@
 import { AnonimizeStateState } from "@/types/AnonimizeState";
-import { EntityTypeI } from "@/types/EntityType";
-import { UserFile } from "@/core/UserFile";
+import { EntityTypeI, SpecificOffsetRange } from "@/types/EntityType";
 import { Button } from "@/core/BootstrapIcons";
-import { SpecificOffsetRange, useTypesDict } from "@/core/uses";
+import { useTypesDict } from "@/hooks/use-types-dict";
 import { renderBlock } from "./render";
 import { UserFileInterface } from "@/types/UserFileInterface";
 import { useState } from "react";

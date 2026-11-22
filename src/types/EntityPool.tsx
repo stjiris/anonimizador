@@ -1,9 +1,22 @@
-import { Entity, EntityI, normalizeEntityString, OffsetRange } from "./EntityType";
+import {Entity, EntityI, normalizeEntityString, OffsetRange, DUMMY_ENTITY_TYPE} from "./EntityType";
 
 export enum AddEntityDryRun {
     CHANGE_TYPE,
     CHANGE_OFFSET,
     CHANGE_ARRAY
+}
+
+function deduplicateOffsets(offsets: OffsetRange[]): OffsetRange[] {
+    const seen = new Set<string>();
+    const result: OffsetRange[] = [];
+    for (const off of offsets) {
+        const key = `${off.start}:${off.end}`;
+        if (!seen.has(key)) {
+            seen.add(key);
+            result.push(off);
+        }
+    }
+    return result;
 }
 
 export class EntityPool {
@@ -30,37 +43,68 @@ export class EntityPool {
     }
 
     offChange(cb: (action: string) => void) {
-        let idx = this.listeners.findIndex((fn) => fn === cb);
+        const idx = this.listeners.findIndex((fn) => fn === cb);
         if (idx >= 0) {
             this.listeners.splice(idx, 1)
         }
     }
 
-    joinEntities(indexes: number[]) {
-        if (indexes.length <= 1) return;
-        indexes.sort((a, b) => a - b) // indexes are sorted
+    /**
+     * Joins pool entities at `indexes` with optional `extraOffsets` outside the pool.
+     * Keeps the first pool entity's type (or creates a `"Marca"` entity when `indexes` is empty),
+     * purges any colliding pool occurrences so `extraOffsets` prevail, and deduplicates identical spans.
+     */
+    joinEntities(indexes: number[], extraOffsets: OffsetRange[] = []) {
+        extraOffsets = deduplicateOffsets(extraOffsets);
+        indexes = Array.from(new Set(indexes))
+            .filter(i => i >= 0 && i < this.entities.length)
+            .sort((a, b) => b - a);
 
-        let first: Entity = this.entities[indexes.shift()!];
-        let removed: OffsetRange[] = []
-        indexes.reverse().forEach(i => {
-            let cEnt = this.entities.splice(i, 1)[0];
-            removed.push(...cEnt.offsets)
-        })
+        if (extraOffsets.length === 0 && indexes.length <= 1) return;
 
-        first.addOffset(removed);
-        first.offsetsLength = first.offsets.length;
+        // Choose the entity type.
+        const target = this.entities[indexes.pop() ?? -1] ?? new Entity("Marca")
+
+        const mergedOffsets: OffsetRange[] = [];
+        for (const i of indexes) {
+            const removed = this.entities.splice(i, 1);
+            if (removed.length === 1) {
+                mergedOffsets.push(...removed[0].offsets);
+            }
+        }
+
+        if (mergedOffsets.length > 0) {
+            target.addOffset(mergedOffsets);
+        }
+
+        if (extraOffsets.length > 0) {
+            for (const off of extraOffsets) {
+                this.removeOffset(off.start, off.end, false);
+            }
+
+            target.addOffset(extraOffsets);
+        }
+
+        target.offsets = deduplicateOffsets(target.offsets);
+        target.offsetsLength = target.offsets.length;
+
+        if (target.offsets.length > 0 && !this.entities.includes(target)) {
+            this.entities.push(target);
+        }
+
         this.updateOrder("Juntar entidades");
     }
 
     splitEntities(indexes: number[]) {
         if (indexes.length === 0) return;
-        let newEnt: Entity[] = [];
+
+        const newEnt: Entity[] = [];
         this.entities.forEach((ent, i) => {
             if (indexes.indexOf(i) === -1 || ent.offsets.length <= 1) return newEnt.push(ent);
 
-            let otherOffs = ent.offsets.splice(1); // Changes current ent
-            for (let off of otherOffs) {
-                let nent = new Entity(ent.type);
+            const otherOffs = ent.offsets.splice(1); // Changes current ent
+            for (const off of otherOffs) {
+                const nent = new Entity(ent.type);
                 nent.addOffset([off]);
                 newEnt.push(nent);
             }
@@ -97,8 +141,7 @@ export class EntityPool {
     }
 
     updateOrder(action: string) {
-        let typeCounts: { [key: string]: number } = {}
-        let funcCounts: { [key: number]: number } = {}
+        const typeCounts: { [key: string]: number } = {}
 
         this.entities.sort((a, b) => a.offsets[0].start - b.offsets[0].start).forEach((e, i) => {
             e.index = i + 1;
@@ -106,10 +149,6 @@ export class EntityPool {
                 typeCounts[e.type] = 0;
             }
             e.typeIndex = ++typeCounts[e.type]!;
-            if (!funcCounts[e.funcIndex]) {
-                funcCounts[e.funcIndex] = 0;
-            }
-            e.funcIndex = funcCounts[e.funcIndex]!++;
         });
         this.notify(action)
 
@@ -196,9 +235,9 @@ export class EntityPool {
     }
 
     entitiesAt(startOffset: number, endOffset: number): Entity[] {
-        let r = []
-        for (let curr of this.entities) {
-            for (let off of curr.offsets) {
+        const r = []
+        for (const curr of this.entities) {
+            for (const off of curr.offsets) {
                 if ((off.start >= startOffset && off.end < endOffset) || (off.start < endOffset && off.end >= startOffset)) {
                     // Entity colides with existing
                     r.push(curr);
@@ -218,9 +257,9 @@ export class EntityPool {
             return [AddEntityDryRun.CHANGE_TYPE, affected]
         }
 
-        let normed = normalizeEntityString(text)
+        const normed = normalizeEntityString(text)
         // Loop to check similarities
-        for (let curr of this.entities) {
+        for (const curr of this.entities) {
             if (curr.offsets.some(off => normalizeEntityString(off.preview) === normed)) {
                 affected++;
             }
@@ -235,16 +274,16 @@ export class EntityPool {
     addEntity(startOffset: number, endOffset: number, text: string, label: string, update: boolean = true) {
         let used = false;
         // Loop to remove "colisions"
-        for (let ent of this.entitiesAt(startOffset, endOffset)) {
+        for (const ent of this.entitiesAt(startOffset, endOffset)) {
             ent.type = label;
             used = true;
         }
 
         if (used) return this.notify("Modificar tipo de entidade");
 
-        let normed = normalizeEntityString(text) + label
+        const normed = normalizeEntityString(text) + label
         // Loop to check similarities
-        for (let curr of this.entities) {
+        for (const curr of this.entities) {
             if (curr.offsets.some(off => normalizeEntityString(off.preview) + curr.type === normed)) {
                 curr.addOffset([{ start: startOffset, end: endOffset, preview: text }])
                 used = true
@@ -254,7 +293,7 @@ export class EntityPool {
 
         // Add entity to end
         if (!used) {
-            let ent = new Entity(label);
+            const ent = new Entity(label);
             ent.addOffset([{ start: startOffset, end: endOffset, preview: text }])
             this.entities.push(ent)
         }

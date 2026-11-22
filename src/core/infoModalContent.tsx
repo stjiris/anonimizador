@@ -1,23 +1,23 @@
 "use client";
+
 import { formatBytes } from "@/components/SelectFile";
-import { UserFile } from "@/core/UserFile";
 import { MaterialReactTable } from "material-react-table";
 import { MRT_Localization_PT } from "material-react-table/locales/pt";
-import { useArea, useDescriptors, useEntities, useImages, useSave, useSummary, useTypes } from "./uses";
+import { useArea, useDescriptors, useEntities, useImages, useSave, useSummary, useTypes } from "@/hooks";
 import { UserFileInterface } from "@/types/UserFileInterface";
 
 const intl = new Intl.DateTimeFormat(["pt", "en"], { dateStyle: "short", timeStyle: "medium" });
 
 export function InfoModalContent({ file }: { file: UserFileInterface }) {
-    let saved = useSave(file);
-    let types = useTypes(file);
-    let images = useImages(file);
-    let entities = useEntities(file.pool);
-    let descriptors = useDescriptors(file);
-    let area = useArea(file);
-    let summary = useSummary(file);
+    const saved = useSave(file);
+    const types = useTypes(file);
+    const images = useImages(file);
+    const entities = useEntities(file.pool);
+    const descriptors = useDescriptors(file);
+    const area = useArea(file);
+    const summary = useSummary(file);
 
-    let data: { key: string, value: string }[] = [
+    const data: { key: string, value: string }[] = [
         { key: "Nome", value: file.name },
         { key: "Tamanho", value: formatBytes(new Blob([JSON.stringify(file.toSavedFile())]).size) },
         { key: "Importado", value: intl.format(file.imported) },
@@ -31,8 +31,6 @@ export function InfoModalContent({ file }: { file: UserFileInterface }) {
         { key: "Descritores Sugeridos", value: descriptors?.length.toString() || "" },
         { key: "Sumarização Sugerida", value: summary?.length.toString() || "" },
     ];
-
-
 
     return <>
         <div className="modal-header">

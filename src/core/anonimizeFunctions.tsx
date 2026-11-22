@@ -1,5 +1,5 @@
 "use client";
-export type AnonimizeFunction = (str: string, type: string, idx: number, typeIdx: number, funIdx: number) => string;
+export type AnonimizeFunction = (str: string, type: string, idx: number, typeIdx: number) => string;
 
 const typeFullNameMap: { [key: string]: string } = {
     "PES": "Pessoa",
@@ -39,43 +39,46 @@ export const firstWord: AnonimizeFunction = (str) => str.replace(/([A-Za-zÀ-Ö�
 export const matriculaLeter: AnonimizeFunction = (str) => str.replace(/[0-9]/g, '.');
 export const matriculaNumber: AnonimizeFunction = (str) => str.replace(/[A-Za-z]/g, '.');
 
-let alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-export const leter: AnonimizeFunction = (_str, _type, _idx, _tidx, fidx) => {
-    let leter = alphabet[fidx % alphabet.length];
-    let s = leter;
+const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+export const leter: AnonimizeFunction = (_str, _type, _idx, tidx) => {
+    const fidx = Math.max(0, tidx - 1);
+    const letter = alphabet[fidx % alphabet.length];
+
+    let s = letter;
     for (let i = -1; i < Math.floor(fidx / alphabet.length); i++) {
-        s += leter;
+        s += letter;
     }
 
     return s
 }
 
 export const year: AnonimizeFunction = (str: string, ...args) => {
-    let yyyymmdd = str.match(/(\d{4})(.)\d{1,2}\2\d{1,2}/);
+    const yyyymmdd = str.match(/(\d{4})(.)\d{1,2}\2\d{1,2}/);
     if (yyyymmdd) {
         return yyyymmdd[1] + yyyymmdd[2] + "..." + yyyymmdd[2] + "...";
     }
 
-    let ddmmyyyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{4})/);
+    const ddmmyyyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{4})/);
     if (ddmmyyyy) {
         return "..." + ddmmyyyy[1] + "..." + ddmmyyyy[2] + ddmmyyyy[3];
     }
-    let ddmmyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{1,2})/);
+
+    const ddmmyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{1,2})/);
     if (ddmmyy) {
         return "..." + ddmmyy[1] + "..." + ddmmyy[2] + ddmmyy[3];
     }
 
-    let diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/);
+    const diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/);
     if (diaDeMesDeyyyy) {
         return "... de ... de " + diaDeMesDeyyyy[1];
     }
 
-    let mesDeAnoDeyyyy = str.match(/.* de (\d{4})/);
+    const mesDeAnoDeyyyy = str.match(/.* de (\d{4})/);
     if (mesDeAnoDeyyyy) {
         return "... de " + mesDeAnoDeyyyy[1];
     }
 
-    let diaDeMes = str.match(/^\d{1,2} de .+/);
+    const diaDeMes = str.match(/^\d{1,2} de .+/);
     if (diaDeMes) {
         return "... de ...";
     }
@@ -86,31 +89,32 @@ export const year: AnonimizeFunction = (str: string, ...args) => {
 //Anonymization technique for dates that uses "D" and "M" as placeholders for "Dia" and "Mês" respectively,
 //instead of "...", leading dates to be returned in the following formats: "D/M/0000", "D-M-0000" or "D de M de 0000";
 export const year2: AnonimizeFunction = (str: string, ...args) => {
-    let yyyymmdd = str.match(/(\d{4})(.)\d{1,2}\2\d{1,2}/);
+    const yyyymmdd = str.match(/(\d{4})(.)\d{1,2}\2\d{1,2}/);
     if (yyyymmdd) {
         return yyyymmdd[1] + yyyymmdd[2] + "M" + yyyymmdd[2] + "D";
     }
 
-    let ddmmyyyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{4})/);
+    const ddmmyyyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{4})/);
     if (ddmmyyyy) {
         return "D" + ddmmyyyy[1] + "M" + ddmmyyyy[2] + ddmmyyyy[3];
     }
-    let ddmmyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{1,2})/);
+
+    const ddmmyy = str.match(/\d{1,2}(.)\d{1,2}(.)(\d{1,2})/);
     if (ddmmyy) {
         return "D" + ddmmyy[1] + "M" + ddmmyy[2] + ddmmyy[3];
     }
 
-    let diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/);
+    const diaDeMesDeyyyy = str.match(/\d* de .* de (\d{4})/);
     if (diaDeMesDeyyyy) {
         return "D de M de " + diaDeMesDeyyyy[1];
     }
 
-    let mesDeAnoDeyyyy = str.match(/.* de (\d{4})/);
+    const mesDeAnoDeyyyy = str.match(/.* de (\d{4})/);
     if (mesDeAnoDeyyyy) {
         return "M de " + mesDeAnoDeyyyy[1];
     }
 
-    let diaDeMes = str.match(/^\d{1,2} de .+/);
+    const diaDeMes = str.match(/^\d{1,2} de .+/);
     if (diaDeMes) {
         return "D de M";
     }
@@ -129,21 +133,21 @@ export const processo: AnonimizeFunction = (str, ...args) => {
 export const AA_inc: AnonimizeFunction = (_str, type, _idx, tidx) => "AA" + tidx.toString()
 
 //Anonymization technique that uses the leter "V" coupled with a numerical increment;
-export const matricula_inc: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) => "V" + typeIdx.toString()
+export const matricula_inc: AnonimizeFunction = (str, type, idx, typeIdx) => "V" + typeIdx.toString()
 
 //Anonymization technique that uses the leter "P" coupled with a numerical increment;
-export const partido_inc: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) => "P" + typeIdx.toString()
+export const partido_inc: AnonimizeFunction = (str, type, idx, typeIdx) => "P" + typeIdx.toString()
 
 const redesSociais = ['Facebook', 'Instagram', 'Twitter', 'WhatsApp', 'Tiktok', 'LinkedIn', 'Snapchat', 'X.', 'Reddit', 'Youtube', 'Discord', 'Telegram']
 
-export const redes_inc: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) => {
+export const redes_inc: AnonimizeFunction = (str, type, idx, typeIdx) => {
     const emailMatch = str.match(/@(.+)$/);
     if (emailMatch) {
         return "nome" + typeIdx.toString() + "@" + emailMatch[1];
     }
 
-    let strLow = str.toLowerCase()
-    for (let rede of redesSociais) {
+    const strLow = str.toLowerCase()
+    for (const rede of redesSociais) {
         if(strLow.includes(rede.toLowerCase())) {
             return "nome" + typeIdx.toString() + "@" + rede.toLowerCase() + ".com";
         }
@@ -151,15 +155,6 @@ export const redes_inc: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) =>
 
     return "nome" + typeIdx.toString();
 }
-
-const moradasTypes = [
-    'Rua', 'Avenida', 'Largo', 'Praça', 'Travessa', 'Estrada', 'Calçada', 'Alameda',
-    'Rotunda', 'Praceta', 'Beco', 'Viela', 'Caminho', 'Vereda', 'Azinhaga', 'Escadas',
-    'Escadinhas', 'Pátio', 'Terreiro', 'Rossio', 'Campo', 'Jardim', 'Parque', 'Quinta',
-    'Urbanização', 'Loteamento', 'Lugar', 'Sítio', 'Vila', 'Povoação', 'Aldeia',
-    'Freguesia', 'Concelho', 'Distrito', 'Zona', 'Bloco', 'Lote', 'Edifício', 'Torre',
-    'Impasse', 'Quelha', 'Rampa', 'Ponte', 'Cais', 'Porto', 'Marina', 'Doca',
-]
 
 export const iban_prefix: AnonimizeFunction = (str) => {
     const match = str.match(/^(?:IBAN\s+)?([A-Z]{2}\d{2})/);
@@ -171,12 +166,20 @@ export const iban_prefix: AnonimizeFunction = (str) => {
 
 export const codigoPostal: AnonimizeFunction = (str) => str.replace(/\d{4}-\d{3}/, "0000-000")
 
-export const moradas_inc: AnonimizeFunction = (str, type, _idx, tidx, funIdx) => {
+const moradasTypes = [
+    'Rua', 'Avenida', 'Largo', 'Praça', 'Travessa', 'Estrada', 'Calçada', 'Alameda',
+    'Rotunda', 'Praceta', 'Beco', 'Viela', 'Caminho', 'Vereda', 'Azinhaga', 'Escadas',
+    'Escadinhas', 'Pátio', 'Terreiro', 'Rossio', 'Campo', 'Jardim', 'Parque', 'Quinta',
+    'Urbanização', 'Loteamento', 'Lugar', 'Sítio', 'Vila', 'Povoação', 'Aldeia',
+    'Freguesia', 'Concelho', 'Distrito', 'Zona', 'Bloco', 'Lote', 'Edifício', 'Torre',
+    'Impasse', 'Quelha', 'Rampa', 'Ponte', 'Cais', 'Porto', 'Marina', 'Doca',
+]
 
-    let strLow = str.toLowerCase()
+export const moradas_inc: AnonimizeFunction = (str, type, _idx, tidx) => {
+    str = str.toLowerCase()
 
-    for (let morType of moradasTypes) {
-        if(strLow.includes(morType.toLowerCase())) {
+    for (const morType of moradasTypes) {
+        if(str.includes(morType.toLowerCase())) {
             return morType.toString() + " " + tidx.toString();
         }
     }
@@ -187,29 +190,19 @@ export const moradas_inc: AnonimizeFunction = (str, type, _idx, tidx, funIdx) =>
 //Anonymization technique that uses the type name coupled with a numerical increment specific to that type;
 export const typeWithIncrement: AnonimizeFunction = (str, type, idx, typeIdx) => type + " " + typeIdx.toString()
 
-export const automatic: AnonimizeFunction = (str, type, idx, typeIdx, funIdx) => {
-    if (type === "PES")
-        return leter(str, type, idx, typeIdx, typeIdx - 1) // overwrite funIdx, automatically only we should call it.
-    if (type === "DAT")
-        return year(str, type, idx, typeIdx, funIdx)
-    if (type === "PRO")
-        return processo(str, type, idx, typeIdx, funIdx)
-    if (type === "MAT")
-        return matriculaLeter(str, type, idx, typeIdx, funIdx)
-    if (type === "INST")
-        return firstWord(str, type, idx, typeIdx, funIdx)
-    if (type === "MOR")
-        return moradas_inc(str, type, idx, typeIdx, funIdx)
-    if (type === "PAR")
-        return partido_inc(str, type, idx, typeIdx, funIdx)
-    if (type === "RED")
-        return redes_inc(str, type, idx, typeIdx, funIdx)
-    
-    return reticiencias(str, type, idx, typeIdx, funIdx)
+export const automatic: AnonimizeFunction = (str, type, idx, typeIdx) => {
+    switch (type) {
+        case "PES":  return leter(str, type, idx, typeIdx);
+        case "DAT":  return year(str, type, idx, typeIdx);
+        case "PRO":  return processo(str, type, idx, typeIdx);
+        case "MAT":  return matriculaLeter(str, type, idx, typeIdx);
+        case "INST": return firstWord(str, type, idx, typeIdx);
+        case "MOR":  return moradas_inc(str, type, idx, typeIdx);
+        case "PAR":  return partido_inc(str, type, idx, typeIdx);
+        case "RED":  return redes_inc(str, type, idx, typeIdx);
+        default:     return reticiencias(str, type, idx, typeIdx);
+    }
 }
-
-
-
 
 export interface AnonimizeFunctionDescription {
     name: string,

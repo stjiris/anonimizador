@@ -1,7 +1,5 @@
 import { AnonimizeStateState } from "@/types/AnonimizeState"
-import { EntityTypeI } from "@/types/EntityType"
-import { SpecificOffsetRange } from "@/core/uses"
-
+import { EntityTypeI, SpecificOffsetRange } from "@/types/EntityType"
 
 type AnonimizeTokenProps = {
     string: string
@@ -12,13 +10,13 @@ type AnonimizeTokenProps = {
 }
 
 export default function AnonimizeToken(props: AnonimizeTokenProps){
-    let dataAttrs: {[_:string]: string} = {
+    const dataAttrs: {[_:string]: string} = {
         'data-offset': props.offset.toString()
     };
     
     if( props.specificOffset && props.type ){
-        let type: EntityTypeI = props.type;
-        dataAttrs['data-anonimize-cod'] = props.specificOffset.ent.anonimizingFunction(type)(props.specificOffset.preview, props.specificOffset.ent.type, props.specificOffset.ent.index, props.specificOffset.ent.typeIndex, props.specificOffset.ent.funcIndex);
+        const type: EntityTypeI = props.type;
+        dataAttrs['data-anonimize-cod'] = props.specificOffset.ent.anonimizingFunction(type)(props.specificOffset.preview, props.specificOffset.ent.type, props.specificOffset.ent.index, props.specificOffset.ent.typeIndex);
         dataAttrs['data-anonimize-type'] = type.name;
         dataAttrs['data-anonimize-color'] = type.color;
         dataAttrs['data-anonimize-offset-start'] = props.specificOffset.start.toString()
