@@ -1,10 +1,15 @@
-export VERSION_COMMIT=$(git rev-parse --short HEAD)
-export VERSION_DATE=$(date +%d/%m/%Y)
+#!/bin/sh
+set -eu
+
+VERSION_COMMIT=$(git rev-parse --short HEAD)
+VERSION_DATE=$(date +%d/%m/%Y)
 
 if [ ! -d "iris-lfs-storage" ]; then
     git clone https://gitlab.com/diogoalmiro/iris-lfs-storage.git
-    cd iris-lfs-storage && git lfs pull && cd ..
 fi
 
-docker compose build --build-arg VERSION_COMMIT=$VERSION_COMMIT --build-arg VERSION_DATE=$VERSION_DATE anonimizador nlp_server
-docker compose up -d --force-recreate anonimizador nlp_server
+(cd iris-lfs-storage && git lfs pull)
+
+export VERSION_COMMIT VERSION_DATE
+docker compose build anonimizador nlp_server
+docker compose up -d --remove-orphans --wait anonimizador nlp_server

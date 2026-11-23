@@ -9,10 +9,10 @@ import { ProfileI } from "@/types/ProfileType";
 import { sortEntityTypesXLast } from "./Tooltip";
 
 export function ProfileTypesTable() {
-    let [profile, setProfile] = useProfile();
-    let [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-    let availableProfiles = useAvaiableProfiles();
-    let knownProfile = availableProfiles.find(p => p.name === profile?.name);
+    const [profile, setProfile] = useProfile();
+    const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+    const availableProfiles = useAvaiableProfiles();
+    const knownProfile = availableProfiles.find(p => p.name === profile?.name);
     const data = useMemo(() =>
         profile
             ? sortEntityTypesXLast(
@@ -87,7 +87,7 @@ export function ProfileTypesTable() {
             enableGlobalFilter={false}
             enableFullScreenToggle={false}
             enableColumnActions={false}
-            editingMode="cell"
+            editDisplayMode="cell"
             enableExpanding={true}
             columns={[TYPE_COLUMN(profile, setProfile), ANON_COLUMN(profile, setProfile), EXAMPLE_COLUMN]}
             data={data}
@@ -98,10 +98,10 @@ export function ProfileTypesTable() {
             renderBottomToolbarCustomActions={() =>
                 <form className="d-flex m-2 w-100" onSubmit={(evt) => {
                     evt.preventDefault();
-                    let form = evt.target as HTMLFormElement;
-                    let tipoInput = form.elements.namedItem("tipo") as HTMLInputElement;
-                    let colorInput = form.elements.namedItem("color") as HTMLInputElement;
-                    let anonInput = form.elements.namedItem("anonimização") as HTMLSelectElement;
+                    const form = evt.target as HTMLFormElement;
+                    const tipoInput = form.elements.namedItem("tipo") as HTMLInputElement;
+                    const colorInput = form.elements.namedItem("color") as HTMLInputElement;
+                    const anonInput = form.elements.namedItem("anonimização") as HTMLSelectElement;
                     setProfile({ ...profile!, defaultEntityTypes: { ...profile!.defaultEntityTypes, [tipoInput.value]: { color: colorInput.value, functionIndex: parseInt(anonInput.value) } } });
                     tipoInput.value = "";
                     colorInput.value = "";
@@ -140,7 +140,7 @@ const TYPE_COLUMN: (profile: ProfileI, setProfile: (p: ProfileI) => void) => MRT
     Header: <><Bicon n="pencil" /> Tipo</>,
     accessorKey: "color",
     enableEditing: true,
-    muiTableBodyCellEditTextFieldProps: ({ row, table }) => ({
+    muiEditTextFieldProps: ({ row, table }) => ({
         type: "color",
         name: "color",
         onBlur: (evt) => {
@@ -156,7 +156,7 @@ const ANON_COLUMN: (profile: ProfileI, setProfile: (p: ProfileI) => void) => MRT
     Header: <><Bicon n="pencil" /> Anonimização</>,
     accessorFn: (ent) => functionsWithDescriptionArray[ent.functionIndex]?.name ?? functionsWithDescriptionArray[AUTO_ANONIMIZE].name,
     enableEditing: true,
-    muiTableBodyCellEditTextFieldProps: ({ row, table }) => ({
+    muiEditTextFieldProps: ({ row }) => ({
         select: true,
         children: functionsWithDescriptionArray.map((desc, i) => <option key={i} label={desc.name} value={i}>{desc.name}</option>),
         SelectProps: {
@@ -275,13 +275,13 @@ export function ProfileSelector() {
     const inputFileRef = useRef<HTMLInputElement>(null);
 
     const onFileChangeCallback = useCallback<ChangeEventHandler<HTMLInputElement>>((e) => {
-        let file = e.target.files?.item(0);
+        const file = e.target.files?.item(0);
         if (!file) {
             return;
         }
-        let reader = new FileReader();
+        const reader = new FileReader();
         reader.onload = (e) => {
-            let profile = JSON.parse(reader.result as string);
+            const profile = JSON.parse(reader.result as string);
             if (!isProfileI(profile)) {
                 alert("Arquivo inválido");
                 return;
@@ -293,7 +293,7 @@ export function ProfileSelector() {
         e.target.value = "";
     }, [setProfile]);
     const onDownloadProfile = useCallback(() => {
-        let newName = prompt("Nome do perfil", profile?.name || "")
+        const newName = prompt("Nome do perfil", profile?.name || "")
         if (!newName || availableProfiles.find(p => p.name === newName)) {
             alert("Nome inválido");
             return;
